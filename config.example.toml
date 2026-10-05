@@ -1,0 +1,12 @@
+# Copy to $STASH_HOME/config.toml (default ~/stash/config.toml).
+# Every key is optional. Later milestones add their own keys here (reel engines, batch sizes, inventory paths).
+
+# Port for `stash serve`.
+port = 8765
+
+# Built web app served by `stash serve`. Defaults to apps/web/dist in this repo.
+# web_dist = "C:/path/to/stash/apps/web/dist"
+
+# Category -> color token. Seed categories get their own color; new ones use cat-extra-1..8.
+[category_colors]
+# my-category = "cat-extra-1"

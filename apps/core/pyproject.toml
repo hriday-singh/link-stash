@@ -1,19 +1,21 @@
 [project]
 name = "stash"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
+description = "Link Stash core: extract, triage and store saved links"
 authors = [
     { name = "Hriday Singh", email = "hridaysingh2207@gmail.com" }
 ]
 requires-python = ">=3.14"
 dependencies = [
+    "httpx>=0.28.1",
     "pydantic>=2.13.5",
+    "pyyaml>=6.0.3",
+    "scrapling[fetchers]>=0.4.15",
     "typer>=0.27.2",
 ]
 
 [project.scripts]
-stash = "stash:main"
+stash = "stash.cli:app"
 
 [build-system]
 requires = ["uv_build>=0.11.25,<0.12.0"]
@@ -25,3 +27,16 @@ dev = [
     "pytest>=9.1.1",
     "ruff>=0.16.10",
 ]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.pyright]
+typeCheckingMode = "strict"
+include = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

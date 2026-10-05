@@ -15,6 +15,10 @@ const ThemeContext = createContext<ThemeValue | null>(null);
 
 function readStored(): Theme {
   try {
+    if (typeof window !== "undefined") {
+      const param = new URLSearchParams(window.location.search).get("theme");
+      if (param === "light" || param === "dark") return param;
+    }
     const value = localStorage.getItem(KEY);
     return value === "light" || value === "dark" ? value : "system";
   } catch {

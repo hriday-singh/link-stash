@@ -5,7 +5,9 @@ import { MockFeed, MockSidebar } from "@/mock/MockFeed";
 import { useTheme } from "@/state/theme";
 
 export function App() {
-  const [view, setView] = useState<"feed" | "card">("feed");
+  const [view, setView] = useState<"feed" | "card">(() =>
+    typeof window !== "undefined" && window.location.hash === "#card" ? "card" : "feed",
+  );
   const { resolved, toggle } = useTheme();
   return (
     <div className="flex min-h-dvh">

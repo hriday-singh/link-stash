@@ -7,9 +7,11 @@
     <title>Link Stash</title>
     <script>
       try {
-        var t = localStorage.getItem("stash.theme");
+        var p = new URLSearchParams(window.location.search).get("theme");
+        var t = p || localStorage.getItem("stash.theme");
         var dark = t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
         if (dark) document.documentElement.classList.add("dark");
+        else document.documentElement.classList.remove("dark");
       } catch (e) {}
     </script>
   </head>
