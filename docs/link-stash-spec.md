@@ -137,7 +137,7 @@ stash/
 
 ## Source extractors
 
-Every link goes through `stash extract <url>`, which returns one JSON record per source with the same shape. **Scrapling is the universal web extraction engine across every link type.** Rather than relying on fragile raw HTTP requests or requiring API tokens for third-party platforms, Link Stash uses Scrapling everywhere. Fast static retrieval uses Scrapling's `Fetcher`, while JavaScript-rendered, Cloudflare-protected, or bot-challenged targets automatically leverage Scrapling's `StealthyFetcher` (with browser TLS and header fingerprint spoofing). No LLM picks how to fetch. Every network call has a timeout and retries with backoff.
+Every link goes through `stash extract <url>`, which returns one JSON record per source with the same shape. **Scrapling is the universal web extraction engine across every link type.** Rather than relying on fragile raw HTTP requests or requiring API tokens for third-party platforms, Link Stash uses Scrapling everywhere. Fast static retrieval uses Scrapling's `Fetcher`, while JavaScript-rendered, Cloudflare-protected, or bot-challenged targets automatically leverage Scrapling's `StealthyFetcher` (with browser TLS and header fingerprint spoofing). No LLM picks how to fetch. Every network call has a timeout and retries with backoff. All scraper and scanner outputs are strictly sanitized to prevent context window bloat while delicately preserving technical substance (see [Context Debloat Spec](context-debloat-spec.md)).
 
 | Source | URL patterns | Primary method | Fallbacks | Key fields captured |
 | --- | --- | --- | --- | --- |

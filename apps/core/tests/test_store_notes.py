@@ -21,35 +21,21 @@ def test_split_notes_when_present() -> None:
 
 
 def test_split_notes_when_absent() -> None:
-    body = (
-        "This is the summary paragraph.\n\n"
-        "**Origin.**\n"
-        "Added 2026-10-06 from reel."
-    )
+    body = "This is the summary paragraph.\n\n**Origin.**\nAdded 2026-10-06 from reel."
     body_no_notes, notes = split_notes(body)
     assert notes == ""
     assert body_no_notes.strip() == body.strip()
 
 
 def test_split_notes_at_end_of_body() -> None:
-    body = (
-        "Summary text.\n\n"
-        "**Notes.**\n"
-        "Just some trailing notes."
-    )
+    body = "Summary text.\n\n**Notes.**\nJust some trailing notes."
     body_no_notes, notes = split_notes(body)
     assert notes == "Just some trailing notes."
     assert body_no_notes.strip() == "Summary text."
 
 
 def test_replace_notes_existing() -> None:
-    body = (
-        "Summary paragraph.\n\n"
-        "**Notes.**\n"
-        "Old notes here.\n\n"
-        "**Origin.**\n"
-        "Added from web."
-    )
+    body = "Summary paragraph.\n\n**Notes.**\nOld notes here.\n\n**Origin.**\nAdded from web."
     new_body = replace_notes(body, "New updated notes.")
     _, notes = split_notes(new_body)
     assert notes == "New updated notes."
@@ -58,11 +44,7 @@ def test_replace_notes_existing() -> None:
 
 
 def test_replace_notes_insert_before_origin() -> None:
-    body = (
-        "Summary paragraph.\n\n"
-        "**Origin.**\n"
-        "Added from web."
-    )
+    body = "Summary paragraph.\n\n**Origin.**\nAdded from web."
     new_body = replace_notes(body, "Fresh notes added.")
     _, notes = split_notes(new_body)
     assert notes == "Fresh notes added."
@@ -78,13 +60,7 @@ def test_replace_notes_insert_at_end_when_no_origin() -> None:
 
 
 def test_replace_notes_remove_when_empty() -> None:
-    body = (
-        "Summary paragraph.\n\n"
-        "**Notes.**\n"
-        "Old notes here.\n\n"
-        "**Origin.**\n"
-        "Added from web."
-    )
+    body = "Summary paragraph.\n\n**Notes.**\nOld notes here.\n\n**Origin.**\nAdded from web."
     new_body = replace_notes(body, "   ")
     _, notes = split_notes(new_body)
     assert notes == ""

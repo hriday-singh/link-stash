@@ -1,14 +1,13 @@
 """API request and response schemas for Link Stash library server."""
 
-from typing import Generic, Literal, TypeVar
+from typing import Literal, cast
+
 from pydantic import BaseModel, Field
 
 from stash.store.models import Card, Kind, SourceDoc
 
-T = TypeVar("T")
 
-
-class Page(BaseModel, Generic[T]):
+class Page[T](BaseModel):
     items: list[T]
     next_cursor: str | None = None
 
@@ -65,13 +64,15 @@ class SourceDetail(BaseModel):
     source: SourceDoc
     video_url: str | None = None
     thumb_url: str | None = None
-    cards: list[dict[str, str]] = Field(default_factory=list)
+    cards: list[dict[str, str]] = Field(default_factory=lambda: cast(list[dict[str, str]], []))
 
 
 class CardLinks(BaseModel):
-    backlinks: list[dict[str, str]] = Field(default_factory=list)
-    mentioned_by: list[dict[str, str]] = Field(default_factory=list)
-    outgoing: list[dict[str, str]] = Field(default_factory=list)
+    backlinks: list[dict[str, str]] = Field(default_factory=lambda: cast(list[dict[str, str]], []))
+    mentioned_by: list[dict[str, str]] = Field(
+        default_factory=lambda: cast(list[dict[str, str]], [])
+    )
+    outgoing: list[dict[str, str]] = Field(default_factory=lambda: cast(list[dict[str, str]], []))
 
 
 class GraphNode(BaseModel):
@@ -89,8 +90,8 @@ class GraphEdge(BaseModel):
 
 
 class GraphData(BaseModel):
-    nodes: list[GraphNode] = Field(default_factory=list)
-    edges: list[GraphEdge] = Field(default_factory=list)
+    nodes: list[GraphNode] = Field(default_factory=lambda: cast(list[GraphNode], []))
+    edges: list[GraphEdge] = Field(default_factory=lambda: cast(list[GraphEdge], []))
 
 
 class SearchHit(BaseModel):

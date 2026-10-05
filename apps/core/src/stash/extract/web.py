@@ -76,7 +76,7 @@ def extract_web_content(html: str, url: str) -> WebRecord:
         canonical_key=canonical_key,
         title=title,
         description=description,
-        text=clean_text[:6000],
+        text=clean_text[:16000],
         outbound_links=outbound,
         mentions=mentions,
     )

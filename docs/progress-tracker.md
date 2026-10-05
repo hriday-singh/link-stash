@@ -15,16 +15,16 @@ Link Stash is divided into two interdependent parts:
 | Area | Milestones Defined | Completed / Substantially Done | Planned / In Progress | Completion % |
 | --- | --- | --- | --- | --- |
 | **Core Pipeline (A1–A10)** | 10 | 8 complete/logic done (A1–A8) + 1 in progress (A9) | 1 planned (A10) | **85%** |
-| **Web Application (B0–B6)** | 7 | 1 complete (B0 + interactive mocks) | 6 planned (B1–B6) | **22%** |
-| **Combined System** | 17 | 9 complete/logic done | 8 planned | **60%** |
+| **Web Application (B0–B6)** | 7 | 2 complete (B0, B1) | 5 planned (B2–B6) | **29%** |
+| **Combined System** | 17 | 10 complete/logic done | 7 planned | **65%** |
 
 ### Automated Verification Scorecard
 
 | Component | Test Suite | Pass Count | Lint Status | Typecheck Status | Build Status |
 | --- | --- | --- | --- | --- | --- |
-| **`apps/core` (Python 3.14)** | Pytest 9.1.1 (28 modules) | **159 / 159 passing** (100%) | Ruff: 0 errors | Pyright (strict): 0 errors | N/A (Python package) |
-| **`apps/web` (React 19 / Vite)** | Vitest 5.0.3 (9 test files) | **58 / 58 passing** (100%) | ESLint: 0 errors | `tsc -b`: 0 errors | Vite build: **0.87 kB HTML, 335 kB JS, 52 kB CSS** |
-| **Total Automated Tests** | Pytest + Vitest | **217 tests passing** | Clean | Strict clean | Production build clean |
+| **`apps/core` (Python 3.14)** | Pytest 9.1.1 (33 modules) | **192 / 192 passing** (100%) | Ruff: 0 errors | Pyright (strict): 0 errors | N/A (Python package) |
+| **`apps/web` (React 19 / Vite)** | Vitest 5.0.3 (9 test files) | **58 / 58 passing** (100%) | ESLint: 0 errors | `tsc -b`: 0 errors | Vite build: **0.87 kB HTML, 404 kB JS, 51 kB CSS** |
+| **Total Automated Tests** | Pytest + Vitest | **250 tests passing** | Clean | Strict clean | Production build clean |
 
 ---
 
@@ -52,7 +52,7 @@ Link Stash is divided into two interdependent parts:
 | Milestone | Code | Spec Reference | Plan Document | Status | Test Coverage | Key Deliverables |
 | --- | --- | --- | --- | --- | --- | --- |
 | **B0 Visual Design** | `B0` | [library-app-spec.md](file:///docs/library-app-spec.md#L224-L232) | [2026-10-05-library-app-b0-design.md](file:///docs/superpowers/plans/2026-10-05-library-app-b0-design.md) | **Complete (100%)** | 51 tests | `tokens.css` with 0 hardcoded colors/px, WCAG AA contrast tests, system/manual theme toggle, `Tile`, `GeneratedTile`, `CategoryPill`, `SegmentedControl`, `StashLogo`, `MorphIcon`, mock feed, card, and interactive views. |
-| **B1 Serve and API** | `B1` | [library-app-spec.md](file:///docs/library-app-spec.md#L170-L192) | [2026-10-05-library-app-b1-api.md](file:///docs/superpowers/plans/2026-10-05-library-app-b1-api.md) | **Planned (0%)** | 0 tests | `stash serve` FastAPI server, CRUD endpoints, Notes section parser/patcher, range-supported media streaming, watcher SSE events, OpenAPI TS types. |
+| **B1 Serve and API** | `B1` | [library-app-spec.md](file:///docs/library-app-spec.md#L170-L192) | [2026-10-05-library-app-b1-api.md](file:///docs/superpowers/plans/2026-10-05-library-app-b1-api.md) | **Complete (100%)** | 33 tests (`test_store_notes.py`, `test_services_paging.py`, `test_server_api.py`, `test_server_events.py`, `test_cli_serve.py`) | `stash serve` FastAPI server, CRUD endpoints, Notes section parser/patcher, range-supported media streaming, watcher SSE events, OpenAPI TS types (`schema.d.ts`), typed client (`client.ts`). |
 | **B2 Shell, Grid, Search** | `B2` | [library-app-spec.md](file:///docs/library-app-spec.md#L59-L98) | [2026-10-05-library-app-b2-shell.md](file:///docs/superpowers/plans/2026-10-05-library-app-b2-shell.md) | **Planned (0%)** | 0 tests | TanStack Router, AppShell, sidebar/drawer, Lenis smooth scroll, shared virtualized grid, Feed/category/search routes, Ctrl+K palette, URL filters, live sync. |
 | **B3 Card Page** | `B3` | [library-app-spec.md](file:///docs/library-app-spec.md#L126-L138) | [2026-10-05-library-app-b3-card.md](file:///docs/superpowers/plans/2026-10-05-library-app-b3-card.md) | **Planned (0%)** | 0 tests | `/c/$slug` route, read-only markdown body, CodeMirror 6 Notes editor with `[[slug]]` autocomplete, autosave with 409 conflict banner, Properties form with ChipInput, Reject dialog. |
 | **B4 Stash Views** | `B4` | [library-app-spec.md](file:///docs/library-app-spec.md#L151-L158) | [2026-10-05-library-app-b4-stash-views.md](file:///docs/superpowers/plans/2026-10-05-library-app-b4-stash-views.md) | **Planned (0%)** *(Mocked in B0)* | 0 tests | Sources list + video player with seekable timestamp chips, Pending resolve form, Rejected table with un-reject, Inventory view, theSVG brand logos. |
@@ -139,8 +139,8 @@ The specification ([docs/link-stash-spec.md](file:///docs/link-stash-spec.md#L36
 | `stash reject` | Record rejection in `rejected.md` | **Pending CLI registration** | Service complete in [services/rejects.py](file:///apps/core/src/stash/services/rejects.py) |
 | `stash pending` | List, add, resolve pending items | **Pending CLI registration** | Service complete in [services/pending.py](file:///apps/core/src/stash/services/pending.py) |
 | `stash import-ig-export` | Import Instagram backlog | **Pending CLI registration** | Service complete in [services/queue.py](file:///apps/core/src/stash/services/queue.py) |
-| `stash queue` | Inspect or pop triage queue | **Pending CLI registration** | Service complete in [services/queue.py](file:///apps/core/src/stash/services/queue.py) |
-| `stash serve` | FastAPI backend & static server | **Not implemented** | Part of Milestone B1 |
+| `stash serve` | FastAPI backend & static server | **Implemented** | [cli/serve.py](file:///apps/core/src/stash/cli/serve.py) |
+| `stash openapi` | Output OpenAPI JSON schema | **Implemented** | [cli/serve.py](file:///apps/core/src/stash/cli/serve.py) |
 | `stash install-skills` | Link skills to Claude/Antigravity | **Pending CLI registration** | Service complete in [services/skills.py](file:///apps/core/src/stash/services/skills.py) |
 
 ### D. Agent Skills Audit

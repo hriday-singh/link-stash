@@ -75,7 +75,7 @@ def extract_notion_content(html_or_text: str, url: str) -> NotionRecord:
         url=url,
         canonical_key=canonical_key,
         title=title,
-        text=clean_text[:5000],
+        text=clean_text[:16000],
         outbound_links=outbound,
         mentions=mentions,
     )

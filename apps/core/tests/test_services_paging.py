@@ -45,4 +45,4 @@ def test_fts_query_handles_special_operators_and_quotes() -> None:
     assert '"python"' in res
     assert '"FastAPI"' in res
     assert '"web-app"' in res
-    assert res.endswith('*')
+    assert res.endswith("*")

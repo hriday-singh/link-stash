@@ -38,7 +38,7 @@ def list_cards_rows(
 
     if since:
         conditions.append("c.added >= :since")
-        params["since"] since
+        params["since"] = since
 
     if until:
         conditions.append("c.added <= :until")
@@ -50,22 +50,34 @@ def list_cards_rows(
 
     if creator:
         conditions.append(
-            "c.key IN (SELECT l.to_key FROM links l JOIN sources s ON l.from_key = s.id WHERE s.creator = :creator)"
+            "c.key IN ("
+            "  SELECT l.from_key FROM links l JOIN sources s ON l.to_key = s.id "
+            "  WHERE s.creator = :creator "
+            "  UNION "
+            "  SELECT l.to_key FROM links l JOIN sources s ON l.from_key = s.id "
+            "  WHERE s.creator = :creator"
+            ")"
         )
         params["creator"] = creator
 
     if has_video is not None:
+        video_subquery = (
+            "  SELECT l.from_key FROM links l JOIN sources s ON l.to_key = s.id "
+            "  WHERE s.video IS NOT NULL "
+            "  UNION "
+            "  SELECT l.to_key FROM links l JOIN sources s ON l.from_key = s.id "
+            "  WHERE s.video IS NOT NULL"
+        )
         if has_video:
-            conditions.append(
-                "c.key IN (SELECT l.to_key FROM links l JOIN sources s ON l.from_key = s.id WHERE s.video IS NOT NULL)"
-            )
+            conditions.append(f"c.key IN ({video_subquery})")
         else:
-            conditions.append(
-                "c.key NOT IN (SELECT l.to_key FROM links l JOIN sources s ON l.from_key = s.id WHERE s.video IS NOT NULL)"
-            )
+            conditions.append(f"c.key NOT IN ({video_subquery})")
 
     where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
+    link_join = (
+        "(l.to_key = s.id AND l.from_key = c.key) OR (l.from_key = s.id AND l.to_key = c.key)"
+    )
     sql = f"""
     SELECT
         c.key,
@@ -77,9 +89,9 @@ def list_cards_rows(
         c.url,
         c.hash,
         c.path,
-        (SELECT s.platform FROM links l JOIN sources s ON l.from_key = s.id WHERE l.to_key = c.key LIMIT 1) as platform,
-        (SELECT s.thumb FROM links l JOIN sources s ON l.from_key = s.id WHERE l.to_key = c.key LIMIT 1) as thumb_path,
-        (SELECT s.id FROM links l JOIN sources s ON l.from_key = s.id WHERE l.to_key = c.key LIMIT 1) as source_id,
+        (SELECT s.platform FROM links l JOIN sources s ON {link_join} LIMIT 1) as platform,
+        (SELECT s.thumb FROM links l JOIN sources s ON {link_join} LIMIT 1) as thumb_path,
+        (SELECT s.id FROM links l JOIN sources s ON {link_join} LIMIT 1) as source_id,
         (SELECT group_concat(t.tag, ',') FROM tags t WHERE t.key = c.key) as tag_list
     FROM cards c
     {where_clause}
@@ -127,12 +139,12 @@ def get_card_links_rows(
 
     # 2. Mentioned by: sources mentioning this card
     sql_mentioned = """
-    SELECT l.from_key as source_id, l.type, s.platform, s.creator, s.url, s.stage
+    SELECT s.id as source_id, l.type, s.platform, s.creator, s.url, s.stage
     FROM links l
-    JOIN sources s ON l.from_key = s.id
-    WHERE l.to_key = ? AND l.type = 'source'
+    JOIN sources s ON (l.to_key = s.id AND l.from_key = ?) OR (l.from_key = s.id AND l.to_key = ?)
+    WHERE l.type = 'source'
     """
-    mentioned_by = conn.execute(sql_mentioned, (card_key,)).fetchall()
+    mentioned_by = conn.execute(sql_mentioned, (card_key, card_key)).fetchall()
 
     # 3. Outgoing: targets this card links to
     sql_outgoing = """
@@ -212,23 +224,23 @@ def get_cards_for_source(conn: sqlite3.Connection, source_id: str) -> list[sqlit
     sql = """
     SELECT c.slug, c.title, c.category, c.kind
     FROM links l
-    JOIN cards c ON l.to_key = c.key
-    WHERE l.from_key = ?
+    JOIN cards c ON (l.to_key = c.key AND l.from_key = ?) OR (l.from_key = c.key AND l.to_key = ?)
+    WHERE l.type = 'source'
     """
-    return conn.execute(sql, (source_id,)).fetchall()
+    return conn.execute(sql, (source_id, source_id)).fetchall()
 
 
 def search_cards_rows(conn: sqlite3.Connection, query: str, limit: int = 50) -> list[sqlite3.Row]:
     """Executes FTS5 search with custom \x02 / \x03 highlight markers."""
     sql = """
     SELECT
-        s.slug,
+        c.slug,
         c.title,
         c.category,
         c.kind,
-        snippet(search, 1, '\x02', '\x03', '...', 24) as snippet
+        snippet(search, 3, '\x02', '\x03', '...', 24) as snippet
     FROM search s
-    JOIN cards c ON s.slug = c.slug
+    JOIN cards c ON s.key = c.key
     WHERE search MATCH ?
     ORDER BY rank
     LIMIT ?
@@ -282,11 +294,16 @@ def get_graph_elements(
             node_params.append(category)
 
         where_nodes = f"WHERE {' AND '.join(node_conds)}" if node_conds else ""
-        nodes_sql = f"SELECT c.slug as id, c.title as label, c.category, c.kind FROM cards c {where_nodes}"
+        nodes_sql = (
+            f"SELECT c.slug as id, c.title as label, c.category, c.kind FROM cards c {where_nodes}"
+        )
         nodes = conn.execute(nodes_sql, node_params).fetchall()
         node_ids = {row["id"] for row in nodes}
 
-        edge_conds = ["l.from_key IN (SELECT key FROM cards)", "l.to_key IN (SELECT key FROM cards)"]
+        edge_conds = [
+            "l.from_key IN (SELECT key FROM cards)",
+            "l.to_key IN (SELECT key FROM cards)",
+        ]
         edge_params: list[Any] = []
         if edge_type:
             edge_conds.append("l.type = ?")
@@ -297,15 +314,19 @@ def get_graph_elements(
         FROM links l
         JOIN cards c1 ON l.from_key = c1.key
         JOIN cards c2 ON l.to_key = c2.key
-        WHERE {' AND '.join(edge_conds)}
+        WHERE {" AND ".join(edge_conds)}
         """
         raw_edges = conn.execute(edges_sql, edge_params).fetchall()
         # Filter edges where both endpoints are in nodes
-        filtered_edges = [e for e in raw_edges if e["source"] in node_ids and e["target"] in node_ids]
+        filtered_edges = [
+            e for e in raw_edges if e["source"] in node_ids and e["target"] in node_ids
+        ]
         return nodes, filtered_edges
 
     # Local graph BFS from center_slug
-    center_card = conn.execute("SELECT key, slug, title, category, kind FROM cards WHERE slug = ?", (center_slug,)).fetchone()
+    center_card = conn.execute(
+        "SELECT key, slug, title, category, kind FROM cards WHERE slug = ?", (center_slug,)
+    ).fetchone()
     if not center_card:
         return [], []
 
@@ -317,9 +338,11 @@ def get_graph_elements(
             break
         placeholders = ",".join("?" for _ in current_frontier)
         neighbors_sql = f"""
-        SELECT DISTINCT to_key as k FROM links WHERE from_key IN ({placeholders}) AND to_key IN (SELECT key FROM cards)
+        SELECT DISTINCT to_key as k FROM links
+        WHERE from_key IN ({placeholders}) AND to_key IN (SELECT key FROM cards)
         UNION
-        SELECT DISTINCT from_key as k FROM links WHERE to_key IN ({placeholders}) AND from_key IN (SELECT key FROM cards)
+        SELECT DISTINCT from_key as k FROM links
+        WHERE to_key IN ({placeholders}) AND from_key IN (SELECT key FROM cards)
         """
         params = list(current_frontier) + list(current_frontier)
         rows = conn.execute(neighbors_sql, params).fetchall()
@@ -328,10 +351,11 @@ def get_graph_elements(
         current_frontier = next_frontier
 
     keys_placeholders = ",".join("?" for _ in visited_keys)
-    nodes = conn.execute(
-        f"SELECT slug as id, title as label, category, kind FROM cards WHERE key IN ({keys_placeholders})",
-        list(visited_keys),
-    ).fetchall()
+    nodes_sql = (
+        "SELECT slug as id, title as label, category, kind FROM cards "
+        f"WHERE key IN ({keys_placeholders})"
+    )
+    nodes = conn.execute(nodes_sql, list(visited_keys)).fetchall()
 
     edges_sql = f"""
     SELECT c1.slug as source, c2.slug as target, l.type

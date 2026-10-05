@@ -76,7 +76,7 @@ def extract_pdf_data(data: bytes, source_identifier: str) -> PdfRecord:
         canonical_key=canonical_key,
         title=title,
         page_count=page_count,
-        text=full_text[:8000],
+        text=full_text[:24000],
         outbound_links=outbound,
         mentions=mentions,
     )
