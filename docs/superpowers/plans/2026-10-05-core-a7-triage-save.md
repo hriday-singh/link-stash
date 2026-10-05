@@ -17,7 +17,7 @@
 2. **RapidFuzz overlap scoring:** Compares extracted mention names and tags against library cards and inventory items; score >= 75 flags candidate overlap.
 3. **Atomic card saving:** Card file written atomically into `library/items/<category>/<slug>.md` and immediately indexed into SQLite.
 4. **Queue state integrity:** `stash import-ig-export` parses Instagram's `saved_posts.json` without failing on malformed entries and filters out already-processed keys.
-5. **Pending lifecycle:** Comment-for-link items added with status "open"; resolving with DM'd link sets status "ready" and records URL.
+5. **Pending lifecycle:** Comment-for-link items added with status "open" only when `cta.keyword` is set and the analyzed record has zero concrete mentions (no URL, no resolvable name); a CTA post whose content names its repos/tools is triaged normally. Resolving with DM'd link sets status "ready" and records URL.
 
 ---
 

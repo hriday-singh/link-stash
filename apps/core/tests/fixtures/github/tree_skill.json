@@ -1,0 +1,25 @@
+{
+  "sha": "123456",
+  "url": "https://api.github.com/repos/owner/repo/git/trees/HEAD",
+  "tree": [
+    {
+      "path": "SKILL.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "abcdef"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ghijkl"
+    },
+    {
+      "path": "scripts",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "mnopqr"
+    }
+  ],
+  "truncated": false
+}

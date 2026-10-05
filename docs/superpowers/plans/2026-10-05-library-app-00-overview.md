@@ -1,6 +1,7 @@
 # Link Stash Library App: Plan Overview (B0–B6)
 
 **Spec:** [docs/library-app-spec.md](../../library-app-spec.md) (part 2). Core spec: [docs/link-stash-spec.md](../../link-stash-spec.md) (part 1).
+**Progress tracker:** [docs/progress-tracker.md](../../progress-tracker.md).
 
 Seven plans, one per milestone. Each one ships working, testable software on its own and starts only when the one before it is approved.
 
@@ -16,7 +17,8 @@ Seven plans, one per milestone. Each one ships working, testable software on its
 
 ## Precondition: core milestones A1–A7
 
-No code exists yet. B0 can start any time (frontend only). **B1 and later need A4 and A7 done.** B1 imports the core through the contract below. When writing the A4/A7 plans, make them produce exactly these names; if they ship different names, fix the imports in B1 only.
+- **B0 Visual Design:** Completed in `apps/web` (scaffold, tokens, theme, components, static mock).
+- **B1 and later need A4 and A7 done.** B1 imports the core through the contract below. When executing A4/A7, they produce exactly these names.
 
 ### Core contract consumed by B1 (must exist after A7)
 

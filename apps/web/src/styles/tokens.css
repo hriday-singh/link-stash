@@ -47,6 +47,10 @@
   --cat-extra-6: oklch(0.623 0.214 259.815);
   --cat-extra-7: oklch(0.795 0.184 86.047);
   --cat-extra-8: oklch(0.553 0.013 58.071);
+  /* surface layering */
+  --surface-sunken: oklch(0.97 0.001 286.3);
+  --surface-elevated: oklch(1 0 0);
+  --sidebar-bg: oklch(0.978 0.002 286.3);
   /* motion */
   --duration-fast: 120ms;
   --duration-base: 200ms;
@@ -71,11 +75,17 @@
   --destructive-foreground: oklch(0.141 0.005 285.823);
   --success: oklch(0.792 0.209 151.711);
   --warning: oklch(0.828 0.189 84.429);
+  /* surface layering */
+  --surface-sunken: oklch(0.115 0.005 285.8);
+  --surface-elevated: oklch(0.23 0.006 285.88);
+  --sidebar-bg: oklch(0.122 0.005 285.8);
 }
 
 @theme {
   --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
   --text-xs: 0.75rem;
   --text-xs--line-height: 1rem;
   --text-sm: 0.875rem;
@@ -99,8 +109,10 @@
   --radius-xl: 1rem;
   --shadow-sm: 0 1px 2px 0 oklch(0 0 0 / 0.05);
   --shadow-md: 0 4px 12px -2px oklch(0 0 0 / 0.08), 0 2px 4px -2px oklch(0 0 0 / 0.04);
+  --shadow-pill: 0 1px 3px 0 oklch(0 0 0 / 0.08), 0 1px 2px -1px oklch(0 0 0 / 0.04);
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15);
 }
 
 @theme inline {
@@ -125,6 +137,9 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-sidebar-bg: var(--sidebar-bg);
 }
 
 @layer base {

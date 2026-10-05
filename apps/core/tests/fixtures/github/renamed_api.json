@@ -1,0 +1,21 @@
+{
+  "name": "newrepo",
+  "full_name": "neworg/newrepo",
+  "owner": {
+    "login": "neworg"
+  },
+  "html_url": "https://github.com/neworg/newrepo",
+  "description": "Renamed repository from oldorg/oldrepo",
+  "stargazers_count": 890,
+  "language": "TypeScript",
+  "archived": false,
+  "license": {
+    "key": "apache-2.0",
+    "name": "Apache License 2.0",
+    "spdx_id": "Apache-2.0"
+  },
+  "topics": [
+    "agents"
+  ],
+  "pushed_at": "2026-10-02T10:00:00Z"
+}

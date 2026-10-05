@@ -15,3 +15,11 @@ export function isCategoryToken(token: string): boolean {
 export function categoryColorVar(token: string): string {
   return `var(--${isCategoryToken(token) ? token : "cat-extra-8"})`;
 }
+
+/** Lowercase slug; null when valid, else the message to show. */
+export function categoryNameError(name: string, existing: readonly string[]): string | null {
+  if (!name) return "Name is required.";
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(name)) return "Use lowercase letters, numbers and dashes.";
+  if (existing.includes(name)) return "That category already exists.";
+  return null;
+}

@@ -27,6 +27,13 @@ class Invalid(StashError):
         super().__init__("invalid", message, details)
 
 
+class Blocked(StashError):
+    """Source exists but cannot be fetched (removed, private, login wall)."""
+
+    def __init__(self, message: str, details: dict[str, object] | None = None):
+        super().__init__("blocked", message, details)
+
+
 class LockTimeout(StashError):
     def __init__(self, message: str, details: dict[str, object] | None = None):
         super().__init__("lock_timeout", message, details)

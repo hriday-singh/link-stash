@@ -1,0 +1,25 @@
+{
+  "sha": "789012",
+  "url": "https://api.github.com/repos/owner/mcp-server/git/trees/HEAD",
+  "tree": [
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "abcdef"
+    },
+    {
+      "path": "server.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ghijkl"
+    },
+    {
+      "path": "mcp.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "mnopqr"
+    }
+  ],
+  "truncated": false
+}

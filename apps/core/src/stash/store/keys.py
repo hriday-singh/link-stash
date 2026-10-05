@@ -2,6 +2,7 @@
 
 import re
 from pathlib import Path
+from typing import Literal
 
 from stash.errors import Invalid
 
@@ -11,13 +12,12 @@ _IG = re.compile(
 )
 
 
-def parse_ig_url(url: str) -> tuple[str, str]:
+def parse_ig_url(url: str) -> tuple[Literal["reel", "p"], str]:
     """Return (kind, shortcode); kind is "reel" or "p". `/reels/` and `/tv/` collapse to reel."""
     m = _IG.match(url.strip())
     if not m:
         raise Invalid("not an Instagram post or reel URL", {"url": url})
-    kind = "p" if m.group(1).lower() == "p" else "reel"
-    return kind, m.group(2)
+    return ("p" if m.group(1).lower() == "p" else "reel"), m.group(2)
 
 
 def ig_key(url: str) -> str:

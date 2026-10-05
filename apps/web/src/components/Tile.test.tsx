@@ -14,7 +14,7 @@ const base: TileData = {
 
 it("shows a generated tile when there is no thumbnail", () => {
   render(<Tile data={base} />);
-  expect(screen.getByTestId("generated-tile")).toHaveTextContent("agent-kit");
+  expect(screen.getByTestId("generated-tile")).toHaveTextContent("repo");
   expect(screen.getByTestId("generated-tile")).toHaveTextContent("owner");
   expect(screen.queryByRole("img")).not.toBeInTheDocument();
 });

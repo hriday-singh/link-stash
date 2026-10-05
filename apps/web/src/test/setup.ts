@@ -18,3 +18,6 @@ if (!window.matchMedia) {
       dispatchEvent: () => false,
     }) as MediaQueryList;
 }
+
+// jsdom has no scrollTo; navigation calls it.
+window.scrollTo = () => {};

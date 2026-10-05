@@ -2,7 +2,7 @@
 
 Oct 5, 2026 · Hriday Singh Dube
 
-Part 2 of 2. Part 1, the pipeline that fills the library, is in [link-stash-spec.md](link-stash-spec.md). This app reads and edits what part 1 writes, through the same Python core.
+Part 2 of 2. Part 1, the pipeline that fills the library, is in [link-stash-spec.md](link-stash-spec.md). This app reads and edits what part 1 writes, through the same Python core. Progress tracking across all milestones is in [progress-tracker.md](progress-tracker.md).
 
 ## Overview
 

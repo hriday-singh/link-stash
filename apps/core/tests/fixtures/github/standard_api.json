@@ -1,0 +1,24 @@
+{
+  "name": "scrapling",
+  "full_name": "D4Vinci/Scrapling",
+  "owner": {
+    "login": "D4Vinci"
+  },
+  "html_url": "https://github.com/D4Vinci/Scrapling",
+  "description": "Undetectable, powerful, and easy-to-use web scraping library",
+  "stargazers_count": 5420,
+  "language": "Python",
+  "archived": false,
+  "license": {
+    "key": "mit",
+    "name": "MIT License",
+    "spdx_id": "MIT"
+  },
+  "topics": [
+    "scraping",
+    "stealth",
+    "crawler",
+    "python"
+  ],
+  "pushed_at": "2026-10-01T12:00:00Z"
+}

@@ -1,6 +1,7 @@
 # Link Stash Core Pipeline: Plan Overview (A1–A7)
 
 **Spec:** [docs/link-stash-spec.md](../../link-stash-spec.md) (part 1). Web app spec: [docs/library-app-spec.md](../../library-app-spec.md) (part 2).
+**Progress tracker:** [docs/progress-tracker.md](../../progress-tracker.md).
 **Web app overview:** [2026-10-05-library-app-00-overview.md](2026-10-05-library-app-00-overview.md) (B0–B6).
 
 Seven core plans, one per milestone. Each milestone ships working, independently testable software.
@@ -17,9 +18,12 @@ Seven core plans, one per milestone. Each milestone ships working, independently
 
 ---
 
-## Progress & Status (Oct 5, 2026)
+## Progress & Status (Oct 6, 2026)
 
 - **A1 Scaffold:** Completed and committed in `1f40ee7`.
-- **A2 Instagram Extractor:** Active in background process.
-- **A3–A7 Plans:** Fully drafted, reviewed against `link-stash-spec.md`, and ready for execution.
-- **Precondition for B1:** Completing A4 (Store & Index) and A7 (Check & Save) delivers the core contract consumed by the FastAPI web server (`stash serve`).
+- **A2 Instagram Extractor:** Key parsing, embed parsing, media fetcher, and extract service implemented with recorded fixtures and tests.
+- **A3 Reel Engines:** Completed and tested in `ae894ed` (Models, schemas, prompt, agy headless, gemini_api, frames fallback, service, CLI subcommands).
+- **A4 Store and Index:** Completed and verified (Models, byte-identical card serialization, reentrant file write lock, SQLite index with FTS5, file watcher, `stash reindex` CLI; 115 core tests passing, ruff & pyright clean).
+- **A5–A7 Plans:** Fully drafted and reviewed against `link-stash-spec.md`.
+- **Precondition for B1:** Completing A4 (Store & Index) and A7 (Check & Save) delivers the core contract consumed by the FastAPI web server (`stash serve`). A4 is now complete.
+- **Web App (B0):** Milestone B0 Visual Design completed in `apps/web` (scaffold, tokens, theme, components, mock feed & card; 38 tests passing, clean typecheck/lint).

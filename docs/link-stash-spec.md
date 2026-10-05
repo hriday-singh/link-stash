@@ -2,7 +2,7 @@
 
 Oct 5, 2026 · Hriday Singh Dube
 
-Part 1 of 2. This file covers the pipeline: CLI, skills, extractors, reel engines, inventory, store and dedup. Part 2, the local web app for browsing and editing the library, is in [library-app-spec.md](library-app-spec.md).
+Part 1 of 2. This file covers the pipeline: CLI, skills, extractors, reel engines, inventory, store and dedup. Part 2, the local web app for browsing and editing the library, is in [library-app-spec.md](library-app-spec.md). Progress tracking across all milestones is in [progress-tracker.md](progress-tracker.md).
 
 ## Overview
 
@@ -164,7 +164,7 @@ Every link goes through `stash extract <url>`, which returns one JSON record per
 
 **Follow-through (one level).** Every record lists the links and names it mentions. GitHub and HF links are extracted immediately. A bare name such as "a repo called X" is resolved with GitHub search and marked low confidence, which triggers the "unclear" question.
 
-**Comment-for-link detection.** A caption or transcript matching *comment / type / drop + a quoted word + DM / link / send* sets `cta.keyword`. The item goes to the pending queue with the instruction "Comment `<KEYWORD>` on <reel>".
+**Comment-for-link detection.** A caption or transcript matching *comment / type / drop / reply + a quoted or ALL-CAPS word* sets `cta.keyword`. That is a hint, not a route: most CTA posts (7 of 12 in the Oct 6 test) also name the repos or tools in the caption, video, on-screen text or carousel slides. Commenting is the last resort. The item goes to the pending queue ("Comment `<KEYWORD>` on <reel>") only when `cta.keyword` is set **and** analysis finds no concrete mention (no URL, no resolvable name).
 
 **Resumable stages.** Each source records its stage in `source.md` frontmatter: `fetched` → `analyzed` → `triaged` → `saved | rejected | pending`. A batch that dies part-way resumes from the last stage per source. Download and engine runs never repeat for a shortcode that already has them. Failures are appended to `logs/failed.jsonl` and retried with `stash extract --retry-failed`.
 
@@ -451,7 +451,7 @@ Instagram changes are the biggest risk: instaloader broke in June 2026 and has b
 | Private/gated content | 401/403, HF `gated: true`, private Notion | Card saved with `gated: true`, or pending `blocked:private` |
 | Bare name, no URL | Mention with `url: null` | GitHub/HF search, top match marked low confidence, asked in the table |
 | Inferred URL | `url_source: inferred` | Verified against GitHub/HF API; dropped to name-only if it 404s |
-| Comment-for-link reel | `cta.keyword` set | Pending `cta`, instruction shown, resolved via `/stash-pending` or the web app |
+| Comment-for-link reel | `cta.keyword` set and analysis found zero concrete mentions | Pending `cta`, instruction shown, resolved via `/stash-pending` or the web app. With mentions found, triage proceeds normally and the keyword stays on the source as a note |
 | GitHub API rate limit | 403 with `x-ratelimit-remaining: 0` | Switch to the scrape backend for the rest of the batch |
 | GitHub page layout changed | Scrape backend finds no star counter / description | Switch to the API backend if a token exists; else save with facts missing and log it |
 | Session dies mid-batch | Sources stuck before `triaged` | Next `/stash` resumes from each source's stage |

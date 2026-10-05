@@ -11,8 +11,8 @@ from stash.errors import Invalid
 
 class Config(BaseModel):
     home: Path
-    port: int = Field(8765, ge=1, le=65535)
-    category_colors: dict[str, str] = {}
+    port: int = Field(default=8765, ge=1, le=65535)
+    category_colors: dict[str, str] = Field(default_factory=dict)
     web_dist: Path | None = None
 
 

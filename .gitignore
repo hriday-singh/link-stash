@@ -105,3 +105,6 @@ Desktop.ini
 *.sln
 *.sw?
 *~
+
+# Playwright MCP artifacts
+.playwright-mcp/

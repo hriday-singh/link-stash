@@ -16,7 +16,7 @@
 2. Killing the run mid-batch, then re-running, never re-downloads a finished source.
 3. Expired video URL (403, `oe` in the past) re-fetches the embed page once, then fails cleanly.
 4. Partial downloads land in `cache/` and are renamed into place only when complete.
-5. Comment-for-link caption sets `cta.keyword`.
+5. Comment-for-link caption sets `cta.keyword` as a hint only; A2 never routes to pending (that is A7, and only when analysis finds no concrete mention).
 
 ---
 
