@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReelRecord",
+  "type": "object",
+  "properties": {
+    "summary": {
+      "type": "string",
+      "description": "One paragraph, English summary of the reel"
+    },
+    "spoken_language": {
+      "type": ["string", "null"],
+      "description": "Language code (en, hi, etc.) or null"
+    },
+    "transcript": {
+      "type": ["string", "null"],
+      "description": "Spoken transcript in original language, or null"
+    },
+    "transcript_source": {
+      "type": "string",
+      "enum": ["audio", "burned_subtitles", "none"]
+    },
+    "on_screen_text": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Text visible on screen that carries factual information"
+    },
+    "mentions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["repo", "model", "skill", "plugin", "mcp", "tool", "ui_ref", "practice", "link"]
+          },
+          "name": { "type": "string" },
+          "url": { "type": ["string", "null"] },
+          "url_source": {
+            "type": ["string", "null"],
+            "enum": ["on_screen", "spoken", "caption", "inferred", null]
+          },
+          "evidence": {
+            "type": "string",
+            "enum": ["spoken", "on_screen", "caption"]
+          },
+          "at": {
+            "type": ["string", "null"],
+            "description": "Timestamp MM:SS or null"
+          }
+        },
+        "required": ["kind", "name", "evidence"]
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "description": "Map of mention name to list of features or settings shown"
+    },
+    "takeaways": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Practices, stats, benchmarks, comparisons; 1-3 lines each"
+    },
+    "cta": {
+      "type": ["object", "null"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["comment", "link_in_bio", "url", "none"]
+        },
+        "keyword": { "type": ["string", "null"] },
+        "what_you_get": { "type": ["string", "null"] }
+      },
+      "required": ["type"]
+    },
+    "engine": {
+      "type": "string",
+      "enum": ["agy-host", "agy-headless", "gemini-api", "frames"]
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    }
+  },
+  "required": [
+    "summary",
+    "transcript_source",
+    "on_screen_text",
+    "mentions",
+    "features",
+    "takeaways",
+    "engine",
+    "confidence"
+  ]
+}

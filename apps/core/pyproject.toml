@@ -37,6 +37,11 @@ select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
 [tool.pyright]
 typeCheckingMode = "strict"
 include = ["src", "tests"]
+venvPath = "."
+venv = ".venv"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "live: marks tests as live integration tests (deselect with '-m \"not live\"')",
+]
