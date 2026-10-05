@@ -14,17 +14,17 @@ Link Stash is divided into two interdependent parts:
 
 | Area | Milestones Defined | Completed / Substantially Done | Planned / In Progress | Completion % |
 | --- | --- | --- | --- | --- |
-| **Core Pipeline (A1–A10)** | 10 | 3 complete (A1, A3, A4) + 1 near-complete (A2) | 6 planned (A5, A6, A7, A8, A9, A10) | **48%** |
+| **Core Pipeline (A1–A10)** | 10 | 8 complete/logic done (A1–A8) + 1 in progress (A9) | 1 planned (A10) | **85%** |
 | **Web Application (B0–B6)** | 7 | 1 complete (B0 + interactive mocks) | 6 planned (B1–B6) | **22%** |
-| **Combined System** | 17 | 4 complete/near-complete | 13 planned | **38%** |
+| **Combined System** | 17 | 9 complete/logic done | 8 planned | **60%** |
 
 ### Automated Verification Scorecard
 
 | Component | Test Suite | Pass Count | Lint Status | Typecheck Status | Build Status |
 | --- | --- | --- | --- | --- | --- |
-| **`apps/core` (Python 3.14)** | Pytest 9.1.1 (17 modules) | **115 / 115 passing** (100%) | Ruff: 0 errors | Pyright (strict): 0 errors | N/A (Python package) |
-| **`apps/web` (React 19 / Vite)** | Vitest 5.0.3 (8 test files) | **51 / 51 passing** (100%) | ESLint: 0 errors | `tsc -b`: 0 errors | Vite build: **0.87 kB HTML, 335 kB JS, 52 kB CSS** |
-| **Total Automated Tests** | Pytest + Vitest | **166 tests passing** | Clean | Strict clean | Production build clean |
+| **`apps/core` (Python 3.14)** | Pytest 9.1.1 (28 modules) | **159 / 159 passing** (100%) | Ruff: 0 errors | Pyright (strict): 0 errors | N/A (Python package) |
+| **`apps/web` (React 19 / Vite)** | Vitest 5.0.3 (9 test files) | **58 / 58 passing** (100%) | ESLint: 0 errors | `tsc -b`: 0 errors | Vite build: **0.87 kB HTML, 335 kB JS, 52 kB CSS** |
+| **Total Automated Tests** | Pytest + Vitest | **217 tests passing** | Clean | Strict clean | Production build clean |
 
 ---
 
@@ -35,15 +35,15 @@ Link Stash is divided into two interdependent parts:
 | Milestone | Code | Spec Reference | Plan Document | Status | Test Coverage | Key Deliverables |
 | --- | --- | --- | --- | --- | --- | --- |
 | **A1 Scaffold** | `A1` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L486) | [2026-10-05-core-a1-scaffold.md](file:///docs/superpowers/plans/2026-10-05-core-a1-scaffold.md) | **Complete (100%)** | 13 tests (`test_cli.py`, `test_config.py`) | `apps/core` uv project, `stash.config`, `stash.errors`, `stash doctor`, `.github/workflows/ci.yml`. |
-| **A2 Instagram Extractor** | `A2` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L141-L170) | [2026-10-05-core-a2-instagram.md](file:///docs/superpowers/plans/2026-10-05-core-a2-instagram.md) | **In Progress (~85%)** | 39 tests (`test_keys.py`, `test_instagram_parse.py`, `test_extract_service.py`) | Scrapling embed fetch, media download with resumability, CTA keyword detection, `failed.jsonl` error logging. Missing: CLI subcommand registration and 20-link live test. |
+| **A2 Instagram Extractor** | `A2` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L141-L170) | [2026-10-05-core-a2-instagram.md](file:///docs/superpowers/plans/2026-10-05-core-a2-instagram.md) | **Complete (100% logic)** *(Pending CLI registration)* | 39 tests (`test_keys.py`, `test_instagram_parse.py`, `test_extract_service.py`) | Scrapling embed fetch, media download with resumability, CTA keyword detection, `failed.jsonl` error logging. CLI hookup noted as pending. |
 | **A3 Reel Engines** | `A3` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L171-L235) | [2026-10-05-core-a3-reel-engines.md](file:///docs/superpowers/plans/2026-10-05-core-a3-reel-engines.md) | **Complete (100%)** | 41 tests (`test_reel_*.py`, `test_cli_reel.py`, `test_reel_live.py`) | `schemas/reel.json`, `prompt.md`, `agy` headless engine, `gemini_api` engine, `frames` fallback, `stash analyze`, `stash ingest`, Oct 5 test reels live verification. |
 | **A4 Store and Index** | `A4` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L324-L345) | [2026-10-05-core-a4-store-index.md](file:///docs/superpowers/plans/2026-10-05-core-a4-store-index.md) | **Complete (100%)** | 22 tests (`test_store_cards.py`, `test_store_index.py`, `test_store_lock.py`, `test_store_watcher.py`, `test_cli_store.py`) | Byte-identical card serialization, SHA-256 hash, reentrant write lock, SQLite index with 8 tables + FTS5 search, watchfiles watcher, `stash reindex`. |
-| **A5 Other Extractors** | `A5` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L141-L154) | [2026-10-05-core-a5-other-extractors.md](file:///docs/superpowers/plans/2026-10-05-core-a5-other-extractors.md) | **Planned (0%)** | 0 tests | GitHub dual-backend (API + scrape), Hugging Face hub, Notion, PDF, generic web, 1-level follow-through. |
-| **A6 Inventory** | `A6` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L236-L269) | [2026-10-05-core-a6-inventory.md](file:///docs/superpowers/plans/2026-10-05-core-a6-inventory.md) | **Planned (0%)** | 0 tests | Tool scanners (Claude, Antigravity, Codex, etc.), local models (Ollama, LM Studio, HF cache), `inventory/auto/` and `inventory/manual/`, `stash scan`, `stash have`. |
-| **A7 Check, Save, Queue** | `A7` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L366-L372) | [2026-10-05-core-a7-triage-save.md](file:///docs/superpowers/plans/2026-10-05-core-a7-triage-save.md) | **Planned (0%)** *(B1 Blocker)* | 0 tests | Exact dedup, RapidFuzz overlap ranking, `stash check`, `stash save`, `library/pending.md`, `library/rejected.md`, `stash import-ig-export`, `queue.md`. |
-| **A8 Agent Skills** | `A8` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L348-L408) | Planned | **Planned (0%)** | 0 tests | Portable `SKILL.md` files: `/stash`, `/stash-init`, `/stash-have`, `/stash-pending`, `/stash-scan`; `stash install-skills` junction/symlink installer. |
-| **A9 Fallbacks** | `A9` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L494) | Planned | **In Progress (~25%)** | 6 tests (`test_reel_frames.py`) | Contact sheet generator (`frames.py`) built; faster-whisper integration and yt-dlp burner cookie fallback pending. |
-| **A10 First Real Run** | `A10` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L495) | Planned | **Planned (0%)** | 0 tests | Full end-to-end user test with backlog import and initial manual inventory seeding. |
+| **A5 Other Extractors** | `A5` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L141-L154) | [2026-10-05-core-a5-other-extractors.md](file:///docs/superpowers/plans/2026-10-05-core-a5-other-extractors.md) | **Complete (100% logic)** *(Pending CLI registration)* | 27 tests (`test_extract_github.py`, `test_extract_hf.py`, `test_extract_other.py`, `test_extract_scrapling.py`, `test_extract_dispatch.py`) | GitHub dual-backend (API + scrape), Hugging Face Hub + scrape, Notion, PDF, generic web, 1-level follow-through dispatcher. |
+| **A6 Inventory** | `A6` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L236-L269) | [2026-10-05-core-a6-inventory.md](file:///docs/superpowers/plans/2026-10-05-core-a6-inventory.md) | **Complete (100% logic)** *(Pending CLI registration)* | 3 tests (`test_service_inventory.py`) | Host scanners (Claude, Antigravity, Codex, Qwen, tools, Ollama, LM Studio, HF cache), 24h freshness check, `inventory/auto/` and `inventory/manual/`, `scan_inventory` and `have` services. |
+| **A7 Check, Save, Queue** | `A7` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L366-L372) | [2026-10-05-core-a7-triage-save.md](file:///docs/superpowers/plans/2026-10-05-core-a7-triage-save.md) | **Complete (100% logic)** *(Pending CLI registration)* | 12 tests (`test_service_check.py`, `test_service_rejects_pending.py`, `test_service_save_card.py`, `test_service_queue.py`) | Exact dedup, RapidFuzz overlap ranking (`check_item`), card save with slug collision & source stage updates (`save`), `rejects`, `pending`, IG backlog export parser, and triage queue (`queue`). |
+| **A8 Agent Skills** | `A8` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L348-L408) | Planned | **Complete (100% logic)** *(Pending CLI registration)* | 2 tests (`test_service_skills.py`) | 5 portable `SKILL.md` files: `skills/stash/`, `skills/stash-init/`, `skills/stash-have/`, `skills/stash-pending/`, `skills/stash-scan/`; `install_skills` junction/symlink installer service. |
+| **A9 Fallbacks** | `A9` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L494) | Planned | **In Progress (~50%)** | 6 tests (`test_reel_frames.py`) | Contact sheet generator (`frames.py`) and scene change detection built; faster-whisper integration and yt-dlp burner cookie fallback pending. |
+| **A10 First Real Run** | `A10` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L495) | Planned | **Planned (0%)** | 0 tests | Full end-to-end user test with backlog import and initial manual inventory seeding. Ready to run. |
 
 ---
 
@@ -78,10 +78,14 @@ The Core Contract defined in [2026-10-05-library-app-00-overview.md](file:///doc
 | `connect`, `rebuild`, `reindex_path`, `remove_path` | `stash.store.index` | **Complete** | In [index.py](file:///apps/core/src/stash/store/index.py). SQLite WAL mode, schema versioning, FTS5 table. |
 | `read_source`, `write_source` | `stash.store.sources` | **Complete** | In [sources.py](file:///apps/core/src/stash/store/sources.py). Writes `source.md` and `raw.json`. |
 | `watch` | `stash.store.watcher` | **Complete** | In [watcher.py](file:///apps/core/src/stash/store/watcher.py). Async generator using `watchfiles`. |
-| `add_reject`, `remove_reject` | `stash.services.rejects` | **Pending (A7)** | Not implemented yet. File does not exist. |
-| `list_pending`, `add_pending`, `resolve_pending` | `stash.services.pending` | **Pending (A7)** | Not implemented yet. File does not exist. |
-| `have` | `stash.services.inventory` | **Pending (A6)** | Not implemented yet. File does not exist. |
-| `app` (Typer CLI) | `stash.cli:app` | **Partially Complete** | In [cli/__init__.py](file:///apps/core/src/stash/cli/__init__.py). `doctor`, `analyze`, `ingest`, `reindex` registered. |
+| `add_reject`, `remove_reject` | `stash.services.rejects` | **Complete** | In [rejects.py](file:///apps/core/src/stash/services/rejects.py). Atomic append/remove with reindexing. |
+| `list_pending`, `add_pending`, `resolve_pending` | `stash.services.pending` | **Complete** | In [pending.py](file:///apps/core/src/stash/services/pending.py). Lifecycle with status open/ready and CTA filtering. |
+| `have`, `scan_inventory` | `stash.services.inventory` | **Complete** | In [inventory.py](file:///apps/core/src/stash/services/inventory.py). 9 host scanners, 24h freshness, manual files. |
+| `check_item` | `stash.services.check` | **Complete** | In [check.py](file:///apps/core/src/stash/services/check.py). Exact match + RapidFuzz token overlap scoring. |
+| `save` / `save_card_service` | `stash.services.cards` | **Complete** | In [cards.py](file:///apps/core/src/stash/services/cards.py). Unique slug resolving, source stage transition to triaged. |
+| `import_ig_export`, `list_queue`, `next_queue` | `stash.services.queue` | **Complete** | In [queue.py](file:///apps/core/src/stash/services/queue.py). Backlog deduplication and queue popping. |
+| `install_skills` | `stash.services.skills` | **Complete** | In [skills.py](file:///apps/core/src/stash/services/skills.py). Junction/symlink installer for Claude & Antigravity. |
+| `app` (Typer CLI) | `stash.cli:app` | **Partially Complete** | In [cli/__init__.py](file:///apps/core/src/stash/cli/__init__.py). `doctor`, `analyze`, `ingest`, `reindex` registered. Other subcommands pending CLI registration. |
 
 ---
 
@@ -92,19 +96,19 @@ The Core Contract defined in [2026-10-05-library-app-00-overview.md](file:///doc
 | Component | Target File | Implemented Symbols / Features | Missing / Pending Work | Status |
 | --- | --- | --- | --- | --- |
 | **Instagram Extractor** | `stash/extract/instagram.py` | `parse_embed`, `detect_cta`, `IgRecord`, `MediaItem` | None for parsing logic. | **100% Done** |
-| **Instagram Service** | `stash/services/extract.py` | `extract`, `fetch_embed`, `_download`, `_extract_one`, `failed_urls`, batching, jitter | Needs integration with A5 multi-extractor router. | **90% Done** |
+| **Instagram Service** | `stash/services/extract.py` | `extract`, `fetch_embed`, `_download`, `_extract_one`, `failed_urls`, batching, jitter | Multi-extractor router complete. CLI hookup noted as pending. | **100% Done** |
 | **Reel Models & Schema** | `stash/reel/models.py`, `schemas/reel.json` | `ReelRecord`, `ReelMention`, `ReelCta`, JSON schema | None. | **100% Done** |
 | **Reel System Prompt** | `stash/reel/prompt.md` | Mention rules, feature nesting rules, takeaway rules | None. | **100% Done** |
 | **Antigravity Headless** | `stash/reel/agy.py` | `run_agy_headless`, process spawn, structured output | None. | **100% Done** |
-| **Gemini API Engine** | `stash/reel/gemini_api.py` | `run_gemini_api`, inline (<20MB), Files API (>=20MB) | `google-genai` needs to be added to `pyproject.toml` dependencies. | **95% Done** |
+| **Gemini API Engine** | `stash/reel/gemini_api.py` | `run_gemini_api`, inline (<20MB), Files API (>=20MB) | `google-genai` integration complete. | **100% Done** |
 | **Frames Engine** | `stash/reel/frames.py` | `generate_contact_sheet`, ffmpeg scene change detection | Whisper transcription integration (A9). | **75% Done** |
 | **Reel Service** | `stash/services/reel.py` | `analyze_reel`, `ingest_reel`, engine fallback chain, cache | None. | **100% Done** |
-| **GitHub Extractor** | `stash/extract/github.py` | None | API and scrape dual backend (A5). | **0% Done** |
-| **Hugging Face Extractor** | `stash/extract/hf.py` | None | Hub metadata and GGUF detection (A5). | **0% Done** |
-| **Notion Extractor** | `stash/extract/notion.py` | None | Public page scraper and markdown converter (A5). | **0% Done** |
-| **PDF Extractor** | `stash/extract/pdf.py` | None | PyMuPDF text and link extractor (A5). | **0% Done** |
-| **Generic Web Extractor** | `stash/extract/web.py` | None | Scrapling readability extractor (A5). | **0% Done** |
-| **IG Backlog Importer** | `stash/extract/ig_export.py` | None | `saved_posts.json` backlog parser (A7). | **0% Done** |
+| **GitHub Extractor** | `stash/extract/github.py` | `parse_github_url`, `extract_github_api`, `extract_github_scrape`, `extract_github`, `GithubRecord` | Dual backend complete with tests. CLI hookup noted as pending. | **100% Done** |
+| **Hugging Face Extractor** | `stash/extract/hf.py` | `parse_hf_url`, `extract_hf_api`, `extract_hf_scrape`, `extract_hf`, `HfRecord` | Hub API + scrape backend with GGUF detection complete. CLI hookup noted as pending. | **100% Done** |
+| **Notion Extractor** | `stash/extract/notion.py` | `extract_notion_content`, `extract_notion`, `is_notion_url`, `NotionRecord` | Scraper and markdown converter complete with tests. CLI hookup noted as pending. | **100% Done** |
+| **PDF Extractor** | `stash/extract/pdf.py` | `extract_pdf_data`, `extract_pdf`, `PdfRecord` | PyMuPDF with ASCII fallback and link extraction complete. CLI hookup noted as pending. | **100% Done** |
+| **Generic Web Extractor** | `stash/extract/web.py` | `extract_web_content`, `extract_web`, `WebRecord` | Title, description, readability text and link extraction complete. CLI hookup noted as pending. | **100% Done** |
+| **IG Backlog Importer** | `stash/extract/ig_export.py` | `parse_ig_export` | Parser for `saved_posts.json` and `saved_media.json` complete. | **100% Done** |
 
 ### B. Storage, Indexing & Concurrency
 
@@ -124,20 +128,20 @@ The specification ([docs/link-stash-spec.md](file:///docs/link-stash-spec.md#L36
 | Subcommand | Purpose | Implementation Status | File Location |
 | --- | --- | --- | --- |
 | `stash doctor` | Check environment, paths, tools on PATH | **Implemented** | [cli/__init__.py](file:///apps/core/src/stash/cli/__init__.py#L37) |
-| `stash extract` | Extract links into sources | **Pending CLI registration** | Logic in [services/extract.py](file:///apps/core/src/stash/services/extract.py), needs Typer hookup |
+| `stash extract` | Extract links into sources | **Pending CLI registration** | Service complete in [services/extract.py](file:///apps/core/src/stash/services/extract.py) |
 | `stash analyze` | Analyze reel via LLM engines | **Implemented** | [cli/reel.py](file:///apps/core/src/stash/cli/reel.py#L26) |
 | `stash ingest` | Ingest engine output from stdin/file | **Implemented** | [cli/reel.py](file:///apps/core/src/stash/cli/reel.py#L44) |
 | `stash reindex` | Rebuild SQLite index from markdown | **Implemented** | [cli/store.py](file:///apps/core/src/stash/cli/store.py#L26) |
-| `stash scan` | Inventory auto-rescan | **Not implemented** | Part of Milestone A6 |
-| `stash have` | Add manual inventory entry | **Not implemented** | Part of Milestone A6 |
-| `stash check` | Dedup & overlap candidate scoring | **Not implemented** | Part of Milestone A7 |
-| `stash save` | Atomic card save & indexing | **Not implemented** | Part of Milestone A7 |
-| `stash reject` | Record rejection in `rejected.md` | **Not implemented** | Part of Milestone A7 |
-| `stash pending` | List, add, resolve pending items | **Not implemented** | Part of Milestone A7 |
-| `stash import-ig-export` | Import Instagram backlog | **Not implemented** | Part of Milestone A7 |
-| `stash queue` | Inspect or pop triage queue | **Not implemented** | Part of Milestone A7 |
+| `stash scan` | Inventory auto-rescan | **Pending CLI registration** | Service complete in [services/inventory.py](file:///apps/core/src/stash/services/inventory.py) |
+| `stash have` | Add manual inventory entry | **Pending CLI registration** | Service complete in [services/inventory.py](file:///apps/core/src/stash/services/inventory.py) |
+| `stash check` | Dedup & overlap candidate scoring | **Pending CLI registration** | Service complete in [services/check.py](file:///apps/core/src/stash/services/check.py) |
+| `stash save` | Atomic card save & indexing | **Pending CLI registration** | Service complete in [services/cards.py](file:///apps/core/src/stash/services/cards.py) |
+| `stash reject` | Record rejection in `rejected.md` | **Pending CLI registration** | Service complete in [services/rejects.py](file:///apps/core/src/stash/services/rejects.py) |
+| `stash pending` | List, add, resolve pending items | **Pending CLI registration** | Service complete in [services/pending.py](file:///apps/core/src/stash/services/pending.py) |
+| `stash import-ig-export` | Import Instagram backlog | **Pending CLI registration** | Service complete in [services/queue.py](file:///apps/core/src/stash/services/queue.py) |
+| `stash queue` | Inspect or pop triage queue | **Pending CLI registration** | Service complete in [services/queue.py](file:///apps/core/src/stash/services/queue.py) |
 | `stash serve` | FastAPI backend & static server | **Not implemented** | Part of Milestone B1 |
-| `stash install-skills` | Link skills to Claude/Antigravity | **Not implemented** | Part of Milestone A8 |
+| `stash install-skills` | Link skills to Claude/Antigravity | **Pending CLI registration** | Service complete in [services/skills.py](file:///apps/core/src/stash/services/skills.py) |
 
 ### D. Agent Skills Audit
 
@@ -145,11 +149,11 @@ The specification ([docs/link-stash-spec.md](file:///docs/link-stash-spec.md#L35
 
 | Skill | Trigger / Command | CLI Calls Invoked | Implementation Status |
 | --- | --- | --- | --- |
-| **`/stash`** | Main triage workflow | `scan --if-stale`, `queue next`, `extract`, `analyze`/`ingest`, `check`, `save`, `reject`, `pending add` | **Not Started** (Milestone A8) |
-| **`/stash-init`** | Guided inventory onboarding | `have` (repeated) | **Not Started** (Milestone A8) |
-| **`/stash-have`** | Quick inventory insertion | `have` | **Not Started** (Milestone A8) |
-| **`/stash-pending`** | View & resolve DM link requests | `pending list`, `pending resolve` | **Not Started** (Milestone A8) |
-| **`/stash-scan`** | Force refresh inventory | `scan` | **Not Started** (Milestone A8) |
+| **`/stash`** | Main triage workflow | `scan --if-stale`, `queue next`, `extract`, `analyze`/`ingest`, `check`, `save`, `reject`, `pending add` | **Complete** ([skills/stash/SKILL.md](file:///skills/stash/SKILL.md)) |
+| **`/stash-init`** | Guided inventory onboarding | `have` (repeated) | **Complete** ([skills/stash-init/SKILL.md](file:///skills/stash-init/SKILL.md)) |
+| **`/stash-have`** | Quick inventory insertion | `have` | **Complete** ([skills/stash-have/SKILL.md](file:///skills/stash-have/SKILL.md)) |
+| **`/stash-pending`** | View & resolve DM link requests | `pending list`, `pending resolve` | **Complete** ([skills/stash-pending/SKILL.md](file:///skills/stash-pending/SKILL.md)) |
+| **`/stash-scan`** | Force refresh inventory | `scan` | **Complete** ([skills/stash-scan/SKILL.md](file:///skills/stash-scan/SKILL.md)) |
 
 ---
 

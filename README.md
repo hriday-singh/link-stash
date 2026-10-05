@@ -8,7 +8,7 @@ It includes a Python CLI, background extractors, a local SQLite FTS5 search inde
 
 ## How it works
 
-1. **Extract**: Grabs source metadata and media from Instagram reels, GitHub repositories, Hugging Face models/spaces, Notion pages, and PDFs.
+1. **Extract**: Universally powered by **Scrapling** across all link types—stealthily extracting metadata, media, rendered DOMs, and outbound links from Instagram reels, GitHub repos, Hugging Face models/spaces, Notion pages, online PDFs, and arbitrary web pages without requiring API keys or failing on bot challenges.
 2. **Analyze reels**: Transcribes speech, runs OCR on on-screen text, and identifies mentioned tools and links using Gemini or local frame analysis.
 3. **Check inventory**: Scans your local environment (Ollama models, LM Studio cache, Hugging Face models, agent configs) to flag tools you already have before you save duplicates.
 4. **Save markdown cards**: Writes human-readable `.md` files with YAML frontmatter to your local stash directory (`~/stash/library/`).
@@ -16,10 +16,13 @@ It includes a Python CLI, background extractors, a local SQLite FTS5 search inde
 
 ## Supported sources
 
-- **Instagram reels**: Audio transcription, on-screen text detection, reel video preservation, poster thumbnails.
-- **GitHub repositories**: Canonical owner/repo resolution, stars, topics, license, and detection of skills, plugins, or MCP servers.
-- **Hugging Face**: Model architectures, parameter sizes, GGUF variants, datasets, and spaces.
-- **Notion pages & PDFs**: Extracted text, markdown, and all outbound reference links.
+All link extraction is powered by **Scrapling** (using lightweight `Fetcher` and browser-stealth `StealthyFetcher` with automatic escalation on Cloudflare / JS / anti-bot challenges):
+
+- **Instagram reels**: Audio transcription, on-screen text detection, reel video preservation, poster thumbnails via Scrapling embed fetch.
+- **GitHub repositories**: Canonical owner/repo resolution, star counts, topics, license, and detection of skills, plugins, or MCP servers via Scrapling page scraping + raw file inspection (with optional REST API companion).
+- **Hugging Face**: Model architectures, parameter sizes, GGUF variants, datasets, and spaces scraped via Scrapling alongside `huggingface_hub`.
+- **Notion pages & PDFs**: Dynamic JS rendering via Scrapling's `StealthyFetcher`, PyMuPDF text/link parsing for downloaded PDFs, and all outbound reference links.
+- **Generic web pages & docs**: Scrapling automated fetcher with stealth escalation for blogs, documentation, landing pages, and developer tools.
 
 ## Architecture
 

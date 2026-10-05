@@ -1,0 +1,19 @@
+{
+  "id": "tatsu-lab/alpaca",
+  "author": "tatsu-lab",
+  "downloads": 54000,
+  "gated": false,
+  "lastModified": "2026-05-10T12:00:00.000Z",
+  "tags": [
+    "instruction",
+    "dataset",
+    "license:cc-by-nc-4.0"
+  ],
+  "card_data": {
+    "license": "cc-by-nc-4.0"
+  },
+  "siblings": [
+    { "rfilename": "data/train.parquet" },
+    { "rfilename": "README.md" }
+  ]
+}

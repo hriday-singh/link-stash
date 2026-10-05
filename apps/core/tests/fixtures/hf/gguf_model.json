@@ -1,0 +1,25 @@
+{
+  "id": "bartowski/Llama-3.2-1B-Instruct-GGUF",
+  "author": "bartowski",
+  "pipeline_tag": "text-generation",
+  "downloads": 82000,
+  "gated": false,
+  "lastModified": "2026-09-26T10:00:00.000Z",
+  "tags": [
+    "gguf",
+    "llama",
+    "text-generation",
+    "license:llama3.2",
+    "base_model:meta-llama/Llama-3.2-1B-Instruct"
+  ],
+  "card_data": {
+    "license": "llama3.2",
+    "base_model": "meta-llama/Llama-3.2-1B-Instruct"
+  },
+  "safetensors": null,
+  "siblings": [
+    { "rfilename": "Llama-3.2-1B-Instruct-Q4_K_M.gguf" },
+    { "rfilename": "Llama-3.2-1B-Instruct-Q8_0.gguf" },
+    { "rfilename": "README.md" }
+  ]
+}

@@ -29,6 +29,9 @@ ORDERED_KEYS = [
 ]
 
 
+_SAFE_PART = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+
+
 def card_path(home: Path, category: str, slug: str) -> Path:
     """Return the absolute path for a card file given its category and slug."""
     return home / "library" / "items" / category / f"{slug}.md"
@@ -120,6 +123,12 @@ def save_card(home: Path, card: Card, body: str, slug: str | None = None) -> Pat
     from stash.store.lock import write_lock
 
     home = Path(home)
+    # category and slug become path parts: no traversal, no odd characters
+    for part in (card.category, slug):
+        if part is not None and not _SAFE_PART.match(part):
+            raise Invalid(
+                "category and slug must be lowercase letters, digits and '-'", {"value": part}
+            )
     with write_lock(home):
         db = connect(home)
         try:
@@ -157,4 +166,3 @@ def save_card(home: Path, card: Card, body: str, slug: str | None = None) -> Pat
             return dest_path
         finally:
             db.close()
-

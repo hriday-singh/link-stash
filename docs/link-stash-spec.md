@@ -37,9 +37,12 @@ Every row below was decided in the scoping sessions on Oct 5, 2026. Change a row
 | Repo vs data | Code in this repo; data in `STASH_HOME` (default `~/stash`), never committed | Clean public repo; library can be backed up or versioned on its own |
 | Runtime | Python 3.14 via `uv`; `uv tool install` puts `stash` on PATH | Lockfile, fast, standard for new Python repos |
 | Commands | `/stash`, `/stash-init`, `/stash-have`, `/stash-pending`, `/stash-scan` | Written once as Agent Skills (SKILL.md); both CLIs expose each skill as a slash command |
-| Instagram fetch | Embed page via Scrapling, no login; burner cookies only as fallback | Tested Oct 5: 18/18 embed pages, video links play logged out |
+| Universal fetch | Scrapling is used everywhere across all link types (Instagram, GitHub, Hugging Face, Notion, PDF downloads, and generic web links) with `Fetcher` and `StealthyFetcher` | Bypasses anti-bot challenges, handles JS rendering, and provides zero-config scraping without requiring API tokens |
+| Instagram fetch | Embed page via Scrapling `StealthyFetcher`, no login; burner cookies only as fallback | Tested Oct 5: 18/18 embed pages, video links play logged out |
 | Reel understanding | In Antigravity, agy reads the mp4 itself; in Claude Code, stash calls agy headless; then Gemini API key, then contact sheet + whisper | Oct 5 test: agy read 3/3 mp4s natively; Claude has no video input |
-| GitHub fetch | Two backends, identical record: REST API when a token exists (`gh auth token`, else `GITHUB_TOKEN`), else Scrapling page + raw files; each falls back to the other | Works with zero setup for cloners; API is steadier when a token is there (5,000/h vs 60/h) |
+| GitHub fetch | Scrapling page scraping + raw files as universal fetcher; REST API backend as companion when a token exists (`gh auth token`, else `GITHUB_TOKEN`) | Scrapling runs everywhere with zero setup; API offers higher rate limits if a token is present |
+| Hugging Face fetch | Scrapling on model/dataset/space pages (with `huggingface_hub` metadata integration) | Extracts architecture, parameter sizes, GGUFs, tags, and downloads even for gated or custom landing pages |
+| Notion & Web fetch | Scrapling `StealthyFetcher` for Notion and JS-rendered pages; `Fetcher` escalating to `StealthyFetcher` on 403/JS for all generic links | Extracts title, readable content, and all outbound links across any website reliably |
 | Library format | Markdown folder, one card per thing; markdown is the source of truth | Greppable by either CLI, portable, editable by hand |
 | Index | SQLite + FTS5 at `STASH_HOME/.index/stash.db`, derived from markdown, rebuilt any time | Fast dedup, search, backlinks and graph; deleting it loses nothing |
 | Raw content | Separate `sources/<id>/` per link; cards link to it | Cards stay short |
@@ -134,23 +137,26 @@ stash/
 
 ## Source extractors
 
-Every link goes through `stash extract <url>`, which returns one JSON record per source with the same shape. Each extractor uses a plain library or API. No LLM picks how to fetch. Every network call has a timeout and retries with backoff.
+Every link goes through `stash extract <url>`, which returns one JSON record per source with the same shape. **Scrapling is the universal web extraction engine across every link type.** Rather than relying on fragile raw HTTP requests or requiring API tokens for third-party platforms, Link Stash uses Scrapling everywhere. Fast static retrieval uses Scrapling's `Fetcher`, while JavaScript-rendered, Cloudflare-protected, or bot-challenged targets automatically leverage Scrapling's `StealthyFetcher` (with browser TLS and header fingerprint spoofing). No LLM picks how to fetch. Every network call has a timeout and retries with backoff.
 
 | Source | URL patterns | Primary method | Fallbacks | Key fields captured |
 | --- | --- | --- | --- | --- |
 | Instagram reel/post | `instagram.com/[user/]reel\|reels\|p\|tv/<code>` | Scrapling `StealthyFetcher` on `/<type>/<code>/embed/captioned/`, resources disabled, batches of at most 6 | 1. yt-dlp with burner `cookies.txt` 2. ask for an mp4 path | shortcode, author, caption, comment count, video URL, poster image, carousel items, `oe` expiry |
-| GitHub repo | `github.com/<owner>/<repo>[/...]` | Token found: REST `GET /repos/{o}/{r}` (follows renames), `/readme`, `/git/trees/HEAD?recursive=1`. No token: Scrapling on `github.com/<o>/<r>` + raw files | The other backend | canonical `owner/repo`, description, stars, last push, archived, license, topics, language, has `SKILL.md` / plugin.json / MCP server |
-| Hugging Face | `huggingface.co/<org>/<name>`, `/datasets/...`, `/spaces/...` | `huggingface_hub` `model_info(files_metadata=True)` (dataset/space equivalents) | Scrapling on the page | repo id, type, pipeline tag, params (safetensors), GGUF files, gated, license, downloads, last modified |
+| GitHub repo | `github.com/<owner>/<repo>[/...]` | Scrapling on `github.com/<o>/<r>` + raw files (universal); REST API (`GET /repos/{o}/{r}`, `/readme`, `/git/trees/HEAD`) if `GITHUB_TOKEN` is found | Dual backends fallback to each other | canonical `owner/repo`, description, stars, last push, archived, license, topics, language, has `SKILL.md` / plugin.json / MCP server |
+| Hugging Face | `huggingface.co/<org>/<name>`, `/datasets/...`, `/spaces/...` | Scrapling on the page + `huggingface_hub` `model_info(files_metadata=True)` | Scrapling page parse fallback if Hub API is unavailable | repo id, type, pipeline tag, params (safetensors), GGUF files, gated, license, downloads, last modified |
 | Notion page | `*.notion.site/...`, public `notion.so/...` | Scrapling `StealthyFetcher`, network idle, markdown | Notion `loadPageChunk` endpoint; private page → ask | title, text, every outbound link |
-| PDF | URL ending `.pdf` or a local path | PyMuPDF text + `page.get_links()` | OCR only if no text layer | text, every link inside |
-| Generic link | anything else | Scrapling `Fetcher`, then `StealthyFetcher` on 403/JS pages | ask for a pasted copy | title, main text, outbound links |
+| PDF (remote or local) | URL ending `.pdf` or a local path | Scrapling `Fetcher` downloads remote PDF to cache; PyMuPDF text + `page.get_links()` | OCR only if no text layer | text, every link inside |
+| Generic link | anything else (blogs, docs, landing pages, tools) | Scrapling `Fetcher`, auto-escalating to `StealthyFetcher` on 403 / Cloudflare / JS pages | ask for a pasted copy | title, main text, outbound links, mentioned GitHub/HF assets |
 | Instagram data export (optional) | local `saved_posts.json` | `stash import-ig-export <file>`: parse, normalize to `ig:` keys, drop already-processed, append to `queue.md` | none | URL, saved date |
 
-**GitHub backends.** Both produce the same record; the backend used is stored in `raw.json`.
+**Universal Scrapling web extraction across all sources:**
 
-- **API (token found).** One call returns structured facts and the canonical name after renames; the tree call answers "does it ship a SKILL.md / plugin / MCP server" in one request. Stable across GitHub redesigns.
-- **Scrape (no token).** Scrapling on `github.com/<o>/<r>` gives stars (exact count in the counter's `title`), description, topics, license, archived banner, last commit, root file list, and the canonical name via the 301 on renamed repos. `raw.githubusercontent.com/<o>/<r>/HEAD/<path>` gives README and probes known paths (`SKILL.md`, `.claude-plugin/plugin.json`, `package.json`, `pyproject.toml`); 200 or 404 answers "does it ship X". Raw cannot list folders, so nested skills need one extra page fetch of `skills/`. Tested Oct 5 logged out: page 200, raw 200 from CDN cache with no rate-limit headers, folder listing 404.
-- The scrape backend breaks if GitHub changes its markup. Recorded fixtures cover both backends, and `pytest -m live` catches layout changes.
+- **GitHub repos:** Scrapling parses `github.com/<o>/<r>` to extract stars (exact count in the counter's `title`), description, topics, license, archived banner, last commit, root file list, and canonical name via 301 redirects on renamed repos. Raw file probes (`SKILL.md`, `.claude-plugin/plugin.json`, `package.json`, `pyproject.toml`) and folder listings are fetched via Scrapling. The REST API is available as a companion backend when `GITHUB_TOKEN` or `gh auth token` exists.
+- **Hugging Face models & spaces:** Scrapling fetches `huggingface.co/<org>/<name>` directly. It extracts pipeline tags, license, downloads, model card README markdown, file trees, and detects GGUF quantizations from the file tree DOM, working seamlessly alongside or without the `huggingface_hub` API.
+- **Notion pages:** Public Notion docs (`*.notion.site` or `notion.so`) are rendered using Scrapling's `StealthyFetcher` until network idle, extracting page titles, body text blocks, and all outbound reference URLs.
+- **Generic links & articles:** Any URL that does not match a specialized extractor is fetched using Scrapling's `Fetcher`. If a 403, 401, Cloudflare challenge, or empty JavaScript shell is detected, it automatically escalates to `StealthyFetcher` to render the DOM, strip boilerplate scripts/styles, extract title and meta descriptions, and discover all outbound links and mentioned tools.
+- **PDF downloads:** Remote PDF URLs are retrieved using Scrapling's fetcher into the local cache before passing to PyMuPDF for high-fidelity text and hyperlink extraction.
+- **Recorded fixtures & tests:** Both static and stealth scrape backends are backed by recorded fixtures, and `pytest -m live` validates layout changes against live sites.
 
 **Instagram notes from the Oct 5 test**
 
@@ -534,7 +540,7 @@ Build Instagram and the reel engines first, because they carry the most risk. Ea
 | [FastAPI](https://fastapi.tiangolo.com/) + [Pydantic](https://docs.pydantic.dev/) | Local API, models, OpenAPI |
 | [watchfiles](https://github.com/samuelcolvin/watchfiles) | Reindex on file change |
 | SQLite + FTS5 (stdlib `sqlite3`) | Derived index and full-text search |
-| [Scrapling](https://github.com/D4Vinci/Scrapling) | Instagram embed pages, Notion, generic links |
+| [Scrapling](https://github.com/D4Vinci/Scrapling) | Universal web fetching engine for all links (Instagram, GitHub, Hugging Face, Notion, PDF downloads, and generic web) |
 | [httpx](https://www.python-httpx.org/) | API calls and media download |
 | [Antigravity CLI](https://antigravity.google/docs/skills/) | Primary video reader (in-session and `agy -p`) |
 | [yt-dlp](https://github.com/yt-dlp/yt-dlp) | Instagram fallback with burner cookies |

@@ -1,5 +1,6 @@
 """GitHub repo extractor supporting both API (token) and scrape backends."""
 
+import contextlib
 import os
 import re
 import subprocess
@@ -11,6 +12,7 @@ import httpx
 from pydantic import BaseModel, Field
 
 from stash.errors import Invalid
+from stash.extract.fetch import fetch_page_text
 from stash.store.models import Mention, SourceDoc
 
 GITHUB_URL_RE = re.compile(
@@ -38,7 +40,7 @@ class GithubRecord(BaseModel):
     has_mcp: bool = False
     backend: Literal["api", "scrape"]
     readme: str | None = None
-    mentions: list[Mention] = Field(default_factory=list)
+    mentions: list[Mention] = Field(default_factory=list[Mention])
 
 
 def parse_github_url(url: str) -> tuple[str, str]:
@@ -77,7 +79,7 @@ def resolve_github_token() -> str | None:
         )
         if proc.returncode == 0 and proc.stdout.strip():
             return proc.stdout.strip()
-    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+    except FileNotFoundError, subprocess.TimeoutExpired, OSError:
         pass
     return None
 
@@ -208,7 +210,9 @@ def extract_github_api(
     mentions = extract_mentions_from_text(readme_text or "")
     # Exclude self repo from mentions
     mentions = [
-        m for m in mentions if m.name.lower() != f"{canonical_owner.lower()}/{canonical_repo.lower()}"
+        m
+        for m in mentions
+        if m.name.lower() != f"{canonical_owner.lower()}/{canonical_repo.lower()}"
     ]
 
     return GithubRecord(
@@ -235,7 +239,7 @@ def extract_github_api(
 def extract_github_scrape(
     owner: str,
     repo: str,
-    client: httpx.Client,
+    client: httpx.Client | None = None,
 ) -> GithubRecord:
     """Extract repository metadata via HTML scraping and raw content probes."""
     headers = {
@@ -246,17 +250,29 @@ def extract_github_scrape(
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     }
     page_url = f"https://github.com/{owner}/{repo}"
-    resp = client.get(page_url, headers=headers, follow_redirects=True)
-    resp.raise_for_status()
-    html = resp.text
+    if client is not None:
+        resp = client.get(page_url, headers=headers, follow_redirects=True)
+        resp.raise_for_status()
+        html = resp.text
+        final_url_str = str(resp.url)
+    else:
+        status, html = fetch_page_text(page_url, headers=headers)
+        if status >= 400:
+            raise Invalid(
+                f"Failed to fetch GitHub page ({status}): {page_url}",
+                {"url": page_url, "status": status},
+            )
+        final_url_str = page_url
 
     # Resolve canonical owner/repo from final redirected URL or og:url
-    final_path = urlparse(str(resp.url)).path.strip("/")
+    final_path = urlparse(final_url_str).path.strip("/")
     path_parts = final_path.split("/")
-    if len(path_parts) >= 2:
+    if len(path_parts) >= 2 and path_parts[0] and path_parts[1]:
         canonical_owner, canonical_repo = path_parts[0], path_parts[1]
     else:
-        og_match = re.search(r'<meta\s+property="og:url"\s+content="https?://github\.com/([^/]+)/([^"/]+)', html)
+        og_match = re.search(
+            r'<meta\s+property="og:url"\s+content="https?://github\.com/([^/]+)/([^"/]+)', html
+        )
         if og_match:
             canonical_owner, canonical_repo = og_match.group(1), og_match.group(2)
         else:
@@ -273,10 +289,8 @@ def extract_github_scrape(
         star_match = re.search(r'<span[^>]*class="[^"]*Counter[^"]*"[^>]*title="([\d,]+)"', html)
     if star_match:
         stars_str = star_match.group(1).replace(",", "")
-        try:
+        with contextlib.suppress(ValueError):
             stars = int(stars_str)
-        except ValueError:
-            pass
 
     # Description extraction
     description: str | None = None
@@ -297,11 +311,17 @@ def extract_github_scrape(
 
     # License extraction
     license_val: str | None = None
-    lic_match = re.search(r'<a\s+href="[^"]*/LICENSE[^"]*"[^>]*>\s*(?:<svg[^>]*>.*?</svg>)?\s*([a-zA-Z0-9_.\s-]+?)\s*</a>', html, re.DOTALL)
+    lic_match = re.search(
+        r'<a\s+href="[^"]*/LICENSE[^"]*"[^>]*>\s*(?:<svg[^>]*>.*?</svg>)?\s*([a-zA-Z0-9_.\s-]+?)\s*</a>',
+        html,
+        re.DOTALL,
+    )
     if lic_match:
         license_val = lic_match.group(1).strip()
     elif "octicon-law" in html:
-        lic_fallback = re.search(r'octicon-law.*?</span>\s*([a-zA-Z0-9_.\s-]+?)\s*<', html, re.DOTALL)
+        lic_fallback = re.search(
+            r"octicon-law.*?</span>\s*([a-zA-Z0-9_.\s-]+?)\s*<", html, re.DOTALL
+        )
         if lic_fallback:
             license_val = lic_fallback.group(1).strip()
 
@@ -309,45 +329,53 @@ def extract_github_scrape(
     archived = "flash-warn" in html and "archived" in html.lower()
 
     # Probing raw.githubusercontent.com for files
+    def _probe_raw(path: str) -> tuple[int, str]:
+        if client is not None:
+            r = client.get(f"{raw_base}/{path}")
+            return r.status_code, r.text
+        return fetch_page_text(f"{raw_base}/{path}")
+
     raw_base = f"https://raw.githubusercontent.com/{canonical_owner}/{canonical_repo}/HEAD"
     readme_text: str | None = None
     for r_name in ("README.md", "readme.md", "README"):
         try:
-            r_resp = client.get(f"{raw_base}/{r_name}")
-            if r_resp.status_code == 200:
-                readme_text = r_resp.text
+            status, r_text = _probe_raw(r_name)
+            if status == 200:
+                readme_text = r_text
                 break
-        except httpx.HTTPError:
+        except Exception:
             pass
 
     # Probe skills, plugin, mcp
     has_skill = False
     try:
-        s_resp = client.get(f"{raw_base}/SKILL.md")
-        if s_resp.status_code == 200:
+        status, _ = _probe_raw("SKILL.md")
+        if status == 200:
             has_skill = True
-    except httpx.HTTPError:
+    except Exception:
         pass
 
     has_plugin = False
     try:
-        p_resp = client.get(f"{raw_base}/.claude-plugin/plugin.json")
-        if p_resp.status_code == 200:
+        status, _ = _probe_raw(".claude-plugin/plugin.json")
+        if status == 200:
             has_plugin = True
-    except httpx.HTTPError:
+    except Exception:
         pass
 
     has_mcp = False
     try:
-        m_resp = client.get(f"{raw_base}/mcp.json")
-        if m_resp.status_code == 200:
+        status, _ = _probe_raw("mcp.json")
+        if status == 200:
             has_mcp = True
-    except httpx.HTTPError:
+    except Exception:
         pass
 
     mentions = extract_mentions_from_text(readme_text or "")
     mentions = [
-        m for m in mentions if m.name.lower() != f"{canonical_owner.lower()}/{canonical_repo.lower()}"
+        m
+        for m in mentions
+        if m.name.lower() != f"{canonical_owner.lower()}/{canonical_repo.lower()}"
     ]
 
     return GithubRecord(

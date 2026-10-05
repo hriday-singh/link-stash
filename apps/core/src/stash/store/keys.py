@@ -25,5 +25,6 @@ def ig_key(url: str) -> str:
 
 
 def source_dir(home: Path, key: str) -> Path:
-    """`ig:ABC` -> `<home>/library/sources/ig-ABC`."""
-    return home / "library" / "sources" / key.replace(":", "-", 1)
+    """`ig:ABC` -> `<home>/library/sources/ig-ABC`. Safe across platforms."""
+    safe = re.sub(r"[:/]", "-", key)
+    return home / "library" / "sources" / safe

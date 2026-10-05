@@ -215,3 +215,154 @@ def extract(
         if own_client:
             http.close()
     return results
+
+
+def extract_urls(
+    home: Path,
+    urls: list[str],
+    *,
+    follow_depth: int = 1,
+    client: httpx.Client | None = None,
+) -> list[SourceDoc]:
+    """Unified multi-source extractor with 1-level follow-through.
+
+    Dispatches to Instagram, GitHub, Hugging Face, Notion, PDF, or generic web.
+    If follow_depth > 0, automatically extracts mentioned GitHub/HF child links.
+    """
+    from stash.extract.github import extract_github
+    from stash.extract.hf import extract_hf
+    from stash.extract.notion import extract_notion, is_notion_url
+    from stash.extract.pdf import extract_pdf
+    from stash.extract.web import extract_web
+    from stash.store.sources import read_source
+
+    split = split_urls(urls)
+    docs: list[SourceDoc] = []
+    seen_keys: set[str] = set()
+    child_urls: list[str] = []
+
+    own_client = client is None
+    http = client or httpx.Client(timeout=45.0, follow_redirects=True)
+
+    try:
+        for u in split:
+            u_clean = u.strip()
+            # 1. Instagram
+            try:
+                parse_ig_url(u_clean)
+                ig_res = extract(home, [u_clean], client=http)
+                for r in ig_res:
+                    if r.get("status") in ("fetched", "cached"):
+                        try:
+                            sdoc = read_source(home, r["key"])
+                            if sdoc.key not in seen_keys:
+                                seen_keys.add(sdoc.key)
+                                docs.append(sdoc)
+                                if follow_depth > 0:
+                                    for m in sdoc.mentions:
+                                        if m.url:
+                                            child_urls.append(m.url)
+                        except Exception:
+                            pass
+                continue
+            except StashError:
+                pass
+
+            # 2. GitHub
+            if "github.com" in u_clean.lower():
+                try:
+                    sdoc, rec = extract_github(u_clean, client=client)
+                    write_source(home, sdoc)
+                    raw_data = {"extractor": "github", "record": rec.model_dump(mode="json")}
+                    sdir = source_dir(home, sdoc.key)
+                    (sdir / "raw.json").write_text(json.dumps(raw_data, indent=2), "utf-8")
+                    if sdoc.key not in seen_keys:
+                        seen_keys.add(sdoc.key)
+                        docs.append(sdoc)
+                        if follow_depth > 0:
+                            for m in sdoc.mentions:
+                                if m.url:
+                                    child_urls.append(m.url)
+                    continue
+                except Exception:
+                    pass
+
+            # 3. Hugging Face
+            if "huggingface.co" in u_clean.lower():
+                try:
+                    sdoc, rec = extract_hf(u_clean, http_client=client)
+                    write_source(home, sdoc)
+                    raw_data = {"extractor": "huggingface", "record": rec.model_dump(mode="json")}
+                    sdir = source_dir(home, sdoc.key)
+                    (sdir / "raw.json").write_text(json.dumps(raw_data, indent=2), "utf-8")
+                    if sdoc.key not in seen_keys:
+                        seen_keys.add(sdoc.key)
+                        docs.append(sdoc)
+                        if follow_depth > 0:
+                            for m in sdoc.mentions:
+                                if m.url:
+                                    child_urls.append(m.url)
+                    continue
+                except Exception:
+                    pass
+
+            # 4. Notion
+            if is_notion_url(u_clean):
+                try:
+                    sdoc, rec = extract_notion(u_clean, client=client)
+                    write_source(home, sdoc)
+                    raw_data = {"extractor": "notion", "record": rec.model_dump(mode="json")}
+                    sdir = source_dir(home, sdoc.key)
+                    (sdir / "raw.json").write_text(json.dumps(raw_data, indent=2), "utf-8")
+                    if sdoc.key not in seen_keys:
+                        seen_keys.add(sdoc.key)
+                        docs.append(sdoc)
+                    continue
+                except Exception:
+                    pass
+
+            # 5. PDF
+            if u_clean.lower().endswith(".pdf") or (
+                Path(u_clean).is_file() and u_clean.lower().endswith(".pdf")
+            ):
+                try:
+                    sdoc, rec = extract_pdf(u_clean, client=client)
+                    write_source(home, sdoc)
+                    raw_data = {"extractor": "pdf", "record": rec.model_dump(mode="json")}
+                    sdir = source_dir(home, sdoc.key)
+                    (sdir / "raw.json").write_text(json.dumps(raw_data, indent=2), "utf-8")
+                    if sdoc.key not in seen_keys:
+                        seen_keys.add(sdoc.key)
+                        docs.append(sdoc)
+                    continue
+                except Exception:
+                    pass
+
+            # 6. Generic Web
+            if u_clean.startswith(("http://", "https://")):
+                try:
+                    sdoc, rec = extract_web(u_clean, client=client)
+                    write_source(home, sdoc)
+                    raw_data = {"extractor": "web", "record": rec.model_dump(mode="json")}
+                    sdir = source_dir(home, sdoc.key)
+                    (sdir / "raw.json").write_text(json.dumps(raw_data, indent=2), "utf-8")
+                    if sdoc.key not in seen_keys:
+                        seen_keys.add(sdoc.key)
+                        docs.append(sdoc)
+                except Exception:
+                    pass
+
+        # 1-level follow-through
+        if follow_depth > 0 and child_urls:
+            unique_children = [cu for cu in dict.fromkeys(child_urls) if cu not in split]
+            if unique_children:
+                child_docs = extract_urls(home, unique_children, follow_depth=0, client=http)
+                for cd in child_docs:
+                    if cd.key not in seen_keys:
+                        seen_keys.add(cd.key)
+                        docs.append(cd)
+    finally:
+        if own_client:
+            http.close()
+
+    return docs

@@ -11,6 +11,12 @@ from typing import Any
 import yaml
 
 from stash.store.cards import content_hash, parse_card
+from stash.store.lists import (
+    parse_all,
+    parse_inventory_line,
+    parse_pending_line,
+    parse_reject_line,
+)
 from stash.store.lock import write_lock
 from stash.store.models import Card
 
@@ -186,7 +192,11 @@ def reindex_path(home: Path, path: Path, con: sqlite3.Connection | None = None) 
             and path.name == "source.md"
         ):
             _index_source(home, path, db)
-        # Check if inventory
+        elif rel_parts == ("library", "rejected.md"):
+            _index_rejects(path, db)
+        elif rel_parts == ("library", "pending.md"):
+            _index_pending(path, db)
+        # Inventory: inventory/auto/<tool>.md, inventory/manual/<name>.md
         elif len(rel_parts) >= 2 and rel_parts[0] == "inventory" and path.suffix == ".md":
             _index_inventory(home, path, db)
         db.commit()
@@ -314,35 +324,41 @@ def _index_source(home: Path, path: Path, db: sqlite3.Connection) -> None:
 
 
 def _index_inventory(home: Path, path: Path, db: sqlite3.Connection) -> None:
-    text = path.read_text(encoding="utf-8")
-    name: str = path.stem
-    origin: str = path.name
-    kind: str = "tool"
-    key: str | None = None
+    """One row per `- [kind] name (key: k)` line; origin is relative to inventory/."""
+    try:
+        origin = path.relative_to(home / "inventory").as_posix()
+    except Exception:
+        origin = path.stem
+    db.execute("DELETE FROM inventory WHERE origin = ?", (origin,))
+    for e in parse_all(
+        path.read_text(encoding="utf-8"), lambda ln: parse_inventory_line(ln, origin)
+    ):
+        # ponytail: PK is (name, origin), so a same-named second entry in one file is dropped
+        db.execute(
+            "INSERT OR IGNORE INTO inventory (key, name, kind, origin) VALUES (?, ?, ?, ?)",
+            (e.key, e.name, e.kind, e.origin),
+        )
 
-    if text.startswith("---\n"):
-        parts = text[4:].split("\n---\n", 1)
-        if len(parts) >= 1:
-            try:
-                raw_obj: object = yaml.safe_load(parts[0])
-                if isinstance(raw_obj, dict):
-                    raw_dict: dict[str, object] = raw_obj  # type: ignore[assignment]
-                    if raw_dict.get("name") is not None:
-                        name = str(raw_dict["name"])
-                    if raw_dict.get("kind") is not None:
-                        kind = str(raw_dict["kind"])
-                    if raw_dict.get("key") is not None:
-                        key = str(raw_dict["key"])
-            except Exception:
-                pass
 
-    db.execute(
-        """
-        INSERT OR REPLACE INTO inventory (key, name, kind, origin)
-        VALUES (?, ?, ?, ?)
-        """,
-        (key, name, kind, origin),
-    )
+def _index_rejects(path: Path, db: sqlite3.Connection) -> None:
+    db.execute("DELETE FROM rejects")
+    for e in parse_all(path.read_text(encoding="utf-8"), parse_reject_line):
+        db.execute(
+            "INSERT OR REPLACE INTO rejects (key, date, reason) VALUES (?, ?, ?)",
+            (e.key, e.date.isoformat(), e.reason),
+        )
+
+
+def _index_pending(path: Path, db: sqlite3.Connection) -> None:
+    db.execute("DELETE FROM pending")
+    for p in parse_all(path.read_text(encoding="utf-8"), parse_pending_line):
+        db.execute(
+            """
+            INSERT OR REPLACE INTO pending (id, kind, source_key, instruction, url, status, added)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (p.id, p.kind, p.source_key, p.instruction, p.url, p.status, p.added.isoformat()),
+        )
 
 
 def remove_path(home: Path, path: Path, con: sqlite3.Connection | None = None) -> None:
@@ -363,8 +379,16 @@ def remove_path(home: Path, path: Path, con: sqlite3.Connection | None = None) -
             db.commit()
             return
 
-        # Check if source was deleted
         rel_parts = path.relative_to(home).parts
+        if rel_parts == ("library", "rejected.md"):
+            db.execute("DELETE FROM rejects")
+        elif rel_parts == ("library", "pending.md"):
+            db.execute("DELETE FROM pending")
+        elif rel_parts and rel_parts[0] == "inventory" and path.suffix == ".md":
+            db.execute("DELETE FROM inventory WHERE origin = ?", (path.stem,))
+        db.commit()
+
+        # Check if source was deleted
         if len(rel_parts) >= 3 and rel_parts[0] == "library" and rel_parts[1] == "sources":
             source_id = rel_parts[2].replace("-", ":", 1)
             db.execute("DELETE FROM sources WHERE id = ?", (source_id,))
@@ -401,14 +425,21 @@ def rebuild(home: Path) -> dict[str, int]:
                     reindex_path(home, source_file, con=db)
                     source_count += 1
 
-            # Reindex inventory/
+            # Reindex inventory/ (auto/ and manual/)
             inv_dir = home / "inventory"
             if inv_dir.exists():
-                for inv_file in inv_dir.glob("*.md"):
-                    reindex_path(home, inv_file, con=db)
+                for inv_file in inv_dir.rglob("*.md"):
+                    if ".tmp" not in inv_file.name:
+                        reindex_path(home, inv_file, con=db)
+
+            for name in ("rejected.md", "pending.md"):
+                list_file = home / "library" / name
+                if list_file.is_file():
+                    reindex_path(home, list_file, con=db)
 
             db.commit()
-            return {"cards": card_count, "sources": source_count}
+            inventory_count = db.execute("SELECT COUNT(*) FROM inventory").fetchone()[0]
+            return {"cards": card_count, "sources": source_count, "inventory": inventory_count}
         finally:
             db.close()
 
@@ -418,4 +449,3 @@ def save_card(home: Path, card: Card, body: str, slug: str | None = None) -> Pat
     from stash.store.cards import save_card as _save_card
 
     return _save_card(home, card, body, slug)
-

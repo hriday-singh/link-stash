@@ -22,44 +22,41 @@
 
 ---
 
-### Task 1: GitHub Extractor (Dual Backend)
+### Task 1: GitHub Extractor (Universal Scrapling & API Dual Backend)
 - **Files:** `apps/core/src/stash/extract/github.py`, `apps/core/tests/fixtures/github/*`, `apps/core/tests/test_extract_github.py`.
 - **Approach:**
-  - Token resolution: checks `gh auth token` via subprocess, then `os.environ.get("GITHUB_TOKEN")`.
-  - API Backend (`httpx`): `GET /repos/{owner}/{repo}` (follows redirects), `/readme`, `/git/trees/HEAD?recursive=1`. Detects `SKILL.md`, `.claude-plugin/plugin.json`, `mcp` configs.
-  - Scrape Backend (`Scrapling`): parses `github.com/<owner>/<repo>` for star count (exact integer from `title`), description, topics, license; probes `raw.githubusercontent.com/<o>/<r>/HEAD/<path>`.
+  - Scrape Backend (`Scrapling`): Universal scraper using Scrapling `Fetcher` / `StealthyFetcher` to fetch and parse `github.com/<owner>/<repo>` for star count (exact integer from `title`), description, topics, license, files, and canonical name redirects; probes raw files via Scrapling.
+  - API Backend (`httpx`): Companion backend when `gh auth token` or `GITHUB_TOKEN` is found. `GET /repos/{owner}/{repo}`, `/readme`, `/git/trees/HEAD?recursive=1`. Detects `SKILL.md`, `.claude-plugin/plugin.json`, `mcp` configs.
   - Records which backend was used in `raw.json["backend"]`.
 - **Tests:** Recorded fixtures: standard repo, renamed repo, repo with SKILL.md, repo with MCP server; assert both backends produce matching records.
 
-### Task 2: Hugging Face Extractor
+### Task 2: Hugging Face Extractor (Scrapling & Hub Integration)
 - **Files:** `apps/core/src/stash/extract/hf.py`, `apps/core/tests/fixtures/hf/*`, `apps/core/tests/test_extract_hf.py`.
 - **Approach:**
   - Key normalization: `hf:model:<org>/<name>`, `hf:dataset:<org>/<name>`, `hf:space:<org>/<name>`.
-  - Primary: `huggingface_hub.HfApi().model_info(repo_id, files_metadata=True)` (or dataset/space equivalents).
-  - Extract parameters from `safetensors` metadata; detect `.gguf` file patterns; detect gated models.
-  - Fallback: Scrapling page parse for description and downloads if Hub API fails.
+  - Scrapling Page Fetch: Uses Scrapling `Fetcher` / `StealthyFetcher` on `huggingface.co/<org>/<name>` to scrape model card README, parameters, license, tags, and detect `.gguf` quantizations directly from page DOM and file trees.
+  - Hub API Integration: Complementary metadata from `huggingface_hub.HfApi().model_info(...)` when available.
 - **Tests:** Fixtures for standard model, gated model, GGUF-heavy repo; assert extracted metadata and tags.
 
-### Task 3: Notion & Generic Web Page Extractors
+### Task 3: Notion & Generic Web Page Extractors (Scrapling Universal Fetch)
 - **Files:** `apps/core/src/stash/extract/notion.py`, `apps/core/src/stash/extract/web.py`, `apps/core/tests/fixtures/web/*`, `apps/core/tests/test_extract_web.py`.
 - **Approach:**
-  - Notion: `StealthyFetcher` on public Notion URLs; parses content into markdown; extracts page title and all outbound links.
-  - Web: standard `Fetcher` first; on 403 or heavy JS, falls back to `StealthyFetcher`. Extracts readability text, OpenGraph title/description, and outbound links.
+  - Notion: Scrapling `StealthyFetcher` renders public Notion pages until network idle; extracts title, rendered markdown text, and all outbound reference links.
+  - Generic Web (Every link type): Universal fallback using Scrapling `Fetcher`. On 401/403, Cloudflare/turnstile challenges, or client-rendered SPAs, automatically escalates to `StealthyFetcher` (real Chrome / stealth fingerprint). Extracts page title, meta description, cleaned readable text, and discovers all outbound links and mentioned tools.
 - **Tests:** Public Notion page fixture; generic blog post fixture; 403 JS-heavy fallback fixture.
 
-### Task 4: PDF Extractor
+### Task 4: PDF Extractor (Scrapling Remote Download + PyMuPDF)
 - **Files:** `apps/core/src/stash/extract/pdf.py`, `apps/core/tests/fixtures/pdf/*`, `apps/core/tests/test_extract_pdf.py`.
 - **Approach:**
-  - Accepts local file path or downloads PDF URL to cache.
-  - Opens with `fitz.open()` (PyMuPDF); extracts plain text across pages.
-  - Gathers all embedded link annotations (`page.get_links()`).
+  - For remote PDF links (`http://` or `https://` ending in `.pdf`), downloads file using Scrapling `Fetcher` into local `cache/`.
+  - Local path or cached PDF is opened with `fitz.open()` (PyMuPDF); extracts plain text across pages and discovers embedded link annotations (`page.get_links()`).
 - **Tests:** Sample PDF fixture with text and hyperlinks; verify text content and extracted URLs.
 
-### Task 5: Follow-Through & Dispatch Service
+### Task 5: Follow-Through & Universal Dispatch Service
 - **Files:** `apps/core/src/stash/services/extract.py`, `apps/core/tests/test_extract_dispatch.py`.
 - **Approach:**
   - `extract_urls(urls: list[str], follow_depth: int = 1) -> list[SourceDoc]`:
-    - Dispatches to appropriate extractor by URL pattern (Instagram, GitHub, HF, Notion, PDF, Web).
+    - Dispatches to appropriate extractor by URL pattern (Instagram, GitHub, HF, Notion, PDF, Web), ensuring all remote network requests route through Scrapling.
     - If `follow_depth > 0`: collects outbound GitHub/HF links mentioned in parsed content and enqueues them at `depth = 0`.
     - Skips already-extracted sources.
 - **Tests:** Dispatcher routing; follow-through child link extraction; recursion boundary test (depth <= 1).

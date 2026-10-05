@@ -105,16 +105,20 @@ def test_github_backend_parity() -> None:
 
     api_client = httpx.Client(
         transport=httpx.MockTransport(
-            lambda req: httpx.Response(200, json=tree_data)
-            if "/git/trees/" in str(req.url)
-            else httpx.Response(200, json=api_data)
+            lambda req: (
+                httpx.Response(200, json=tree_data)
+                if "/git/trees/" in str(req.url)
+                else httpx.Response(200, json=api_data)
+            )
         )
     )
     scrape_client = httpx.Client(
         transport=httpx.MockTransport(
-            lambda req: httpx.Response(200, text="# Skill")
-            if "SKILL.md" in str(req.url)
-            else httpx.Response(200, text=page_html)
+            lambda req: (
+                httpx.Response(200, text="# Skill")
+                if "SKILL.md" in str(req.url)
+                else httpx.Response(200, text=page_html)
+            )
         )
     )
 
