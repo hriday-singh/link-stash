@@ -59,7 +59,7 @@ describe("SourcesPage", () => {
                 creator: "@octocat",
                 url: "https://github.com/owner/repo",
                 title: "Octocat Repository",
-                stage: "extracted",
+                stage: "analyzed",
                 has_video: false,
                 has_thumb: false,
                 added: "2026-10-04",
@@ -86,8 +86,9 @@ describe("SourcesPage", () => {
     expect(screen.getAllByText("@octocat").length).toBeGreaterThan(0);
     expect(screen.getByText("https://instagram.com/reel/DE-3r3_s")).toBeInTheDocument();
     expect(screen.getByText("https://github.com/owner/repo")).toBeInTheDocument();
-    expect(screen.getByText("triaged")).toBeInTheDocument();
-    expect(screen.getByText("extracted")).toBeInTheDocument();
+    expect(screen.getAllByText("Triaged")).toHaveLength(2);
+    // Label shows on both the stage filter pill and the card badge.
+    expect(screen.getAllByText("Analyzed")).toHaveLength(2);
     expect(screen.getByText("Video")).toBeInTheDocument();
   });
 

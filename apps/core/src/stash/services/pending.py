@@ -56,6 +56,15 @@ def add_pending(home: Path, item: PendingItem) -> None:
         write_lines(home, _path(home), [*lines, pending_line(item)])
 
 
+def drop_pending(home: Path, id: str) -> None:
+    """Remove an item if present; no-op otherwise (e.g. a blocked fetch that later succeeded)."""
+    with write_lock(home):
+        lines = read_lines(_path(home))
+        kept = [ln for ln in lines if not ((p := parse_pending_line(ln)) and p.id == id)]
+        if len(kept) != len(lines):
+            write_lines(home, _path(home), kept)
+
+
 def resolve_pending(home: Path, id: str, url: str) -> PendingItem:
     url = url.strip()
     _no_space("url", url)

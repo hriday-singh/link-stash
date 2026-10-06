@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SourceCard } from "./SourceCard";
-import type { SourceFilters } from "./filters";
+import { STAGES, STAGE_LABELS, type SourceFilters } from "./filters";
 
 const PLATFORMS = [
   { id: "", label: "All Platforms" },
@@ -17,11 +17,9 @@ const PLATFORMS = [
   { id: "huggingface", label: "Hugging Face" },
 ];
 
-const STAGES = [
+const STAGE_OPTIONS = [
   { id: "", label: "All Stages" },
-  { id: "raw", label: "Raw" },
-  { id: "extracted", label: "Extracted" },
-  { id: "triaged", label: "Triaged" },
+  ...STAGES.map((id) => ({ id, label: STAGE_LABELS[id] })),
 ];
 
 interface SourcesPageProps {
@@ -90,8 +88,9 @@ export function SourcesPage({ filters }: SourcesPageProps) {
 
       {/* Filters Bar */}
       <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 shadow-xs">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
+        {/* One wrapping row: `contents` lets the pill groups wrap alongside the creator input. */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="contents">
             {/* Platform pills */}
             <div className="flex flex-wrap items-center rounded-lg border border-border/60 bg-surface-sunken p-0.5 text-xs">
               {PLATFORMS.map((p) => {
@@ -115,7 +114,7 @@ export function SourcesPage({ filters }: SourcesPageProps) {
 
             {/* Stage pills */}
             <div className="flex flex-wrap items-center rounded-lg border border-border/60 bg-surface-sunken p-0.5 text-xs">
-              {STAGES.map((s) => {
+              {STAGE_OPTIONS.map((s) => {
                 const active = (filters.stage || "") === s.id;
                 return (
                   <button
@@ -149,7 +148,7 @@ export function SourcesPage({ filters }: SourcesPageProps) {
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2">
             <Input
               placeholder="Filter creator (@name)..."
               value={filters.creator ?? ""}

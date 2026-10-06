@@ -3,12 +3,13 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Video01Icon } from "@hugeicons/core-free-icons";
 import { BrandLogo } from "@/components/BrandLogo";
 import type { SourceRow } from "@/api/client";
+import { stageLabel } from "./filters";
 
 export function SourceCard({ source }: { source: SourceRow }) {
   const stageColor =
     source.stage === "triaged"
       ? "bg-success/15 text-success border-success/30"
-      : source.stage === "extracted"
+      : source.stage === "analyzed"
         ? "bg-warning/15 text-warning border-warning/30"
         : "bg-muted text-muted-foreground border-border/60";
 
@@ -49,7 +50,7 @@ export function SourceCard({ source }: { source: SourceRow }) {
           <span
             className={`rounded-md border px-1.5 py-0.5 font-mono text-2xs font-medium uppercase tracking-wider backdrop-blur-xs ${stageColor}`}
           >
-            {source.stage}
+            {stageLabel(source.stage)}
           </span>
         </div>
       </div>
@@ -73,8 +74,12 @@ export function SourceCard({ source }: { source: SourceRow }) {
         </div>
 
         <div className="flex items-center justify-between text-2xs text-muted-foreground pt-1 border-t border-border/40">
-          <span className="font-mono text-2xs truncate max-w-[65%]">{source.id}</span>
-          {source.fetched_at && <span>{source.fetched_at}</span>}
+          <span className="min-w-0 truncate font-mono text-2xs">{source.id}</span>
+          {source.fetched_at && (
+            <time dateTime={source.fetched_at} className="shrink-0">
+              {new Date(source.fetched_at).toLocaleDateString()}
+            </time>
+          )}
         </div>
       </div>
     </Link>

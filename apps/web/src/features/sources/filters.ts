@@ -1,7 +1,18 @@
 import { z } from "zod";
 
-export const STAGES = ["raw", "extracted", "triaged"] as const;
+export const STAGES = ["fetched", "analyzed", "triaged"] as const;
 export type Stage = (typeof STAGES)[number];
+
+// Backend stage ids are pipeline jargon; show what they mean to the user.
+export const STAGE_LABELS: Record<Stage, string> = {
+  fetched: "Awaiting triage",
+  analyzed: "Analyzed",
+  triaged: "Triaged",
+};
+
+export function stageLabel(stage: string): string {
+  return STAGE_LABELS[stage as Stage] ?? stage;
+}
 
 export const sourceFiltersSchema = z.object({
   platform: z.string().optional(),
@@ -19,7 +30,7 @@ export type SourceFilters = z.infer<typeof sourceFiltersSchema>;
  * Parses URL search params or object into clean SourceFilters.
  */
 export function parseSourceFilters(
-  input: Record<string, unknown> | URLSearchParams
+  input: Record<string, unknown> | URLSearchParams,
 ): SourceFilters {
   const raw: Record<string, unknown> = {};
 

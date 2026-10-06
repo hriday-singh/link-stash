@@ -15,7 +15,7 @@ import httpx
 
 from stash.errors import Blocked, Conflict, StashError
 from stash.extract.instagram import IgRecord, parse_embed
-from stash.services.pending import add_pending
+from stash.services.pending import add_pending, drop_pending
 from stash.store.keys import parse_ig_url, source_dir
 from stash.store.models import PendingItem, SourceDoc
 from stash.store.sources import append_failed, write_source
@@ -112,11 +112,15 @@ def _extract_manual(home: Path, kind: Kind, code: str) -> dict[str, Any]:
     return {"key": key, "status": "fetched", "via": "manual", "dir": str(sdir), "files": files}
 
 
+def _blocked_id(key: str) -> str:
+    return f"p-blocked-{key.removeprefix('ig:')}"
+
+
 def _blocked_pending(home: Path, key: str) -> None:
     """Last resort: ask the user for the mp4. One pending item per post."""
     rel = source_dir(home, key).relative_to(home).as_posix()
     item = PendingItem(
-        id=f"p-blocked-{key.removeprefix('ig:')}",
+        id=_blocked_id(key),
         kind="blocked",
         source_key=key,
         instruction=f"Fetch blocked. Save the reel as {rel}/video.mp4, then rerun stash extract.",
@@ -230,6 +234,7 @@ def extract(
                 results.append({"key": key, "status": "queued", "url": url})
                 continue
             if _done(source_dir(home, key)):
+                drop_pending(home, _blocked_id(key))
                 results.append({"key": key, "status": "cached", "dir": str(source_dir(home, key))})
                 continue
             if fetched:
@@ -238,6 +243,7 @@ def extract(
             fetched += 1
             try:
                 results.append(_extract_one(home, http, fetch, kind, code))
+                drop_pending(home, _blocked_id(key))
             except RateLimited:
                 stopped = True
                 results.append(

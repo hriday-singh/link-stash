@@ -15,6 +15,7 @@ import { queryKeys } from "@/api/keys";
 import { BrandLogo } from "@/components/BrandLogo";
 import { Player, type PlayerHandle } from "./Player";
 import { splitStamps, parseStamp } from "./stamps";
+import { stageLabel } from "./filters";
 
 export function SourceDetailPage() {
   const { sourceId } = useParams({ strict: false }) as { sourceId: string };
@@ -120,12 +121,12 @@ export function SourceDetailPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="rounded-md border border-border/60 bg-muted/60 px-2 py-0.5 font-mono text-2xs uppercase tracking-wider">
-                  {source.stage}
+                  {stageLabel(source.stage)}
                 </span>
                 {source.fetched_at && (
-                  <span className="font-mono text-2xs text-muted-foreground">
-                    {source.fetched_at}
-                  </span>
+                  <time dateTime={source.fetched_at} className="text-2xs text-muted-foreground">
+                    {new Date(source.fetched_at).toLocaleString()}
+                  </time>
                 )}
               </div>
             </div>

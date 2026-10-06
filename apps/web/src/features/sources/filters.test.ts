@@ -52,14 +52,14 @@ describe("serializeSourceFilters", () => {
       platform: "instagram",
       creator: "@builder",
       has_video: true,
-      stage: "extracted",
+      stage: "analyzed",
     });
 
     expect(serialized).toEqual({
       platform: "instagram",
       creator: "@builder",
       has_video: "true",
-      stage: "extracted",
+      stage: "analyzed",
     });
   });
 

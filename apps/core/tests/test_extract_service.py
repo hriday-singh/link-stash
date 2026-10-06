@@ -148,3 +148,13 @@ def test_manual_mp4_is_used_when_blocked(tmp_path: Path) -> None:
     r = _run(tmp_path, Fake(), [GONE])[0]
     assert r["status"] == "fetched" and r["via"] == "manual"
     assert read_source(tmp_path, KEY).video is not None
+
+
+def test_blocked_pending_cleared_once_fetch_succeeds(tmp_path: Path) -> None:
+    _run(tmp_path, Fake(), [GONE])
+    assert list_pending(tmp_path)
+    sdir = source_dir(tmp_path, KEY)
+    sdir.mkdir(parents=True, exist_ok=True)
+    (sdir / "video.mp4").write_bytes(b"mp4")
+    _run(tmp_path, Fake(), [GONE])
+    assert list_pending(tmp_path) == []

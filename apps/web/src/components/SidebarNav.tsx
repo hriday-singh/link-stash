@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Add01Icon,
@@ -12,8 +11,7 @@ import {
   SidebarLeftIcon,
   Video01Icon,
 } from "@hugeicons/core-free-icons";
-import { api, unwrap } from "@/api/client";
-import { queryKeys } from "@/api/keys";
+import { useMeta } from "@/lib/useMeta";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,7 +23,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { TextMorph } from "@/components/ui/TextMorph";
-import { ThemeToggle } from "./ThemeToggle";
 import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
@@ -63,11 +60,7 @@ export function SidebarNav({
   const [catError, setCatError] = useState<string | null>(null);
   const [extraCategories, setExtraCategories] = useState<CategoryItem[]>([]);
 
-  const { data: meta } = useQuery({
-    queryKey: queryKeys.meta(),
-    queryFn: () => unwrap(api.GET("/api/meta")),
-    staleTime: 1000 * 30,
-  });
+  const { data: meta } = useMeta();
 
   const isCollapsed = !isMobile && collapsed;
 
@@ -253,7 +246,7 @@ export function SidebarNav({
           </div>
         </div>
 
-        {/* Footer Area: Sync status, Theme switch, Collapse toggle */}
+        {/* Footer Area: Sync status, Collapse toggle */}
         <div className="flex flex-col gap-1.5 pt-3">
           <Separator className="mb-1" />
 
@@ -266,10 +259,10 @@ export function SidebarNav({
             <span
               className={`size-2 shrink-0 rounded-full ${
                 syncStatus === "connected"
-                  ? "bg-emerald-500 shadow-xs"
+                  ? "bg-success shadow-xs"
                   : syncStatus === "connecting"
-                    ? "animate-pulse bg-amber-500"
-                    : "bg-rose-500"
+                    ? "animate-pulse bg-warning"
+                    : "bg-destructive"
               }`}
             />
             {!isCollapsed && (
@@ -282,9 +275,6 @@ export function SidebarNav({
               </span>
             )}
           </div>
-
-          {/* Theme toggle */}
-          <ThemeToggle collapsed={isCollapsed} />
 
           {/* Desktop collapse toggle */}
           {!isMobile && (

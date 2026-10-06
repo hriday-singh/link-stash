@@ -51,7 +51,9 @@ export function MainScroll({ children }: { children: ReactNode }) {
       <div
         ref={wrapperRef}
         data-slot="main-scroll-wrapper"
-        className="h-[calc(100dvh-3.5rem)] flex-1 overflow-y-auto overflow-x-hidden"
+        // No flex-1: as a flex-col child it overrides the fixed height, the wrapper grows to
+        // content, and Lenis swallows wheel events on a box with nothing to scroll.
+        className="h-[calc(100dvh-3.5rem)] overflow-y-auto overflow-x-hidden"
       >
         <div ref={contentRef} data-slot="main-scroll-content" className="min-h-full">
           {children}

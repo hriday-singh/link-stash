@@ -114,7 +114,7 @@ describe("SourceDetailPage", () => {
             platform: "github",
             creator: "@octocat",
             url: "https://github.com/owner/repo",
-            stage: "extracted",
+            stage: "analyzed",
             caption: "Octocat repository readme",
             transcript: null,
             video: null,

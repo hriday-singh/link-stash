@@ -1,10 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Share08Icon,
-  Cancel01Icon,
-} from "@hugeicons/core-free-icons";
+import { Share08Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 
 import { api, unwrap } from "@/api/client";
 import { queryKeys } from "@/api/keys";
@@ -12,6 +9,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { categoryColorVar } from "@/lib/categories";
+import { useMeta, useUntriagedHint } from "@/lib/useMeta";
 import { GraphView } from "./GraphView";
 import type { GraphSearchFilters } from "./types";
 export type { GraphSearchFilters };
@@ -36,18 +34,14 @@ export function GlobalGraph({ filters, onFilterChange }: GlobalGraphProps) {
               edge_type: filters.edge_type,
             },
           },
-        })
+        }),
       );
     },
   });
 
   // 2. Fetch categories metadata for legend and filter
-  const { data: meta } = useQuery({
-    queryKey: queryKeys.meta(),
-    queryFn: async () => {
-      return await unwrap(api.GET("/api/meta"));
-    },
-  });
+  const { data: meta } = useMeta();
+  const untriaged = useUntriagedHint();
 
   const categories = meta?.categories ?? [];
   const nodes = graphData?.nodes ?? [];
@@ -161,10 +155,14 @@ export function GlobalGraph({ filters, onFilterChange }: GlobalGraphProps) {
       {isLoading ? (
         <div
           data-testid="global-graph-loading"
-          className="flex h-[calc(100vh-16rem)] min-h-96 w-full items-center justify-center rounded-xl border border-border/50 bg-surface-sunken/40 animate-pulse text-xs text-muted-foreground"
+          className="flex h-[calc(100dvh-20rem)] min-h-96 w-full items-center justify-center rounded-xl border border-border/50 bg-surface-sunken/40 animate-pulse text-xs text-muted-foreground"
         >
           <div className="flex flex-col items-center gap-2">
-            <HugeiconsIcon icon={Share08Icon} className="size-6 text-primary animate-spin" strokeWidth={1.5} />
+            <HugeiconsIcon
+              icon={Share08Icon}
+              className="size-6 text-primary animate-spin"
+              strokeWidth={1.5}
+            />
             <span>Building global graph...</span>
           </div>
         </div>
@@ -172,8 +170,12 @@ export function GlobalGraph({ filters, onFilterChange }: GlobalGraphProps) {
         <GraphView
           graphData={graphData ?? { nodes: [], edges: [] }}
           onSelectNode={handleSelectNode}
-          height="calc(100vh - 16rem)"
-          emptyMessage="No nodes match current filters"
+          height="calc(100dvh - 20rem)"
+          emptyMessage={
+            untriaged
+              ? `${untriaged.message}. ${untriaged.subtext}`
+              : "No nodes match current filters"
+          }
           className="min-h-96 shadow-xs"
         />
       )}
