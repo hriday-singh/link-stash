@@ -9,7 +9,7 @@
 - Parsing is a pure function over HTML, so unit tests run on recorded fixtures with no network.
 - Live tests live in `tests/live/`, marked `live`, excluded from the default run and CI.
 - Writes go through one lock. SQLite index is not built here; `write_source` skips reindex until the index milestone.
-- Out of scope: yt-dlp + burner cookies fallback, manual mp4 path, reel engines, triage. A blocked embed ends as `blocked:fetch` in `failed.jsonl`.
+- Out of scope: manual mp4 path, reel engines, triage. A blocked embed ends as `blocked:fetch` in `failed.jsonl`.
 
 ## Review focus
 1. URL variants all map to one `ig:<shortcode>` key (username prefix, `/reels/`, `/tv/`, `igsh`/`utm_*`, trailing slash).

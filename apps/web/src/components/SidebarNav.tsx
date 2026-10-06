@@ -116,14 +116,21 @@ export function SidebarNav({
     setAddOpen(false);
   };
 
-  const navItems = [
+  interface NavItem {
+    to: "/" | "/sources" | "/pending" | "/rejected" | "/inventory" | "/graph";
+    label: string;
+    icon: typeof Layout01Icon;
+    count?: number | undefined;
+  }
+
+  const navItems: NavItem[] = [
     { to: "/", label: "Feed", icon: Layout01Icon, count: meta?.counts?.cards },
     { to: "/sources", label: "Sources", icon: Video01Icon, count: meta?.counts?.sources },
     { to: "/pending", label: "Pending", icon: Clock01Icon, count: meta?.counts?.pending },
     { to: "/rejected", label: "Rejected", icon: CancelCircleIcon, count: meta?.counts?.rejected },
     { to: "/inventory", label: "Inventory", icon: Layers01Icon, count: meta?.counts?.inventory },
-    { to: "/graph", label: "Graph", icon: GitForkIcon },
-  ] as const;
+    { to: "/graph", label: "Graph", icon: GitForkIcon, count: undefined },
+  ];
 
   return (
     <TooltipProvider delayDuration={150}>

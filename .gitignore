@@ -83,7 +83,6 @@ results-*.json
 !.env.example
 config.toml
 !config.example.toml
-cookies.txt
 
 # --- OS Generated Files ---
 .DS_Store

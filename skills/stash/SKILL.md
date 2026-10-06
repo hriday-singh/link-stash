@@ -5,14 +5,13 @@ description: Full triage workflow: extract, analyze, check dedup/overlap, show r
 
 # `/stash` — Triage Workflow
 
-Use this skill when the user pastes one or more links to stash, or runs `/stash` to process items waiting in the triage queue.
+Use this skill when the user pastes one or more links to stash, or runs `/stash` with links.
 
 ## Workflow Steps
 
-### 1. Check Open Pendings and Queue
+### 1. Check Open Pendings
 Check `library/pending.md` for open comment-for-link items (`[open]`).
 If there are open pendings, list them in one line each so the user is aware of DM links awaiting input.
-Check `library/queue.md`. If it contains URLs, state how many links are queued for triage.
 
 ### 2. Ensure Inventory Freshness
 Run the inventory scan with freshness check:
@@ -22,15 +21,10 @@ stash scan --if-stale
 This updates `inventory/auto/` if older than 24 hours without delaying if already fresh.
 
 ### 3. Extract Sources
-- If the user provided URLs in their prompt:
-  ```bash
-  stash extract <url1> <url2> ...
-  ```
-- If no URLs were provided, pop the next chunk (default 15) from the queue:
-  ```bash
-  stash queue next --n 15
-  ```
-  Then run `stash extract` on the popped URLs.
+Run extract on the URLs the user pasted. If none were pasted, ask for them.
+```bash
+stash extract <url1> <url2> ...
+```
 
 For Instagram reels, run `stash analyze <id>` (or use `stash ingest <id> -` if analyzing directly in-session) to extract mentions, takeaways, CTA keywords, and summary.
 
@@ -83,4 +77,4 @@ Once the user confirms (e.g. `save 1 2, skip 3, 4 -> practices`), execute the ch
   stash pending add <pending.json>
   ```
 
-Print one concise summary line showing total saved, rejected, and queued.
+Print one concise summary line showing total saved, rejected, and pending.

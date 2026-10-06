@@ -47,12 +47,10 @@ def events_for_changes(
         elif len(parts) >= 3 and parts[0] == "library" and parts[1] == "sources":
             source_ids.add(parts[2])
         elif (
-            len(parts) == 2
-            and parts[0] == "library"
-            and parts[1] in ("pending.md", "rejected.md", "queue.md")
+            len(parts) == 2 and parts[0] == "library" and parts[1] in ("pending.md", "rejected.md")
         ):
             state_files.add(parts[1])
-        elif len(parts) >= 1 and parts[0] in ("pending.md", "rejected.md", "queue.md"):
+        elif len(parts) >= 1 and parts[0] in ("pending.md", "rejected.md"):
             state_files.add(parts[0])
         elif len(parts) >= 1 and parts[0] == "inventory":
             state_files.add(parts[-1])

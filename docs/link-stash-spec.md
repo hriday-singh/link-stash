@@ -14,7 +14,7 @@ Link Stash turns links pasted into Claude Code or Antigravity CLI into a dedupli
 
 **Audience.** Built for one person on one Windows machine (the Predator) first. Every path, agent and engine lives in `config.toml`, never in code, so someone else can clone the repo, edit the config and run it. Windows is the primary target; macOS and Linux are kept working in CI but not tuned.
 
-**Inputs (v1).** Instagram reels and posts, GitHub repos, Hugging Face repos, and Instagram's own data export (`saved_posts.json`). Notion pages, PDFs and generic links are accepted through the same pipe.
+**Inputs (v1).** Instagram reels and posts, GitHub repos and Hugging Face repos. Notion pages, PDFs and generic links are accepted through the same pipe.
 
 **Non-goals (v1).**
 
@@ -32,13 +32,13 @@ Every row below was decided in the scoping sessions on Oct 5, 2026. Change a row
 | Area | Decision | Why |
 | --- | --- | --- |
 | Audience | Personal first, cloneable: all machine specifics in `config.toml` | Public repo that actually runs for others later |
-| Capture | Paste links into Claude Code or Antigravity CLI (agy), one or many at a time; bulk import from Instagram's data export | No mobile/server infra; the saved backlog is the real pile |
+| Capture | Paste links into Claude Code or Antigravity CLI (agy), one or many at a time | No mobile/server infra |
 | Host | acer-predator (Windows); CI also runs Ubuntu | Agent configs, Scrapling and Claude Code live there |
 | Repo vs data | Code in this repo; data in `STASH_HOME` (default `~/stash`), never committed | Clean public repo; library can be backed up or versioned on its own |
 | Runtime | Python 3.14 via `uv`; `uv tool install` puts `stash` on PATH | Lockfile, fast, standard for new Python repos |
 | Commands | `/stash`, `/stash-init`, `/stash-have`, `/stash-pending`, `/stash-scan` | Written once as Agent Skills (SKILL.md); both CLIs expose each skill as a slash command |
 | Universal fetch | Scrapling is used everywhere across all link types (Instagram, GitHub, Hugging Face, Notion, PDF downloads, and generic web links) with `Fetcher` and `StealthyFetcher` | Bypasses anti-bot challenges, handles JS rendering, and provides zero-config scraping without requiring API tokens |
-| Instagram fetch | Embed page via Scrapling `StealthyFetcher`, no login; burner cookies only as fallback | Tested Oct 5: 18/18 embed pages, video links play logged out |
+| Instagram fetch | Embed page via Scrapling `StealthyFetcher`, no login, no cookies; blocked reels fall back to a user-supplied mp4 | Tested Oct 5: 18/18 embed pages, video links play logged out |
 | Reel understanding | In Antigravity, agy reads the mp4 itself; in Claude Code, stash calls agy headless; then Gemini API key, then contact sheet + whisper | Oct 5 test: agy read 3/3 mp4s natively; Claude has no video input |
 | GitHub fetch | Scrapling page scraping + raw files as universal fetcher; REST API backend as companion when a token exists (`gh auth token`, else `GITHUB_TOKEN`) | Scrapling runs everywhere with zero setup; API offers higher rate limits if a token is present |
 | Hugging Face fetch | Scrapling on model/dataset/space pages (with `huggingface_hub` metadata integration) | Extracts architecture, parameter sizes, GGUFs, tags, and downloads even for gated or custom landing pages |
@@ -74,7 +74,7 @@ flowchart TD
     WEB["Library web app (part 2)"] -->|REST + SSE on 127.0.0.1| API
     CLI["stash CLI (Typer)"] --> SVC
     API["stash serve (FastAPI)"] --> SVC
-    SVC["services: triage, cards, inventory, pending, rejects, queue"] --> STORE
+    SVC["services: triage, cards, inventory, pending, rejects"] --> STORE
     SVC --> EX["extract: instagram, github, hf, notion, pdf, web"]
     SVC --> RE["reel engines: agy, gemini_api, frames"]
     SVC --> INV["inventory scan"]
@@ -94,7 +94,7 @@ stash/
         cli/                  Typer commands, thin: parse args, call services, print JSON
         server/               FastAPI routes, thin: validate, call services, return JSON
         services/             business logic shared by cli/ and server/
-        extract/              instagram.py github.py hf.py notion.py pdf.py web.py ig_export.py
+        extract/              instagram.py github.py hf.py notion.py pdf.py web.py
         reel/                 engines (agy.py gemini_api.py frames.py), prompt.md, schemas/reel.json
         inventory/            one scanner per tool
         store/                cards.py keys.py lock.py index.py watcher.py models.py
@@ -128,7 +128,6 @@ stash/
       contact.jpg       only when the frames fallback ran
     pending.md          comment-for-link and blocked items
     rejected.md         key, date, reason
-    queue.md            imported links waiting for triage
   .index/stash.db       derived SQLite index, safe to delete
   cache/                per-run JSON, partial downloads
   logs/                 stash.log (JSON lines), failed.jsonl, scan.log
@@ -141,13 +140,12 @@ Every link goes through `stash extract <url>`, which returns one JSON record per
 
 | Source | URL patterns | Primary method | Fallbacks | Key fields captured |
 | --- | --- | --- | --- | --- |
-| Instagram reel/post | `instagram.com/[user/]reel\|reels\|p\|tv/<code>` | Scrapling `StealthyFetcher` on `/<type>/<code>/embed/captioned/`, resources disabled, batches of at most 6 | 1. yt-dlp with burner `cookies.txt` 2. ask for an mp4 path | shortcode, author, caption, comment count, video URL, poster image, carousel items, `oe` expiry |
+| Instagram reel/post | `instagram.com/[user/]reel\|reels\|p\|tv/<code>` | Scrapling `StealthyFetcher` on `/<type>/<code>/embed/captioned/`, resources disabled, batches of at most 6 | ask for an mp4 (pending `blocked`) | shortcode, author, caption, comment count, video URL, poster image, carousel items, `oe` expiry |
 | GitHub repo | `github.com/<owner>/<repo>[/...]` | Scrapling on `github.com/<o>/<r>` + raw files (universal); REST API (`GET /repos/{o}/{r}`, `/readme`, `/git/trees/HEAD`) if `GITHUB_TOKEN` is found | Dual backends fallback to each other | canonical `owner/repo`, description, stars, last push, archived, license, topics, language, has `SKILL.md` / plugin.json / MCP server |
 | Hugging Face | `huggingface.co/<org>/<name>`, `/datasets/...`, `/spaces/...` | Scrapling on the page + `huggingface_hub` `model_info(files_metadata=True)` | Scrapling page parse fallback if Hub API is unavailable | repo id, type, pipeline tag, params (safetensors), GGUF files, gated, license, downloads, last modified |
 | Notion page | `*.notion.site/...`, public `notion.so/...` | Scrapling `StealthyFetcher`, network idle, markdown | Notion `loadPageChunk` endpoint; private page → ask | title, text, every outbound link |
 | PDF (remote or local) | URL ending `.pdf` or a local path | Scrapling `Fetcher` downloads remote PDF to cache; PyMuPDF text + `page.get_links()` | OCR only if no text layer | text, every link inside |
 | Generic link | anything else (blogs, docs, landing pages, tools) | Scrapling `Fetcher`, auto-escalating to `StealthyFetcher` on 403 / Cloudflare / JS pages | ask for a pasted copy | title, main text, outbound links, mentioned GitHub/HF assets |
-| Instagram data export (optional) | local `saved_posts.json` | `stash import-ig-export <file>`: parse, normalize to `ig:` keys, drop already-processed, append to `queue.md` | none | URL, saved date |
 
 **Universal Scrapling web extraction across all sources:**
 
@@ -275,7 +273,7 @@ These are your own lists: UI component references, tools you use, practices you 
 
 ## Library
 
-The library is plain markdown under `STASH_HOME/library`. There is one card per thing, raw material sits in `sources/`, and three files track state: `pending.md`, `rejected.md` and `queue.md`.
+The library is plain markdown under `STASH_HOME/library`. There is one card per thing, raw material sits in `sources/`, and two files track state: `pending.md` and `rejected.md`.
 
 **Seed categories** (folder name, then what goes in it)
 
@@ -343,7 +341,7 @@ overlaps: [github:other/repo]   # inventory/library keys judged similar
 | `links` | from_key, to_key, type (`source`, `overlap`, `wikilink`); drives backlinks and the graph |
 | `tags` | key, tag |
 | `inventory` | key, name, kind, origin (tool or manual file) |
-| `rejects`, `pending`, `queue` | parsed from their markdown files |
+| `rejects`, `pending` | parsed from their markdown files |
 | `search` | FTS5 over title, body, transcript, caption |
 
 - **Schema version.** The DB stores its schema version. On a mismatch it is deleted and rebuilt from markdown. It is a derived cache, not a migration of your data.
@@ -357,7 +355,7 @@ Five skills drive the `stash` CLI. Each skill is a portable `SKILL.md` that work
 
 | Skill | What it does | CLI calls |
 | --- | --- | --- |
-| `/stash [links]` | Full triage: extract, analyze, check, review table, save. With no links, takes the next chunk from `queue.md` | `scan --if-stale`, `queue next`, `extract`, `analyze` or `ingest`, `check`, `save`, `reject`, `pending add` |
+| `/stash [links]` | Full triage: extract, analyze, check, review table, save. With no links, asks for them | `scan --if-stale`, `extract`, `analyze` or `ingest`, `check`, `save`, `reject`, `pending add` |
 | `/stash-init` | Guided brain dump into `inventory/manual/` | `have` (repeated) |
 | `/stash-have <thing>` | Add one installed thing to the inventory | `have` |
 | `/stash-pending` | List pendings; paste a DM'd link to resolve one | `pending list`, `pending resolve` |
@@ -374,17 +372,15 @@ Five skills drive the `stash` CLI. Each skill is a portable `SKILL.md` that work
 - `stash reject <key> --reason`
 - `stash pending list|add|resolve`
 - `stash have <text|url>`
-- `stash import-ig-export <saved_posts.json>`
-- `stash queue list|next [--n 15]`
 - `stash reindex`
 - `stash serve [--port] [--dev]` (`--dev`: API only, for the Vite dev server)
 - `stash install-skills`
 
 **`/stash` flow**
 
-1. List open pendings, if any, in one line each. If `queue.md` has items, say how many.
+1. List open pendings, if any, in one line each.
 2. Run `stash scan --if-stale`.
-3. Run `stash extract` on the pasted links, or on `stash queue next` when none were pasted. Media is downloaded, then each reel is read by the engine for this CLI (see Reel understanding).
+3. Run `stash extract` on the pasted links. Media is downloaded, then each reel is read by the engine for this CLI (see Reel understanding).
 4. Split each record into things: one candidate per mention, plus a practice candidate when there are takeaways.
 5. Run `stash check` per candidate. It returns exact key hits in the library, inventory and rejects, plus same-kind names for the overlap judgment.
 6. The agent judges overlap, picks a category and drafts each card.
@@ -448,10 +444,9 @@ Instagram changes are the biggest risk: instaloader broke in June 2026 and has b
 
 | Failure | How it shows | Handling |
 | --- | --- | --- |
-| Embed page blocked or changed | No `<video>` / no caption, or redirect to login | yt-dlp with burner cookies → ask for mp4 → pending `blocked:fetch` |
+| Embed page blocked or changed | No `<video>` / no caption, or redirect to login | Use `video.mp4` if the user dropped one in the source folder, else pending `blocked` asking for it |
 | Video URL expired | HTTP 403 on download, `oe` in the past | Re-fetch the embed page once |
-| Instagram rate limit | 429 or empty pages across a batch | Batches of at most 6, 2–5 s jitter, stop the batch and leave the rest queued |
-| Burner flagged | `feedback_required`, checkpoint page | Stop using cookies, warn once, rely on embed + manual mp4 |
+| Instagram rate limit | 429 or empty pages across a batch | Batches of at most 6, 2–5 s jitter, stop the batch; rerun `stash extract` later for the rest |
 | agy or Gemini error, quota, not signed in | agy non-zero exit or status not SUCCESS; API 429 | Next engine in `reel_engines`; item records which engine ran |
 | Engine finds nothing | Zero mentions and zero takeaways | Next engine once, then ask "what was this about?" |
 | Private/gated content | 401/403, HF `gated: true`, private Notion | Card saved with `gated: true`, or pending `blocked:private` |
@@ -479,7 +474,7 @@ Instagram changes are the biggest risk: instaloader broke in June 2026 and has b
 | Store | Pytest table tests for key normalization, byte-identical card round-trip, lock contention, hash conflict, reindex after deleting the DB, all against a temp `STASH_HOME` |
 | Extractors | Recorded fixtures (real embed HTML, GitHub/HF JSON saved once) so unit tests never touch the network. `pytest -m live` runs a small real-link smoke suite by hand |
 | Reel engines | subprocess and API mocked; every engine's output validated against `reel.json` |
-| Services | Dedup passes, queue, pending, `import-ig-export` with a sample export |
+| Services | Dedup passes, pending |
 | API | FastAPI TestClient against a temp `STASH_HOME` |
 | Lint / types | ruff (lint + format), pyright strict |
 | CI | GitHub Actions on every PR: lint, typecheck, tests; core on Windows and Ubuntu |
@@ -495,9 +490,9 @@ Build Instagram and the reel engines first, because they carry the most risk. Ea
 4. **A4 Store and index.** Pydantic models, card read/write, keys, lock, SQLite schema, watcher, `reindex`. *Done when* cards round-trip byte-identical and deleting `stash.db` then running `stash reindex` restores every query result.
 5. **A5 Other extractors.** GitHub, Hugging Face, Notion, PDF, generic, one-level follow-through. *Done when* each has 3 passing sample links.
 6. **A6 Inventory.** Scan for every path in the Inventory table (including the HF cache), manual files, `have`. *Done when* the index lists your real skills and Ollama/LM Studio/HF models.
-7. **A7 Check, save, queue.** Exact pass, candidate list, save/reject/pending writers, `import-ig-export`, `queue`. *Done when* re-pasting a saved link reports "duplicate" and a sample `saved_posts.json` (your real one, if you requested it) fills the queue.
+7. **A7 Check and save.** Exact pass, candidate list, save/reject/pending writers. *Done when* re-pasting a saved link reports "duplicate".
 8. **A8 Skills.** The five `SKILL.md` files and `install-skills`. *Done when* `/stash` runs end to end in Claude Code, then in Antigravity CLI, producing identical cards.
-9. **A9 Fallbacks.** Contact sheet + whisper path and the burner-cookie path. *Done when* forcing agy and the Gemini API to fail still yields a card.
+9. **A9 Fallbacks.** Contact sheet + whisper path, and the manual-mp4 path for blocked embeds. *Done when* forcing agy and the Gemini API to fail still yields a card.
 10. **A10 First real run.** Run `/stash-init` and work through a week of saved reels. Note what felt wrong and update this spec.
 
 ## Open questions
@@ -508,7 +503,6 @@ Build Instagram and the reel engines first, because they carry the most risk. Ea
 - [ ] Re-run the Oct 5 test with the caption included and the new mention rules, then compare (A3).
 - [ ] Gemini free-tier limits for `gemini-3.8-flash`: confirm in AI Studio before relying on it as the fallback for batches of 10+.
 - [ ] Send a real comment-for-link reel to test CTA detection (A2).
-- [ ] Optional: request the Instagram data export (it takes hours to days) if you want the saved backlog imported at A7. Pasting links never needs it.
 
 **Resolved Oct 5:** `.claude` lives at `C:\Users\clash\.claude`. mp4s are kept with a thumbnail. Runtime is uv. GitHub auth comes from `gh auth token`. The HF cache is scanned. Prior art checked (below): ideas taken, no code reused.
 
@@ -524,12 +518,11 @@ Build Instagram and the reel engines first, because they carry the most risk. Ea
 | [Antigravity CLI cheat sheet](https://computingforgeeks.com/antigravity-cli-cheat-sheet/) | `agy -p`, JSON output, `--json-schema`, settings.json permissions, `agy plugin import claude` |
 | [Antigravity #762](https://github.com/google-antigravity/antigravity-cli/issues/762) | IDE chat cannot attach mp4 |
 | [Antigravity #560](https://github.com/google-antigravity/antigravity-cli/issues/560) | Long mp4 hangs the CLI conversation |
-| [yt-dlp #16311](https://github.com/yt-dlp/yt-dlp/issues/16311) | Instagram needs login for yt-dlp (Mar 2026) |
 | [instaloader PR #2706](https://github.com/instaloader/instaloader/pull/2706) | June 2026 endpoint break, fix merged Jul 26 |
 | [instaloader #2738](https://github.com/instaloader/instaloader/issues/2738) | Partial failures again since Sep 4, 2026 |
 | [gallery-dl #9564](https://github.com/mikf/gallery-dl/issues/9564) | Public links redirect to login in gallery-dl |
 | [Whisper comparison 2026](https://www.promptquorum.com/power-local-llm/local-whisper-stt-comparison-2026) | faster-whisper int8 is usable on CPU for base/small |
-| [Karakeep docs](https://docs.karakeep.app/) | Prior art: AI-tagged bookmarks, yt-dlp archiving, agent skills |
+| [Karakeep docs](https://docs.karakeep.app/) | Prior art: AI-tagged bookmarks, agent skills |
 
 **Build with**
 
@@ -543,7 +536,6 @@ Build Instagram and the reel engines first, because they carry the most risk. Ea
 | [Scrapling](https://github.com/D4Vinci/Scrapling) | Universal web fetching engine for all links (Instagram, GitHub, Hugging Face, Notion, PDF downloads, and generic web) |
 | [httpx](https://www.python-httpx.org/) | API calls and media download |
 | [Antigravity CLI](https://antigravity.google/docs/skills/) | Primary video reader (in-session and `agy -p`) |
-| [yt-dlp](https://github.com/yt-dlp/yt-dlp) | Instagram fallback with burner cookies |
 | [google-genai SDK](https://ai.google.dev/gemini-api/docs) | Gemini API fallback |
 | [huggingface_hub](https://huggingface.co/docs/huggingface_hub/en/package_reference/hf_api) | `model_info`, dataset and space info |
 | [GitHub REST API](https://docs.github.com/en/rest) | Repo facts, README, file tree |
@@ -556,6 +548,6 @@ Build Instagram and the reel engines first, because they carry the most risk. Ea
 
 | Repo | What it is | Taken |
 | --- | --- | --- |
-| [reel-watcher](https://github.com/jakeb144/reel-watcher) | Saved reels analyzed locally into JSON; Apple Silicon only (MLX, Apple Vision), downloads via paid Apify | Instagram data export as the backlog source; one labeled contact sheet instead of N frames; resumable runs with a failed log |
+| [reel-watcher](https://github.com/jakeb144/reel-watcher) | Saved reels analyzed locally into JSON; Apple Silicon only (MLX, Apple Vision), downloads via paid Apify | One labeled contact sheet instead of N frames; resumable runs with a failed log |
 | [instagram-reel-bot](https://github.com/Murtadha-Najem/instagram-reel-bot) | Second Instagram account; DM it a reel, Claude Code or Codex replies | Transcribe only when caption/subtitles do not already carry the speech |
 | [Karakeep](https://github.com/karakeep-app/karakeep) | Self-hosted bookmark app with AI tagging and an agent CLI | Nothing new beyond the original spec |

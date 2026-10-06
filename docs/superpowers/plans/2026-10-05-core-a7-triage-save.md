@@ -1,14 +1,14 @@
-# A7 Check, Save, and Queue: Plan
+# A7 Check and Save: Plan
 
-**Goal:** Implement deduplication and overlap candidate scoring (`stash check`), card saving (`stash save`), reject and pending queue management, and Instagram data export backlog import (`stash import-ig-export`).
-**Spec:** `docs/link-stash-spec.md` (Dedup and check, Overlap ranking, Review and confirmation, Instagram data export, Build order A7). Contract: `2026-10-05-library-app-00-overview.md` (`stash.services.rejects`, `stash.services.pending`).
+**Goal:** Implement deduplication and overlap candidate scoring (`stash check`), card saving (`stash save`), reject and pending management.
+**Spec:** `docs/link-stash-spec.md` (Dedup and check, Overlap ranking, Review and confirmation, Build order A7). Contract: `2026-10-05-library-app-00-overview.md` (`stash.services.rejects`, `stash.services.pending`).
 **Stack adds:** `rapidfuzz` (string similarity & token ranking).
 
 ## Constraints
 - Every write operation takes `STASH_HOME/.lock`.
 - Pure evaluation: `stash check` performs no mutations, returning classification (duplicate, rejected, overlap, new) and suggested card attributes.
 - Card save enforces unique slugs across the entire library; colliding titles receive `-2`, `-3` suffixes.
-- `pending.md`, `rejected.md`, and `queue.md` are plain markdown files at `STASH_HOME/library/` with clean line-oriented formats.
+- `pending.md` and `rejected.md` are plain markdown files at `STASH_HOME/library/` with clean line-oriented formats.
 - Precondition for B1: Completing A7 along with A4 satisfies the full Core contract consumed by the FastAPI web server.
 - Never commit; checkpoint after each task.
 
@@ -16,8 +16,7 @@
 1. **Deduplication order:** Exact identity key match -> exact URL match -> reject history match -> fuzzy overlap score.
 2. **RapidFuzz overlap scoring:** Compares extracted mention names and tags against library cards and inventory items; score >= 75 flags candidate overlap.
 3. **Atomic card saving:** Card file written atomically into `library/items/<category>/<slug>.md` and immediately indexed into SQLite.
-4. **Queue state integrity:** `stash import-ig-export` parses Instagram's `saved_posts.json` without failing on malformed entries and filters out already-processed keys.
-5. **Pending lifecycle:** Comment-for-link items added with status "open" only when `cta.keyword` is set and the analyzed record has zero concrete mentions (no URL, no resolvable name); a CTA post whose content names its repos/tools is triaged normally. Resolving with DM'd link sets status "ready" and records URL.
+4. **Pending lifecycle:** Comment-for-link items added with status "open" only when `cta.keyword` is set and the analyzed record has zero concrete mentions (no URL, no resolvable name); a CTA post whose content names its repos/tools is triaged normally. Resolving with DM'd link sets status "ready" and records URL.
 
 ---
 
@@ -58,22 +57,7 @@
     - Updates source stage to `saved` if source keys are present.
 - **Tests:** Clean save with auto-slug; slug collision resolution; frontmatter validation; index row verification.
 
-### Task 4: Instagram Data Export Backlog Importer
-- **Files:** `apps/core/src/stash/extract/ig_export.py`, `apps/core/services/queue.py`, `apps/core/tests/fixtures/ig_export.json`, `apps/core/tests/test_ig_export.py`.
-- **Approach:**
-  - `parse_ig_export(file_path: Path) -> list[tuple[str, str]]`:
-    - Parses Instagram JSON export structure (`saved_posts` / `saved_media`).
-    - Normalizes URLs to `ig:<shortcode>` keys.
-  - `import_ig_backlog(home: Path, export_file: Path) -> int`:
-    - Takes `write_lock`.
-    - Filters out keys already present in `cards`, `rejects`, or `queue.md`.
-    - Appends new items to `library/queue.md`.
-    - Returns count of newly queued links.
-  - `pop_queue(home: Path, count: int = 10) -> list[str]`:
-    - Takes next N links from `library/queue.md` and removes them under lock.
-- **Tests:** Parse sample Instagram export fixture; filter existing items; queue pop and atomic file update.
-
-### Task 5: CLI Subcommands
+### Task 4: CLI Subcommands
 - **Files:** `apps/core/src/stash/cli/triage.py`, `apps/core/tests/test_cli_triage.py`.
 - **Approach:**
   - `stash check <record.json>`: runs check service, prints JSON result.
@@ -82,6 +66,5 @@
   - `stash pending list`: prints list of pending items.
   - `stash pending add <json>`: adds pending item.
   - `stash pending resolve <id> --url <url>`: resolves pending item.
-  - `stash import-ig-export <file>`: imports backlog, prints queued count.
-- **Tests:** CLI tests for check, save, reject, pending, and backlog import with JSON output.
-- **Done:** Duplicate checks prevent re-saving; RapidFuzz flags overlapping tools; IG backlog populates queue; unit tests, ruff, pyright green.
+- **Tests:** CLI tests for check, save, reject, and pending with JSON output.
+- **Done:** Duplicate checks prevent re-saving; RapidFuzz flags overlapping tools; unit tests, ruff, pyright green.

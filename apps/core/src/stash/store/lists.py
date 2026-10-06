@@ -1,4 +1,4 @@
-"""Line formats for the plain markdown lists: inventory, rejected.md, pending.md, queue.md.
+"""Line formats for the plain markdown lists: inventory, rejected.md, pending.md.
 
 One entry per `- ` line. Any other line (headings, notes, blank) is left alone on rewrite.
 """
@@ -26,7 +26,6 @@ _PEND = re.compile(
     r"(?P<source>\S+)\s+(?P<added>\d{4}-\d{2}-\d{2})\s+—\s*(?P<rest>.*)$"
 )
 _URL_SUFFIX = re.compile(r"\s*\(url:\s*(?P<url>\S+?)\)$")
-_QUEUE = re.compile(r"^\s*[-*]\s+(?P<url>https?://\S+)\s*$")
 
 
 def parse_inventory_line(line: str, origin: str) -> InventoryEntry | None:
@@ -90,11 +89,6 @@ def pending_line(p: PendingItem) -> str:
     if p.url:
         line += f" (url: {p.url})"
     return line
-
-
-def parse_queue_line(line: str) -> str | None:
-    m = _QUEUE.match(line)
-    return m["url"] if m else None
 
 
 def parse_all[T](text: str, parse: Callable[[str], T | None]) -> list[T]:

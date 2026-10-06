@@ -81,21 +81,6 @@ def test_pending_add_list_resolve(home: Path) -> None:
     assert resolved["status"] == "ready"
 
 
-def test_import_ig_export_then_queue_next(home: Path, tmp_path: Path) -> None:
-    export = tmp_path / "saved_posts.json"
-    links = [f"https://www.instagram.com/reel/C{i}AAAA/" for i in range(3)]
-    data = {
-        "saved_saved_media": [
-            {"string_map_data": {"Saved on": {"href": u, "value": "Oct 1, 2026"}}} for u in links
-        ]
-    }
-    export.write_text(json.dumps(data), "utf-8")
-    assert _ok(["import-ig-export", str(export)]) == {"queued": 3}
-    assert len(_ok(["queue", "list"])) == 3
-    assert len(_ok(["queue", "next", "--n", "2"])) == 2
-    assert len(_ok(["queue", "list"])) == 1
-
-
 def test_have_adds_manual_entry(home: Path) -> None:
     entry = _ok(["have", "[tool] Scrapling — stealth scraping"])
     assert entry["name"] == "Scrapling"

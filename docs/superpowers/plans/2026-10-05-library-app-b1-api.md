@@ -51,7 +51,7 @@
 
 ### Task 7: Live events (watcher → SSE)
 - **Files:** `stash/server/events.py`, route in `misc.py`, `tests/server/test_events.py`.
-- **Approach:** `events_for_changes(home, changes)`: card paths → per-slug event decided from index (`card.changed {slug, hash}` if row exists, else `card.deleted {slug}`), deduped; `source.md` → `source.changed`; `pending/rejected/queue.md` and `inventory/**` → `state.changed {file}`. `EventHub`: per-subscriber bounded queue; on overflow clear it and push `index.rebuilt` (forces full refetch, no silent loss). Watcher task in lifespan, restarts after errors with a log line. SSE route sends a `connected` comment, events, and keep-alive pings every 15 s.
+- **Approach:** `events_for_changes(home, changes)`: card paths → per-slug event decided from index (`card.changed {slug, hash}` if row exists, else `card.deleted {slug}`), deduped; `source.md` → `source.changed`; `pending/rejected.md` and `inventory/**` → `state.changed {file}`. `EventHub`: per-subscriber bounded queue; on overflow clear it and push `index.rebuilt` (forces full refetch, no silent loss). Watcher task in lifespan, restarts after errors with a log line. SSE route sends a `connected` comment, events, and keep-alive pings every 15 s.
 - **Tests:** mapping table incl. move batch → single `card.changed`; overflow → `index.rebuilt`; integration: `save_card` from "CLI" → hub receives `card.changed` within 5 s; SSE framing with a fake finite hub.
 
 ### Task 8: OpenAPI → TS types

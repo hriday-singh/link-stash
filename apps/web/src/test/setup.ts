@@ -21,3 +21,18 @@ if (!window.matchMedia) {
 
 // jsdom has no scrollTo; navigation calls it.
 window.scrollTo = () => {};
+
+// jsdom has no scrollIntoView; cmdk calls it.
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {};
+}
+
+// jsdom has no ResizeObserver
+if (typeof globalThis.ResizeObserver === "undefined") {
+  class MockResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  globalThis.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
+}

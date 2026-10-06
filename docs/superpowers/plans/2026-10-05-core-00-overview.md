@@ -14,7 +14,7 @@ Seven core plans, one per milestone. Each milestone ships working, independently
 | [a4-store-index](2026-10-05-core-a4-store-index.md) | A4 Store and index | Markdown card read/write, reentrant lock, SQLite index with FTS5, `stash reindex`, watcher | Cards round-trip byte-identical; deleting DB + reindex restores queries |
 | [a5-other-extractors](2026-10-05-core-a5-other-extractors.md) | A5 Other extractors | GitHub (API + scrape), Hugging Face, Notion, PDF, generic web, 1-level follow-through | 3 passing sample links per extractor type |
 | [a6-inventory](2026-10-05-core-a6-inventory.md) | A6 Inventory | Agent tool scanners (Claude, Antigravity, Codex, etc.), local models (Ollama, LM Studio, HF cache), `stash scan`, `stash have` | Real installed tools and models listed in SQLite `inventory` table |
-| [a7-triage-save](2026-10-05-core-a7-triage-save.md) | A7 Check, save, queue | `stash check` (exact + RapidFuzz overlap), `stash save`, rejects, pending, `stash import-ig-export` | Re-pasted links report duplicate; export fills queue; unlocks B1 |
+| [a7-triage-save](2026-10-05-core-a7-triage-save.md) | A7 Check and save | `stash check` (exact + RapidFuzz overlap), `stash save`, rejects, pending | Re-pasted links report duplicate; unlocks B1 |
 
 ---
 

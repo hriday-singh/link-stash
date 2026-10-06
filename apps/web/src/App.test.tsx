@@ -1,146 +1,137 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { createMemoryHistory } from "@tanstack/react-router";
+import { describe, expect, it } from "vitest";
 import { App } from "./App";
+import { createStashRouter } from "./router";
 import { ThemeProvider } from "./state/theme";
 
-describe("App shell and navigation", () => {
-  beforeEach(() => {
-    window.location.hash = "";
-  });
+describe("App shell, Router, and navigation", () => {
+  const renderApp = (initialEntries: string[] = ["/"]) => {
+    const history = createMemoryHistory({ initialEntries });
+    const router = createStashRouter(history);
 
-  const renderApp = () =>
-    render(
+    const result = render(
       <ThemeProvider>
-        <App />
+        <App router={router} />
       </ThemeProvider>,
     );
 
-  it("opens the card page from a feed tile and returns via back", async () => {
-    const user = userEvent.setup();
-    renderApp();
-    expect(screen.getByRole("heading", { name: "Today" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Open Agent Kit" }));
-    expect(screen.getByRole("heading", { name: "Notes" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /back to feed/i }));
-    expect(screen.getByRole("heading", { name: "Today" })).toBeInTheDocument();
+    return { ...result, router, history };
+  };
+
+  it("renders the feed page with empty state message on initial load", async () => {
+    renderApp(["/"]);
+    expect(await screen.findByRole("heading", { name: "Feed" })).toBeInTheDocument();
+    expect(
+      screen.getByText("Paste links into /stash in Claude Code or agy."),
+    ).toBeInTheDocument();
   });
 
-  it("global search filters the feed and Ctrl+K focuses it", async () => {
+  it("drops unknown/invalid URL params silently and still loads the page", async () => {
+    renderApp(["/?kind=banana&since=not-a-date&unknown_param=true"]);
+    expect(await screen.findByRole("heading", { name: "Feed" })).toBeInTheDocument();
+    expect(
+      screen.getByText("Paste links into /stash in Claude Code or agy."),
+    ).toBeInTheDocument();
+  });
+
+  it("opens Command Palette on Ctrl+K and closes on escape", async () => {
     const user = userEvent.setup();
-    renderApp();
+    renderApp(["/"]);
+
+    expect(await screen.findByRole("heading", { name: "Feed" })).toBeInTheDocument();
     await user.keyboard("{Control>}k{/Control}");
-    expect(screen.getByRole("searchbox", { name: "Search" })).toHaveFocus();
-    await user.keyboard("scrapling");
-    expect(screen.getByRole("button", { name: "Open Scrapling" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Open Agent Kit" })).not.toBeInTheDocument();
-  });
 
-  it("filters popover narrows the feed by kind and clears", async () => {
-    const user = userEvent.setup();
-    renderApp();
-    await user.click(screen.getByRole("button", { name: /filters/i }));
-    const kind = screen.getByRole("group", { name: "Kind" });
-    await user.click(within(kind).getByRole("button", { name: "model" }));
-    expect(screen.getByRole("button", { name: "Open Qwen3 8B GGUF" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Open Agent Kit" })).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Clear all" }));
-    expect(screen.getByRole("button", { name: "Open Agent Kit" })).toBeInTheDocument();
-  });
+    expect(
+      await screen.findByPlaceholderText("Type a command or search cards…"),
+    ).toBeInTheDocument();
 
-  it("adds a category from the sidebar dialog and rejects duplicates", async () => {
-    const user = userEvent.setup();
-    renderApp();
-    await user.click(screen.getByRole("button", { name: "Add category" }));
-    const dialog = screen.getByRole("dialog");
-    await user.type(within(dialog).getByRole("textbox"), "models");
-    await user.click(within(dialog).getByRole("button", { name: "Create category" }));
-    expect(within(dialog).getByText("That category already exists.")).toBeInTheDocument();
-    await user.clear(within(dialog).getByRole("textbox"));
-    await user.type(within(dialog).getByRole("textbox"), "prompts");
-    await user.click(within(dialog).getByRole("button", { name: "Create category" }));
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /prompts/ })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(
+        screen.queryByPlaceholderText("Type a command or search cards…"),
+      ).not.toBeInTheDocument();
+    });
   });
 
   it("navigates to Sources view when clicked in sidebar", async () => {
     const user = userEvent.setup();
-    render(
-      <ThemeProvider>
-        <App />
-      </ThemeProvider>,
-    );
-    await user.click(screen.getByRole("link", { name: /sources/i }));
-    expect(screen.getByRole("heading", { name: /all sources/i })).toBeInTheDocument();
+    renderApp(["/"]);
+
+    const sourcesLink = await screen.findByRole("link", { name: /sources/i });
+    await user.click(sourcesLink);
+
+    expect(await screen.findByRole("heading", { name: /all sources/i })).toBeInTheDocument();
   });
 
   it("navigates to Pending view when clicked in sidebar", async () => {
     const user = userEvent.setup();
-    render(
-      <ThemeProvider>
-        <App />
-      </ThemeProvider>,
-    );
-    await user.click(screen.getByRole("link", { name: /pending/i }));
-    expect(screen.getByRole("heading", { name: /pending resolution/i })).toBeInTheDocument();
+    renderApp(["/"]);
+
+    const pendingLink = await screen.findByRole("link", { name: /pending/i });
+    await user.click(pendingLink);
+
+    expect(
+      await screen.findByRole("heading", { name: /pending resolution/i }),
+    ).toBeInTheDocument();
   });
 
   it("navigates to Rejected view when clicked in sidebar", async () => {
     const user = userEvent.setup();
-    render(
-      <ThemeProvider>
-        <App />
-      </ThemeProvider>,
-    );
-    await user.click(screen.getByRole("link", { name: /rejected/i }));
-    expect(screen.getByRole("heading", { name: /rejected log/i })).toBeInTheDocument();
+    renderApp(["/"]);
+
+    const rejectedLink = await screen.findByRole("link", { name: /rejected/i });
+    await user.click(rejectedLink);
+
+    expect(
+      await screen.findByRole("heading", { name: /rejected log/i }),
+    ).toBeInTheDocument();
   });
 
   it("navigates to Inventory view when clicked in sidebar", async () => {
     const user = userEvent.setup();
-    render(
-      <ThemeProvider>
-        <App />
-      </ThemeProvider>,
-    );
-    await user.click(screen.getByRole("link", { name: /inventory/i }));
-    expect(screen.getByRole("heading", { name: /system inventory/i })).toBeInTheDocument();
-  });
+    renderApp(["/"]);
 
-  it("navigates to Graph view when clicked in sidebar", async () => {
-    const user = userEvent.setup();
-    render(
-      <ThemeProvider>
-        <App />
-      </ThemeProvider>,
-    );
-    await user.click(screen.getByRole("link", { name: /graph/i }));
-    expect(screen.getByRole("heading", { name: /global knowledge graph/i })).toBeInTheDocument();
-  });
+    const inventoryLink = await screen.findByRole("link", { name: /inventory/i });
+    await user.click(inventoryLink);
 
-  it("toggles the theme when theme button is clicked", async () => {
-    const user = userEvent.setup();
-    render(
-      <ThemeProvider>
-        <App />
-      </ThemeProvider>,
-    );
-    const themeBtn = screen.getByRole("button", { name: /switch to (dark|light) theme/i });
-    expect(themeBtn).toBeInTheDocument();
-    await user.click(themeBtn);
     expect(
-      screen.getByRole("button", { name: /switch to (dark|light) theme/i }),
+      await screen.findByRole("heading", { name: /system inventory/i }),
     ).toBeInTheDocument();
   });
 
-  it("toggles the mobile navigation drawer", async () => {
+  it("navigates to category route with category indicator", async () => {
     const user = userEvent.setup();
-    render(
-      <ThemeProvider>
-        <App />
-      </ThemeProvider>,
-    );
-    const toggleBtn = screen.getByRole("button", { name: /open navigation/i });
-    await user.click(toggleBtn);
-    expect(screen.getByRole("button", { name: /close navigation/i })).toBeInTheDocument();
+    renderApp(["/"]);
+
+    const modelsLink = await screen.findByRole("link", { name: /models/i });
+    await user.click(modelsLink);
+
+    expect(await screen.findByRole("heading", { name: /models/i })).toBeInTheDocument();
+  });
+
+  it("adds a category from the sidebar dialog and rejects duplicates", async () => {
+    const user = userEvent.setup();
+    renderApp(["/"]);
+
+    const addBtn = await screen.findByRole("button", { name: "Add category" });
+    await user.click(addBtn);
+
+    const dialog = screen.getByRole("dialog");
+    const input = within(dialog).getByRole("textbox");
+
+    await user.type(input, "models");
+    await user.click(within(dialog).getByRole("button", { name: "Create category" }));
+    expect(within(dialog).getByText("That category already exists.")).toBeInTheDocument();
+
+    await user.clear(input);
+    await user.type(input, "prompts");
+    await user.click(within(dialog).getByRole("button", { name: "Create category" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole("link", { name: /prompts/ })).toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-"""Triage CLI commands: extract, scan, have, check, save, reject, pending, queue, skills."""
+"""Triage CLI commands: extract, scan, have, check, save, reject, pending, skills."""
 
 import json
 import sys
@@ -16,7 +16,6 @@ from stash.services.check import CheckInput, check_item
 from stash.services.extract import extract_urls, failed_urls
 from stash.services.inventory import have, scan_inventory
 from stash.services.pending import add_pending, list_pending, new_id, resolve_pending
-from stash.services.queue import import_ig_export, list_queue, next_queue
 from stash.services.rejects import add_reject
 from stash.services.skills import install_skills
 from stash.store.models import Card, PendingItem
@@ -136,16 +135,6 @@ def register_triage_commands(app: typer.Typer) -> None:
         except StashError as e:
             _fail(e)
 
-    @app.command("import-ig-export")
-    def import_ig(
-        file: Annotated[Path, typer.Argument(help="Instagram saved_posts.json export.")],
-    ) -> None:
-        """Queue every link from an Instagram saved-posts export."""
-        try:
-            _print({"queued": import_ig_export(load_config().home, file)})
-        except StashError as e:
-            _fail(e)
-
     @app.command("install-skills")
     def install_skills_cmd(
         skills_dir: Annotated[
@@ -194,26 +183,5 @@ def register_triage_commands(app: typer.Typer) -> None:
         """Attach the received link and mark the item ready."""
         try:
             _print(resolve_pending(load_config().home, id, url).model_dump(mode="json"))
-        except StashError as e:
-            _fail(e)
-
-    queue_app = typer.Typer(help="Backlog of links waiting for triage.", no_args_is_help=True)
-    app.add_typer(queue_app, name="queue")
-
-    @queue_app.command("list")
-    def queue_list() -> None:
-        """List queued links."""
-        try:
-            _print(list_queue(load_config().home))
-        except StashError as e:
-            _fail(e)
-
-    @queue_app.command("next")
-    def queue_next(
-        n: Annotated[int, typer.Option("--n", min=1, help="How many links to pop.")] = 15,
-    ) -> None:
-        """Pop the next links off the queue."""
-        try:
-            _print(next_queue(load_config().home, n))
         except StashError as e:
             _fail(e)
