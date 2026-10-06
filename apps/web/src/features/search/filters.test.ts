@@ -69,4 +69,10 @@ describe("Card search filters", () => {
       has_video: "true",
     });
   });
+
+  it("keeps a known bucket and drops an unknown one", () => {
+    expect(parseCardFilters({ bucket: "later" }).bucket).toBe("later");
+    expect(parseCardFilters({ bucket: "someday" }).bucket).toBeUndefined();
+    expect(serializeCardFilters({ bucket: "upgrade" })).toEqual({ bucket: "upgrade" });
+  });
 });

@@ -40,6 +40,7 @@ def get_cards_page(
     category: str | None = None,
     kind: str | None = None,
     tag: str | None = None,
+    bucket: str | None = None,
     creator: str | None = None,
     since: str | None = None,
     until: str | None = None,
@@ -61,6 +62,7 @@ def get_cards_page(
         category=category,
         kind=kind,
         tag=tag,
+        bucket=bucket,
         creator=creator,
         since=since,
         until=until,
@@ -91,6 +93,7 @@ def get_cards_page(
                 thumb_url=thumb_url,
                 platform=r["platform"],
                 tags=tags,
+                bucket=r["bucket"],
             )
         )
 

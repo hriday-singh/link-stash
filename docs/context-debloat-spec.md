@@ -160,10 +160,10 @@ The debloating rules are enforced at two boundaries:
 ```
 [Remote Web Page / File]
           │
-          ▼
+          v
    Scrapling Fetch
           │
-          ▼
+          v
 ┌───────────────────────────────────────────────┐
 │ 1. Raw Sanitizer (stash/extract/sanitize.py)  │
 │    - Strip <script>, <style>, <nav>, SVG      │
@@ -171,14 +171,14 @@ The debloating rules are enforced at two boundaries:
 │    - Enforce character caps & link extraction │
 └───────────────────────────────────────────────┘
           │
-          ▼
+          v
 ┌───────────────────────────────────────────────┐
 │ 2. Structured Normalization (Record Models)   │
 │    - WebRecord, GithubRecord, HfRecord        │
 │    - Compact key metadata + mentions list     │
 └───────────────────────────────────────────────┘
           │
-          ▼
+          v
 ┌───────────────────────────────────────────────┐
 │ 3. Storage & Context Isolation                │
 │    - Full raw response saved to sources/<id>/ │

@@ -26,6 +26,7 @@ ORDERED_KEYS = [
     "facts",
     "features",
     "overlaps",
+    "bucket",
 ]
 
 
@@ -80,6 +81,8 @@ def parse_card(text: str) -> tuple[Card, str]:
 def render_card(card: Card, body: str) -> str:
     """Render a Card model and body text into canonical byte-stable markdown."""
     raw = card.model_dump(by_alias=True)
+    if raw.get("bucket") is None:
+        raw.pop("bucket", None)  # keep cards without a bucket byte-identical
     ordered_data: dict[str, Any] = {}
 
     for key in ORDERED_KEYS:

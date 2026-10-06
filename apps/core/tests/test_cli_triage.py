@@ -157,3 +157,25 @@ def test_check_raw_url_and_raw_name(home: Path) -> None:
     checked_new = _ok(["check", "something-completely-brand-new-999"])
     assert checked_new["status"] == "new"
 
+
+def test_save_with_flags_and_bucket(home: Path) -> None:
+    saved = _ok([
+        "save", "--url", "https://github.com/acme/widget", "--title", "Widget",
+        "--category", "repos-tools", "--tag", "cli", "--tag", "rust",
+        "--bucket", "try-now", "--body", "# Widget",
+    ])  # fmt: skip
+    text = (home / saved["path"]).read_text("utf-8")
+    assert "bucket: try-now" in text
+    assert "key: github:acme/widget" in text
+    err = _err(["save", "--url", "https://x.example", "--title", "X",
+                "--category", "c", "--bucket", "someday"])  # fmt: skip
+    assert err["error"]["code"] == "invalid"
+
+
+def test_pending_add_with_flags_and_alias(home: Path) -> None:
+    item = _ok([
+        "pending", "add", "--kind", "comment_for_link", "--source", "ig:abc",
+        "--instruction", "Comment AGENT on the reel",
+    ])  # fmt: skip
+    assert item["kind"] == "cta"
+    assert item["source_key"] == "ig:abc"

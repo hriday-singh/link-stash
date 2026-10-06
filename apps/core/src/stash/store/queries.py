@@ -12,6 +12,7 @@ def list_cards_rows(
     category: str | None = None,
     kind: str | None = None,
     tag: str | None = None,
+    bucket: str | None = None,
     creator: str | None = None,
     since: str | None = None,
     until: str | None = None,
@@ -47,6 +48,11 @@ def list_cards_rows(
     if tag:
         conditions.append("c.key IN (SELECT key FROM tags WHERE tag = :tag)")
         params["tag"] = tag
+
+    if bucket:
+        # ponytail: unindexed json_extract scan; add a bucket column if the library gets large.
+        conditions.append("json_extract(c.frontmatter, '$.bucket') = :bucket")
+        params["bucket"] = bucket
 
     if creator:
         conditions.append(
@@ -92,7 +98,8 @@ def list_cards_rows(
         (SELECT s.platform FROM links l JOIN sources s ON {link_join} LIMIT 1) as platform,
         (SELECT s.thumb FROM links l JOIN sources s ON {link_join} LIMIT 1) as thumb_path,
         (SELECT s.id FROM links l JOIN sources s ON {link_join} LIMIT 1) as source_id,
-        (SELECT group_concat(t.tag, ',') FROM tags t WHERE t.key = c.key) as tag_list
+        (SELECT group_concat(t.tag, ',') FROM tags t WHERE t.key = c.key) as tag_list,
+        json_extract(c.frontmatter, '$.bucket') as bucket
     FROM cards c
     {where_clause}
     ORDER BY c.added DESC, c.slug ASC

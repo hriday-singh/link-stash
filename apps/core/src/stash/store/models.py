@@ -4,7 +4,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 SEED_CATEGORIES: tuple[str, ...] = (
     "models",
@@ -26,6 +26,11 @@ Kind = Literal[
     "practice",
     "link",
 ]
+
+
+# Why a saved card is worth keeping: install now, park for a future project,
+# a better replacement for something already in use, or reference only.
+Bucket = Literal["try-now", "later", "upgrade", "inspiration"]
 
 
 class Mention(BaseModel):
@@ -54,6 +59,7 @@ class Card(BaseModel):
     facts: dict[str, object] = Field(default_factory=dict)
     features: list[str] = Field(default_factory=list)
     overlaps: list[str] = Field(default_factory=list)
+    bucket: Bucket | None = None
 
 
 class SourceDoc(BaseModel):
@@ -86,6 +92,12 @@ class PendingItem(BaseModel):
     url: str | None = None
     status: Literal["open", "ready"] = "open"
     added: date
+
+    @field_validator("kind", mode="before")
+    @classmethod
+    def _kind_alias(cls, v: object) -> object:
+        # Agents describe the same gate several ways; all of them mean "cta".
+        return "cta" if v in ("comment_for_link", "comment-for-link", "dm_gated", "dm") else v
 
 
 class RejectEntry(BaseModel):

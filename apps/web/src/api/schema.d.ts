@@ -420,6 +420,8 @@ export interface components {
             features?: string[];
             /** Overlaps */
             overlaps?: string[];
+            /** Bucket */
+            bucket?: ("try-now" | "later" | "upgrade" | "inspiration") | null;
         };
         /** CardDetail */
         CardDetail: {
@@ -497,6 +499,8 @@ export interface components {
             platform?: string | null;
             /** Tags */
             tags?: string[];
+            /** Bucket */
+            bucket?: ("try-now" | "later" | "upgrade" | "inspiration") | null;
         };
         /** CategoryMeta */
         CategoryMeta: {
@@ -793,6 +797,7 @@ export interface operations {
                 category?: string | null;
                 kind?: ("repo" | "model" | "skill" | "plugin" | "mcp" | "tool" | "ui_ref" | "practice" | "link") | null;
                 tag?: string | null;
+                bucket?: ("try-now" | "later" | "upgrade" | "inspiration") | null;
                 creator?: string | null;
                 since?: string | null;
                 until?: string | null;

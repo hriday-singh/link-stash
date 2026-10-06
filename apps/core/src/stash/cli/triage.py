@@ -87,7 +87,7 @@ def register_triage_commands(app: typer.Typer) -> None:
 
     @app.command("have")
     def have_cmd(
-        text: Annotated[str, typer.Argument(help="Name, URL, `[kind] name`, or `-` for stdin.")]
+        text: Annotated[str, typer.Argument(help="Name, URL, `[kind] name`, or `-` for stdin.")],
     ) -> None:
         """Add one or more installed things to inventory/manual/."""
         try:
@@ -113,7 +113,11 @@ def register_triage_commands(app: typer.Typer) -> None:
 
     @app.command()
     def check(
-        record: Annotated[str, typer.Argument(help="Candidate JSON file, URL, name, or `-`.")]
+        record: Annotated[str, typer.Argument(help="Candidate JSON file, URL, name, or `-`.")],
+        live: Annotated[
+            bool,
+            typer.Option("--live", help="Also probe the URL: dead, archived, stale, redirected."),
+        ] = False,
     ) -> None:
         """Check a candidate against library, inventory and rejects."""
         try:
@@ -137,7 +141,7 @@ def register_triage_commands(app: typer.Typer) -> None:
                 item = CheckInput(name=record)
             else:
                 item = CheckInput.model_validate(_read_json(record))
-            _print(check_item(home, item).model_dump(mode="json"))
+            _print(check_item(home, item, live=live).model_dump(mode="json"))
         except ValidationError as e:
             _fail(_invalid(e))
         except StashError as e:
@@ -146,17 +150,41 @@ def register_triage_commands(app: typer.Typer) -> None:
     @app.command("save")
     def save_cmd(
         card_file: Annotated[
-            str, typer.Argument(help="Card JSON (card fields + `body`, optional `slug`), or `-`.")
-        ],
+            str | None,
+            typer.Argument(help="Card JSON (card fields + `body`, optional `slug`), or `-`."),
+        ] = None,
+        url: Annotated[str | None, typer.Option("--url", help="Link; key is derived.")] = None,
+        key: Annotated[str | None, typer.Option("--key", help="Canonical key.")] = None,
+        title: Annotated[str | None, typer.Option("--title")] = None,
+        category: Annotated[str | None, typer.Option("--category")] = None,
+        kind: Annotated[str | None, typer.Option("--kind")] = None,
+        tags: Annotated[list[str] | None, typer.Option("--tag", help="Repeatable.")] = None,
+        bucket: Annotated[
+            str | None, typer.Option("--bucket", help="try-now, later, upgrade or inspiration.")
+        ] = None,
+        source: Annotated[
+            list[str] | None, typer.Option("--source", help="Source key. Repeatable.")
+        ] = None,
+        body: Annotated[str | None, typer.Option("--body", help="Card markdown body.")] = None,
     ) -> None:
-        """Save a card into library/ and index it."""
+        """Save a card into library/ and index it. Flags override fields from the JSON."""
         try:
-            data = _read_json(card_file)
-            body = str(data.pop("body", ""))
+            data = _read_json(card_file) if card_file else {}
+            if url and not key and "key" not in data:
+                from stash.services.inventory import key_for_url
+
+                key, derived_kind, _ = key_for_url(url)
+                data.setdefault("kind", derived_kind)
+            flags = {
+                "url": url, "key": key, "title": title, "category": category, "kind": kind,
+                "tags": tags, "bucket": bucket, "sources": source, "body": body,
+            }  # fmt: skip
+            data.update({k: v for k, v in flags.items() if v is not None})
+            body_text = str(data.pop("body", ""))
             slug = data.pop("slug", None)
             data.setdefault("added", date.today().isoformat())
             card = Card.model_validate(data)
-            result = save(load_config().home, card, body, slug=str(slug) if slug else None)
+            result = save(load_config().home, card, body_text, slug=str(slug) if slug else None)
             _print(result.model_dump(mode="json"))
         except ValidationError as e:
             _fail(_invalid(e))
@@ -187,9 +215,7 @@ def register_triage_commands(app: typer.Typer) -> None:
         ] = "copy",
         workspace: Annotated[
             bool,
-            typer.Option(
-                "--workspace", "-w", help="Also install into .agents/skills in project."
-            ),
+            typer.Option("--workspace", "-w", help="Also install into .agents/skills in project."),
         ] = False,
     ) -> None:
         """Link or copy the stash skills into Claude Code and Antigravity."""
@@ -213,11 +239,22 @@ def register_triage_commands(app: typer.Typer) -> None:
 
     @pending_app.command("add")
     def pending_add(
-        item_file: Annotated[str, typer.Argument(help="Pending item JSON, or `-`.")],
+        item_file: Annotated[str | None, typer.Argument(help="Pending item JSON, or `-`.")] = None,
+        kind: Annotated[
+            str | None, typer.Option("--kind", help="cta (comment/DM for link) or blocked.")
+        ] = None,
+        source: Annotated[str | None, typer.Option("--source", help="Source key.")] = None,
+        instruction: Annotated[
+            str | None, typer.Option("--instruction", help="What the user must do.")
+        ] = None,
+        url: Annotated[str | None, typer.Option("--url")] = None,
     ) -> None:
         """Add a pending item. `id` and `added` are filled in when missing."""
         try:
-            data = _read_json(item_file)
+            data = _read_json(item_file) if item_file else {}
+            flags = {"kind": kind, "source_key": source, "instruction": instruction, "url": url}
+            data.update({k: v for k, v in flags.items() if v is not None})
+            data.setdefault("kind", "cta")
             data.setdefault("id", new_id())
             data.setdefault("added", date.today().isoformat())
             item = PendingItem.model_validate(data)

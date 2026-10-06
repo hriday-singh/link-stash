@@ -382,3 +382,22 @@ def test_graph_and_links(test_env: tuple[Config, TestClient]) -> None:
     assert len(lone_data["nodes"]) == 1
     assert lone_data["nodes"][0]["id"] == "isolated-card"
     assert len(lone_data["edges"]) == 0
+
+
+def test_list_cards_bucket_filter(test_env: tuple[Config, TestClient]) -> None:
+    cfg, client = test_env
+    card = Card(
+        schema=1,
+        key="url:robu.in",
+        title="Robu",
+        category="electronics",
+        kind="link",
+        added=date(2026, 10, 6),
+        bucket="later",
+    )
+    save_card(cfg.home, card, "# Robu", "robu")
+
+    items = client.get("/api/cards?bucket=later").json()["items"]
+    assert [i["slug"] for i in items] == ["robu"]
+    assert items[0]["bucket"] == "later"
+    assert client.get("/api/cards?bucket=bogus").status_code == 422

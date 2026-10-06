@@ -1,6 +1,7 @@
 """`stash check`: exact key hits in library, inventory and rejects, plus overlap candidates.
 
-Pure read. The agent judges the candidates (same thing / same job / different).
+Pure read unless `live` is set (then one network probe, see services/health.py).
+The agent judges the candidates (same thing / same job / different).
 """
 
 import sqlite3
@@ -10,6 +11,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 from rapidfuzz import fuzz, utils
 
+from stash.services.health import Health, probe
 from stash.store.index import connect
 from stash.store.models import InventoryEntry, RejectEntry
 
@@ -54,6 +56,7 @@ class OverlapMatch(BaseModel):
     kind: str
     where: str  # card category or inventory origin
     score: float
+    shared_tags: list[str] = Field(default_factory=list[str])
 
 
 Candidate = OverlapMatch  # alias for backwards compatibility
@@ -73,6 +76,7 @@ class CheckResult(BaseModel):
     reject: RejectEntry | None = None
     overlaps: list[OverlapMatch] = Field(default_factory=list[OverlapMatch])
     candidates: list[OverlapMatch] = Field(default_factory=list[OverlapMatch])
+    health: Health | None = None
 
 
 def _group(kind: str | None) -> str:
@@ -85,6 +89,23 @@ def _norm_url(url: str) -> str:
     return url.strip().rstrip("/").lower()
 
 
+def name_score(a: str, b: str) -> float:
+    """token_set_ratio, scaled down when one name has under half the words of the other.
+
+    Plain token_set_ratio scores "design" vs "awesome-system-design-resources" at 100
+    because one word is a subset of the other. Below a 1:2 word ratio the score is scaled
+    by sqrt(ratio): "shadcn" vs "shadcn/ui" stays 100, that pair drops to 50.
+    """
+    # ponytail: word-count heuristic, not semantic; same-job matches come from shared tags.
+    ta = utils.default_process(a).split()
+    tb = utils.default_process(b).split()
+    if not ta or not tb:
+        return 0.0
+    ratio = min(len(ta), len(tb)) / max(len(ta), len(tb))
+    scale = 1.0 if ratio >= 0.5 else ratio**0.5
+    return fuzz.token_set_ratio(a, b, processor=utils.default_process) * scale
+
+
 def _candidates(db: sqlite3.Connection, item: CheckInput) -> list[OverlapMatch]:
     query_name = item.title or item.name
     group = _group(item.kind)
@@ -93,9 +114,11 @@ def _candidates(db: sqlite3.Connection, item: CheckInput) -> list[OverlapMatch]:
     for r in db.execute("SELECT key, title, kind, category FROM cards"):
         if r["key"] == item.key or _group(r["kind"]) != group:
             continue
-        score = fuzz.token_set_ratio(query_name, r["title"], processor=utils.default_process)
-        if score >= MIN_SCORE:
-            shared = {t[0] for t in db.execute("SELECT tag FROM tags WHERE key = ?", (r["key"],))}
+        score = name_score(query_name, r["title"])
+        card_tags = {t[0] for t in db.execute("SELECT tag FROM tags WHERE key = ?", (r["key"],))}
+        shared = sorted(tags & card_tags)
+        # A shared tag means "same job" even when the names have nothing in common.
+        if score >= MIN_SCORE or shared:
             out.append(
                 OverlapMatch(
                     source="card",
@@ -103,13 +126,14 @@ def _candidates(db: sqlite3.Connection, item: CheckInput) -> list[OverlapMatch]:
                     name_or_title=r["title"],
                     kind=r["kind"],
                     where=r["category"],
-                    score=float(score + TAG_BONUS * len(tags & shared)),
+                    score=round(score + TAG_BONUS * len(shared), 1),
+                    shared_tags=shared,
                 )
             )
     for r in db.execute("SELECT key, name, kind, origin FROM inventory"):
         if (item.key and r["key"] == item.key) or _group(r["kind"]) != group:
             continue
-        score = fuzz.token_set_ratio(query_name, r["name"], processor=utils.default_process)
+        score = name_score(query_name, r["name"])
         if score >= MIN_SCORE:
             out.append(
                 OverlapMatch(
@@ -118,15 +142,25 @@ def _candidates(db: sqlite3.Connection, item: CheckInput) -> list[OverlapMatch]:
                     name_or_title=r["name"],
                     kind=r["kind"],
                     where=r["origin"],
-                    score=float(score),
+                    score=round(score, 1),
                 )
             )
     out.sort(key=lambda c: -c.score)
     return out[:MAX_CANDIDATES]
 
 
-def check_item(home: Path, item: CheckInput) -> CheckResult:
-    """Order: library key, library URL, inventory key, reject key; candidates always included."""
+def check_item(home: Path, item: CheckInput, *, live: bool = False) -> CheckResult:
+    """Order: library key, library URL, inventory key, reject key; candidates always included.
+
+    `live` adds a reachability probe of `item.url` (dead link, archived repo, etc.).
+    """
+    result = _check(home, item)
+    if live and item.url:
+        result.health = probe(item.url)
+    return result
+
+
+def _check(home: Path, item: CheckInput) -> CheckResult:
     if item.url and not item.key:
         from stash.services.inventory import key_for_url
 

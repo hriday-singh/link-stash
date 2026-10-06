@@ -25,9 +25,9 @@ def _union(a: list[str], b: list[str]) -> list[str]:
 
 
 def save(home: Path, card: Card, body: str, slug: str | None = None) -> SaveResult:
-    """Key already in the library: only `sources` and `overlaps` grow; title, body and notes
-    stay as they are. Otherwise a new card with a library-unique slug. Each source the card
-    cites moves to stage `triaged`."""
+    """Key already in the library: only `sources` and `overlaps` grow and a missing `bucket`
+    is filled; title, body and notes stay as they are. Otherwise a new card with a
+    library-unique slug. Each source the card cites moves to stage `triaged`."""
     with write_lock(home):
         db = connect(home)
         try:
@@ -41,6 +41,7 @@ def save(home: Path, card: Card, body: str, slug: str | None = None) -> SaveResu
                 update={
                     "sources": _union(old.sources, card.sources),
                     "overlaps": _union(old.overlaps, card.overlaps),
+                    "bucket": old.bucket or card.bucket,
                 }
             )
             if merged != old:

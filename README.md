@@ -71,6 +71,12 @@ pnpm install
 cd apps/core && uv sync && cd ../..
 ```
 
+Put the `stash` CLI on your PATH so agents can run it from any directory (editable, so repo changes apply immediately):
+
+```bash
+uv tool install --editable apps/core
+```
+
 Run both backend and frontend development servers concurrently:
 
 ```bash

@@ -66,7 +66,7 @@ def test_login_wall_or_changed_page_is_blocked() -> None:
         ("Type 'guide' below", "guide"),
         ("Comment the ones I missed, comment “build” and I will send it", "build"),
         ("Comment below your favourite tool", None),
-        ("Drop a 🔥 if you agree", None),
+        ("Drop a \U0001f525 if you agree", None),  # real captions carry emoji; source stays ASCII
         ("A little motion can make a UI feel different.", None),
     ],
 )

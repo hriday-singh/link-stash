@@ -11,7 +11,7 @@ from stash.server.schemas import CardDetail, CardLinks, CardPatch, CardRejectReq
 from stash.services.card_edit import reject_card, update_card
 from stash.services.library import get_card_detail, get_card_links, get_cards_page
 from stash.store.index import connect
-from stash.store.models import Kind, RejectEntry
+from stash.store.models import Bucket, Kind, RejectEntry
 
 router = APIRouter(prefix="/api/cards", tags=["cards"])
 
@@ -39,6 +39,7 @@ def list_cards(
     category: str | None = None,
     kind: Kind | None = None,
     tag: str | None = None,
+    bucket: Bucket | None = None,
     creator: str | None = None,
     since: str | None = None,
     until: str | None = None,
@@ -55,6 +56,7 @@ def list_cards(
         category=category,
         kind=kind,
         tag=tag,
+        bucket=bucket,
         creator=creator,
         since=since,
         until=until,

@@ -58,7 +58,7 @@ for (const file of jsFiles) {
 
   if (isInitial && Number(gzipKb) > MAX_INITIAL_GZIP_KB) {
     console.error(
-      `❌ Initial bundle ${file} exceeded budget: ${gzipKb} KB > ${MAX_INITIAL_GZIP_KB} KB`
+      `FAIL: Initial bundle ${file} exceeded budget: ${gzipKb} KB > ${MAX_INITIAL_GZIP_KB} KB`
     );
     hasFailure = true;
   }
@@ -69,25 +69,25 @@ console.log("----------------------------------------------------------------");
 // Check that heavy features are separated out into their own code-split chunks
 const initialChunk = report.find((r) => r.isInitial);
 if (!initialChunk) {
-  console.error("❌ Could not find initial index-*.js bundle chunk!");
+  console.error("FAIL: Could not find initial index-*.js bundle chunk!");
   hasFailure = true;
 } else {
-  console.log(`✅ Initial bundle size: ${initialChunk.gzipKb} KB gzip (budget: <= ${MAX_INITIAL_GZIP_KB} KB)`);
+  console.log(`OK: Initial bundle size: ${initialChunk.gzipKb} KB gzip (budget: <= ${MAX_INITIAL_GZIP_KB} KB)`);
 }
 
 const graphChunk = report.find((r) => r.isGraph);
 if (graphChunk) {
-  console.log(`✅ Graph view code-split: ${graphChunk.file} (${graphChunk.gzipKb} KB gzip)`);
+  console.log(`OK: Graph view code-split: ${graphChunk.file} (${graphChunk.gzipKb} KB gzip)`);
 }
 
 const cardChunk = report.find((r) => r.isCard);
 if (cardChunk) {
-  console.log(`✅ Card view / CodeMirror code-split: ${cardChunk.file} (${cardChunk.gzipKb} KB gzip)`);
+  console.log(`OK: Card view / CodeMirror code-split: ${cardChunk.file} (${cardChunk.gzipKb} KB gzip)`);
 }
 
 if (hasFailure) {
   console.error("Bundle verification FAILED.");
   process.exit(1);
 } else {
-  console.log("✅ All bundle budgets and code-splitting criteria PASSED.");
+  console.log("OK: All bundle budgets and code-splitting criteria PASSED.");
 }

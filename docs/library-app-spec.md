@@ -59,12 +59,12 @@ A local, library-first web app for the stash. You browse a thumbnail grid of eve
 
 ```
 ┌──────────────┬───────────────────────────────────────────────┐
-│ Feed         │ [search  Ctrl+K]                 [filters ▾]  │
+│ Feed         │ [search  Ctrl+K]                 [filters v]  │
 │ Sources      │ Today                                          │
 │ Pending (3)  │ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐        │
 │ Rejected     │ │ thumb │ │ thumb │ │ tile  │ │ thumb │        │
 │ Inventory    │ │ title │ │ title │ │ title │ │ title │        │
-│ Graph        │ │ ●cat  │ │ ●cat  │ │ ●cat  │ │ ●cat  │        │
+│ Graph        │ │ *cat  │ │ *cat  │ │ *cat  │ │ *cat  │        │
 │ ──────────   │ └───────┘ └───────┘ └───────┘ └───────┘        │
 │ models       │ Yesterday                                      │
 │ skills-plug… │ ┌───────┐ ┌───────┐ ...                        │
@@ -79,8 +79,8 @@ Card page (`/c/$slug`):
 
 ```
 ┌──────────────┬──────────────────────────────┬────────────────┐
-│ sidebar      │ ⟨logo⟩ owner/agent-kit ★12.4k │ Category  [▾]  │
-│              │ What it is. ...    (read)    │ Kind      [▾]  │
+│ sidebar      │ ⟨logo⟩ owner/agent-kit *12.4k │ Category  [v]  │
+│              │ What it is. ...    (read)    │ Kind      [v]  │
 │              │ Why it fills a gap. ...      │ Tags [x][x] +  │
 │              │ Origin. @creator · reel 0:23 │ Overlaps   →   │
 │              │ ┌ Notes ──────────────────┐  │ Backlinks      │

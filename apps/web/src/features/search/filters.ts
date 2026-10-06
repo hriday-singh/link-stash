@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { BUCKETS, type Bucket } from "@/lib/buckets";
 
 export const VALID_KINDS = [
   "repo",
@@ -18,6 +19,7 @@ export const cardFiltersSchema = z.object({
   category: z.string().optional(),
   kind: z.enum(VALID_KINDS).optional(),
   tag: z.string().optional(),
+  bucket: z.enum(BUCKETS).optional(),
   creator: z.string().optional(),
   since: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
@@ -68,6 +70,10 @@ export function parseCardFilters(
     sanitized.tag = raw.tag.trim();
   }
 
+  if (typeof raw.bucket === "string" && BUCKETS.includes(raw.bucket as Bucket)) {
+    sanitized.bucket = raw.bucket as Bucket;
+  }
+
   if (typeof raw.creator === "string" && raw.creator.trim()) {
     sanitized.creator = raw.creator.trim();
   }
@@ -100,6 +106,7 @@ export function serializeCardFilters(filters: CardFilters): Record<string, strin
   if (filters.category) params.category = filters.category;
   if (filters.kind) params.kind = filters.kind;
   if (filters.tag) params.tag = filters.tag;
+  if (filters.bucket) params.bucket = filters.bucket;
   if (filters.creator) params.creator = filters.creator;
   if (filters.since) params.since = filters.since;
   if (filters.until) params.until = filters.until;

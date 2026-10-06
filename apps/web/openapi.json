@@ -102,6 +102,28 @@
             }
           },
           {
+            "name": "bucket",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "try-now",
+                    "later",
+                    "upgrade",
+                    "inspiration"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bucket"
+            }
+          },
+          {
             "name": "creator",
             "in": "query",
             "required": false,
@@ -1296,6 +1318,23 @@
             },
             "type": "array",
             "title": "Overlaps"
+          },
+          "bucket": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "try-now",
+                  "later",
+                  "upgrade",
+                  "inspiration"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bucket"
           }
         },
         "type": "object",
@@ -1548,6 +1587,23 @@
             },
             "type": "array",
             "title": "Tags"
+          },
+          "bucket": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "try-now",
+                  "later",
+                  "upgrade",
+                  "inspiration"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bucket"
           }
         },
         "type": "object",

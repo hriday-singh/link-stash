@@ -9,6 +9,9 @@ Use this skill to help the user perform an initial inventory brain dump or expan
 
 ## Workflow
 
+### 0. Make Sure `stash` Runs Anywhere
+Run `stash --help`. If the command is not found, install it once from the repo root with `uv tool install --editable apps/core` (until then, use `apps/core/.venv/Scripts/stash` on Windows or `apps/core/.venv/bin/stash`).
+
 ### 1. Show Auto-Scanned Baseline First
 Always start by ensuring the inventory is fresh and showing what Stash already detected:
 ```bash

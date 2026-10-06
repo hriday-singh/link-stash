@@ -4,7 +4,7 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, Field
 
-from stash.store.models import Card, Kind, SourceDoc
+from stash.store.models import Bucket, Card, Kind, SourceDoc
 
 
 class Page[T](BaseModel):
@@ -24,6 +24,7 @@ class CardTile(BaseModel):
     thumb_url: str | None = None
     platform: str | None = None
     tags: list[str] = Field(default_factory=list)
+    bucket: Bucket | None = None
 
 
 class CardDetail(BaseModel):

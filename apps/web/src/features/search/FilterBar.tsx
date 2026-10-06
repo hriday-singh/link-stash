@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { BUCKETS, BUCKET_LABELS, type Bucket } from "@/lib/buckets";
 import { VALID_KINDS, type CardFilters, type CardKind } from "./filters";
 
 interface FilterBarProps {
@@ -36,6 +37,7 @@ export function FilterBar({ filters, onChange, hideCategory = false }: FilterBar
     filters.kind ||
       (!hideCategory && filters.category) ||
       filters.tag ||
+      filters.bucket ||
       filters.creator ||
       filters.since ||
       filters.until ||
@@ -78,6 +80,31 @@ export function FilterBar({ filters, onChange, hideCategory = false }: FilterBar
             {VALID_KINDS.map((kind) => (
               <SelectItem key={kind} value={kind}>
                 {kind}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Bucket Select */}
+      <div className="w-32">
+        <Select
+          value={filters.bucket ?? "all"}
+          onValueChange={(val) =>
+            onChange({
+              ...filters,
+              bucket: val === "all" ? undefined : (val as Bucket),
+            })
+          }
+        >
+          <SelectTrigger className="h-8 text-xs" aria-label="Bucket">
+            <SelectValue placeholder="All buckets" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All buckets</SelectItem>
+            {BUCKETS.map((b) => (
+              <SelectItem key={b} value={b}>
+                {BUCKET_LABELS[b]}
               </SelectItem>
             ))}
           </SelectContent>
