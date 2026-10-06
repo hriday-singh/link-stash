@@ -3,7 +3,7 @@
 import json
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
@@ -135,9 +135,10 @@ def test_have_batch_via_stdin(home: Path) -> None:
     batch_input = "[tool] Alpha — first tool\n[ui_ref] Beta — second UI https://beta.design\n"
     res = _ok(["have", "-"], input=batch_input)
     assert isinstance(res, list)
-    assert len(res) == 2
-    assert res[0]["name"] == "Alpha"
-    assert res[1]["name"] == "Beta"
+    items = cast(list[dict[str, object]], res)
+    assert len(items) == 2
+    assert items[0]["name"] == "Alpha"
+    assert items[1]["name"] == "Beta"
 
 
 def test_check_raw_url_and_raw_name(home: Path) -> None:

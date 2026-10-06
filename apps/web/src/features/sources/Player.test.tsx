@@ -62,4 +62,23 @@ describe("Player Component", () => {
     expect(video.currentTime).toBe(45);
     expect(playSpy).toHaveBeenCalled();
   });
+
+  it("renders morph play button and toggles video state on click", () => {
+    render(
+      <Player
+        hasVideo={true}
+        videoUrl="/api/sources/src-1/video"
+      />
+    );
+
+    const morphBtn = screen.getByTestId("player-morph-play-button");
+    expect(morphBtn).toBeInTheDocument();
+    expect(morphBtn).toHaveAttribute("aria-label", "Play video");
+
+    const video = screen.getByTestId("source-video-element") as HTMLVideoElement;
+    const playSpy = vi.spyOn(video, "play").mockImplementation(async () => {});
+
+    morphBtn.click();
+    expect(playSpy).toHaveBeenCalled();
+  });
 });

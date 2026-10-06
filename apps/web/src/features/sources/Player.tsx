@@ -1,6 +1,7 @@
 import * as React from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Image01Icon } from "@hugeicons/core-free-icons";
+import { Image01Icon, PlayIcon, PauseIcon } from "@hugeicons/core-free-icons";
+import { MorphIcon } from "@/components/ui/MorphIcon";
 
 export interface PlayerHandle {
   seekTo: (seconds: number) => void;
@@ -23,6 +24,7 @@ export const Player = React.forwardRef<PlayerHandle, PlayerProps>(function Playe
   ref
 ) {
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
+  const [isPlaying, setIsPlaying] = React.useState(false);
 
   React.useImperativeHandle(
     ref,
@@ -92,6 +94,8 @@ export const Player = React.forwardRef<PlayerHandle, PlayerProps>(function Playe
         preload="metadata"
         controls
         playsInline
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
         onTimeUpdate={() => {
           if (videoRef.current && onTimeUpdate) {
             onTimeUpdate(videoRef.current.currentTime);
@@ -101,6 +105,28 @@ export const Player = React.forwardRef<PlayerHandle, PlayerProps>(function Playe
       >
         <track kind="captions" />
       </video>
+
+      <button
+        type="button"
+        data-testid="player-morph-play-button"
+        aria-label={isPlaying ? "Pause video" : "Play video"}
+        onClick={() => {
+          if (videoRef.current) {
+            if (videoRef.current.paused) {
+              videoRef.current.play().catch(() => {});
+            } else {
+              videoRef.current.pause();
+            }
+          }
+        }}
+        className="absolute bottom-14 left-4 z-10 flex size-9 items-center justify-center rounded-full bg-background/80 text-foreground shadow-md backdrop-blur-xs transition hover:bg-background focus-visible:outline-2 focus-visible:outline-ring"
+      >
+        <MorphIcon
+          icon={isPlaying ? PauseIcon : PlayIcon}
+          label={isPlaying ? "Pause" : "Play"}
+          size={16}
+        />
+      </button>
     </div>
   );
 });

@@ -283,8 +283,11 @@ def get_graph_elements(
     depth: int = 1,
     category: str | None = None,
     edge_type: str | None = None,
-) -> tuple[list[sqlite3.Row], list[sqlite3.Row]]:
-    """Returns (node_rows, edge_rows) for global or neighborhood graph."""
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Returns (nodes, edges) for global or neighborhood graph.
+
+    Includes cards, sources, and creators.
+    """
     if not center_slug:
         # Global graph
         node_conds: list[str] = []
@@ -295,33 +298,86 @@ def get_graph_elements(
 
         where_nodes = f"WHERE {' AND '.join(node_conds)}" if node_conds else ""
         nodes_sql = (
-            f"SELECT c.slug as id, c.title as label, c.category, c.kind FROM cards c {where_nodes}"
+            f"SELECT c.key, c.slug as id, c.title as label, c.category, c.kind "
+            f"FROM cards c {where_nodes}"
         )
-        nodes = conn.execute(nodes_sql, node_params).fetchall()
-        node_ids = {row["id"] for row in nodes}
+        card_rows = conn.execute(nodes_sql, node_params).fetchall()
+        nodes_map: dict[str, dict[str, Any]] = {}
+        key_to_slug: dict[str, str] = {}
+        for r in card_rows:
+            nodes_map[r["id"]] = {
+                "id": r["id"],
+                "label": r["label"],
+                "category": r["category"],
+                "kind": r["kind"],
+            }
+            key_to_slug[r["key"]] = r["id"]
 
-        edge_conds = [
-            "l.from_key IN (SELECT key FROM cards)",
-            "l.to_key IN (SELECT key FROM cards)",
-        ]
-        edge_params: list[Any] = []
-        if edge_type:
-            edge_conds.append("l.type = ?")
-            edge_params.append(edge_type)
+        edges: list[dict[str, Any]] = []
 
-        edges_sql = f"""
-        SELECT c1.slug as source, c2.slug as target, l.type
-        FROM links l
-        JOIN cards c1 ON l.from_key = c1.key
-        JOIN cards c2 ON l.to_key = c2.key
-        WHERE {" AND ".join(edge_conds)}
-        """
-        raw_edges = conn.execute(edges_sql, edge_params).fetchall()
-        # Filter edges where both endpoints are in nodes
-        filtered_edges = [
-            e for e in raw_edges if e["source"] in node_ids and e["target"] in node_ids
-        ]
-        return nodes, filtered_edges
+        # Card-to-card edges (wikilink, overlap)
+        if not edge_type or edge_type in ("wikilink", "overlap"):
+            card_edge_conds = [
+                "l.from_key IN (SELECT key FROM cards)",
+                "l.to_key IN (SELECT key FROM cards)",
+            ]
+            card_edge_params: list[Any] = []
+            if edge_type:
+                card_edge_conds.append("l.type = ?")
+                card_edge_params.append(edge_type)
+            else:
+                card_edge_conds.append("l.type IN ('wikilink', 'overlap')")
+
+            card_edges_sql = f"""
+            SELECT c1.slug as source, c2.slug as target, l.type
+            FROM links l
+            JOIN cards c1 ON l.from_key = c1.key
+            JOIN cards c2 ON l.to_key = c2.key
+            WHERE {" AND ".join(card_edge_conds)}
+            """
+            raw_card_edges = conn.execute(card_edges_sql, card_edge_params).fetchall()
+            for e in raw_card_edges:
+                if e["source"] in nodes_map and e["target"] in nodes_map:
+                    edges.append({"source": e["source"], "target": e["target"], "type": e["type"]})
+
+        # Card-to-source and source-to-creator edges
+        if (not edge_type or edge_type == "source") and key_to_slug:
+            placeholders = ",".join("?" for _ in key_to_slug)
+            source_links_sql = f"""
+            SELECT l.from_key, s.id, s.creator, s.platform
+            FROM links l
+            JOIN sources s ON l.to_key = s.id
+            WHERE l.type = 'source' AND l.from_key IN ({placeholders})
+            """
+            src_rows = conn.execute(source_links_sql, list(key_to_slug.keys())).fetchall()
+            for sr in src_rows:
+                card_slug = key_to_slug.get(sr["from_key"])
+                if not card_slug or card_slug not in nodes_map:
+                    continue
+                src_id = sr["id"]
+                if src_id not in nodes_map:
+                    nodes_map[src_id] = {
+                        "id": src_id,
+                        "label": f"@{sr['creator']}" if sr["creator"] else src_id,
+                        "category": "source",
+                        "kind": "source",
+                    }
+                edges.append({"source": card_slug, "target": src_id, "type": "source"})
+
+                if sr["creator"]:
+                    creator_id = f"creator:{sr['creator']}"
+                    if creator_id not in nodes_map:
+                        nodes_map[creator_id] = {
+                            "id": creator_id,
+                            "label": f"@{sr['creator']}",
+                            "category": "creator",
+                            "kind": "creator",
+                        }
+                    creator_edge = {"source": src_id, "target": creator_id, "type": "source"}
+                    if creator_edge not in edges:
+                        edges.append(creator_edge)
+
+        return list(nodes_map.values()), edges
 
     # Local graph BFS from center_slug
     center_card = conn.execute(
@@ -330,39 +386,132 @@ def get_graph_elements(
     if not center_card:
         return [], []
 
-    visited_keys = {center_card["key"]}
-    current_frontier = {center_card["key"]}
+    visited_card_keys = {center_card["key"]}
+    visited_source_ids: set[str] = set()
+    current_card_keys = {center_card["key"]}
 
-    for _ in range(depth):
-        if not current_frontier:
+    for step in range(depth):
+        if not current_card_keys:
             break
-        placeholders = ",".join("?" for _ in current_frontier)
-        neighbors_sql = f"""
+        placeholders = ",".join("?" for _ in current_card_keys)
+
+        # 1. Neighbor cards via wikilinks and overlaps
+        neighbor_cards_sql = f"""
         SELECT DISTINCT to_key as k FROM links
         WHERE from_key IN ({placeholders}) AND to_key IN (SELECT key FROM cards)
         UNION
         SELECT DISTINCT from_key as k FROM links
         WHERE to_key IN ({placeholders}) AND from_key IN (SELECT key FROM cards)
         """
-        params = list(current_frontier) + list(current_frontier)
-        rows = conn.execute(neighbors_sql, params).fetchall()
-        next_frontier = {row["k"] for row in rows} - visited_keys
-        visited_keys.update(next_frontier)
-        current_frontier = next_frontier
+        nc_params = list(current_card_keys) + list(current_card_keys)
+        nc_rows = conn.execute(neighbor_cards_sql, nc_params).fetchall()
+        next_card_keys = {r["k"] for r in nc_rows} - visited_card_keys
 
-    keys_placeholders = ",".join("?" for _ in visited_keys)
-    nodes_sql = (
-        "SELECT slug as id, title as label, category, kind FROM cards "
-        f"WHERE key IN ({keys_placeholders})"
+        # 2. Neighbor sources connected to current cards
+        sources_sql = f"""
+        SELECT DISTINCT to_key as sid FROM links
+        WHERE from_key IN ({placeholders}) AND type = 'source'
+        """
+        s_rows = conn.execute(sources_sql, list(current_card_keys)).fetchall()
+        new_source_ids = {r["sid"] for r in s_rows} - visited_source_ids
+        visited_source_ids.update(new_source_ids)
+
+        # 3. If depth allows another hop, find sibling cards connected to those sources
+        if step < depth - 1 and new_source_ids:
+            src_placeholders = ",".join("?" for _ in new_source_ids)
+            sibling_sql = f"""
+            SELECT DISTINCT from_key as k FROM links
+            WHERE to_key IN ({src_placeholders})
+              AND type = 'source'
+              AND from_key IN (SELECT key FROM cards)
+            """
+            sib_rows = conn.execute(sibling_sql, list(new_source_ids)).fetchall()
+            next_card_keys.update({r["k"] for r in sib_rows} - visited_card_keys)
+
+        visited_card_keys.update(next_card_keys)
+        current_card_keys = next_card_keys
+
+    # Assemble local nodes
+    nodes_map: dict[str, dict[str, Any]] = {}
+    key_to_slug: dict[str, str] = {}
+
+    card_placeholders = ",".join("?" for _ in visited_card_keys)
+    card_sql = (
+        f"SELECT key, slug as id, title as label, category, kind "
+        f"FROM cards WHERE key IN ({card_placeholders})"
     )
-    nodes = conn.execute(nodes_sql, list(visited_keys)).fetchall()
+    card_rows = conn.execute(card_sql, list(visited_card_keys)).fetchall()
+    for r in card_rows:
+        nodes_map[r["id"]] = {
+            "id": r["id"],
+            "label": r["label"],
+            "category": r["category"],
+            "kind": r["kind"],
+        }
+        key_to_slug[r["key"]] = r["id"]
 
-    edges_sql = f"""
-    SELECT c1.slug as source, c2.slug as target, l.type
-    FROM links l
-    JOIN cards c1 ON l.from_key = c1.key
-    JOIN cards c2 ON l.to_key = c2.key
-    WHERE l.from_key IN ({keys_placeholders}) AND l.to_key IN ({keys_placeholders})
-    """
-    edges = conn.execute(edges_sql, list(visited_keys) + list(visited_keys)).fetchall()
-    return nodes, edges
+    # Assemble local sources and creators
+    if visited_source_ids:
+        src_placeholders = ",".join("?" for _ in visited_source_ids)
+        src_rows = conn.execute(
+            f"SELECT id, creator, platform FROM sources WHERE id IN ({src_placeholders})",
+            list(visited_source_ids),
+        ).fetchall()
+        for sr in src_rows:
+            sid = sr["id"]
+            nodes_map[sid] = {
+                "id": sid,
+                "label": f"@{sr['creator']}" if sr["creator"] else sid,
+                "category": "source",
+                "kind": "source",
+            }
+            if sr["creator"]:
+                cid = f"creator:{sr['creator']}"
+                if cid not in nodes_map:
+                    nodes_map[cid] = {
+                        "id": cid,
+                        "label": f"@{sr['creator']}",
+                        "category": "creator",
+                        "kind": "creator",
+                    }
+
+    # Assemble local edges
+    edges: list[dict[str, Any]] = []
+
+    # Card-to-card edges
+    if not edge_type or edge_type in ("wikilink", "overlap"):
+        card_edges_sql = f"""
+        SELECT c1.slug as source, c2.slug as target, l.type
+        FROM links l
+        JOIN cards c1 ON l.from_key = c1.key
+        JOIN cards c2 ON l.to_key = c2.key
+        WHERE l.from_key IN ({card_placeholders}) AND l.to_key IN ({card_placeholders})
+        """
+        for e in conn.execute(card_edges_sql, list(visited_card_keys) * 2).fetchall():
+            if not edge_type or e["type"] == edge_type:
+                edges.append({"source": e["source"], "target": e["target"], "type": e["type"]})
+
+    # Card-to-source and source-to-creator edges
+    if (not edge_type or edge_type == "source") and visited_source_ids and visited_card_keys:
+        src_placeholders = ",".join("?" for _ in visited_source_ids)
+        src_edges_sql = f"""
+        SELECT l.from_key, l.to_key as sid, s.creator
+        FROM links l
+        JOIN sources s ON l.to_key = s.id
+        WHERE l.from_key IN ({card_placeholders})
+          AND l.to_key IN ({src_placeholders})
+          AND l.type = 'source'
+        """
+        for se in conn.execute(
+            src_edges_sql, list(visited_card_keys) + list(visited_source_ids)
+        ).fetchall():
+            c_slug = key_to_slug.get(se["from_key"])
+            if c_slug:
+                edges.append({"source": c_slug, "target": se["sid"], "type": "source"})
+            if se["creator"]:
+                cid = f"creator:{se['creator']}"
+                ce = {"source": se["sid"], "target": cid, "type": "source"}
+                if ce not in edges:
+                    edges.append(ce)
+
+    return list(nodes_map.values()), edges

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useNavigate, useParams, Link } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -31,6 +31,8 @@ import { RejectDialog } from "./RejectDialog";
 import { useCardSave } from "./useCardSave";
 import { reconcile } from "./reconcile";
 import { PropertiesForm } from "@/features/properties/PropertiesForm";
+import { LinkPanels } from "@/features/properties/LinkPanels";
+import { LocalGraph } from "@/features/graph/LocalGraph";
 
 export function CardPage() {
   const { slug } = useParams({ strict: false }) as { slug: string };
@@ -62,7 +64,7 @@ export function CardPage() {
   });
 
   // 2. Fetch connections (backlinks, mentions, outgoing)
-  const { data: links } = useQuery({
+  const { data: links, isLoading: isLinksLoading } = useQuery({
     queryKey: queryKeys.cardLinks(slug),
     queryFn: async () => {
       return await unwrap(
@@ -201,11 +203,17 @@ export function CardPage() {
   }
 
   const KindIcon = KIND_ICON[cardDetail.card.kind as Kind] || KIND_ICON.repo;
+  const cardSlug = cardDetail.slug ?? slug;
+  const transitionName = `card-${cardSlug.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-6 lg:px-8 lg:py-8 space-y-6">
       {/* Top Navigation & Actions Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-4">
+      <div
+        data-testid="card-page-header"
+        style={{ viewTransitionName: transitionName } as React.CSSProperties}
+        className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-4"
+      >
         <div className="flex items-center gap-3 min-w-0">
           <Button
             type="button"
@@ -345,89 +353,15 @@ export function CardPage() {
             />
           </div>
 
-          {/* Connections Panels: Backlinks, Mentioned by, Outgoing */}
-          {links && (
-            <div className="rounded-xl border border-border/70 bg-card p-5 shadow-xs space-y-5 text-xs">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Connections
-              </h3>
+            {/* Local Neighborhood Graph */}
+            <LocalGraph slug={slug} />
 
-              {/* Backlinks */}
-              <div className="space-y-2">
-                <span className="font-medium text-foreground">
-                  Backlinks ({links.backlinks?.length ?? 0})
-                </span>
-                {!links.backlinks || links.backlinks.length === 0 ? (
-                  <p className="text-muted-foreground text-[11px]">No backlinks point here.</p>
-                ) : (
-                  <ul className="space-y-1.5">
-                    {links.backlinks.map((link) => (
-                      <li key={link.slug} className="truncate">
-                        <Link
-                          to="/c/$slug"
-                          params={{ slug: link.slug }}
-                          className="text-primary hover:underline"
-                        >
-                          {link.title || link.slug}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              {/* Mentioned by (Sources) */}
-              <div className="space-y-2 border-t border-border/50 pt-3">
-                <span className="font-medium text-foreground">
-                  Mentioned By ({links.mentioned_by?.length ?? 0})
-                </span>
-                {!links.mentioned_by || links.mentioned_by.length === 0 ? (
-                  <p className="text-muted-foreground text-[11px]">No source mentions.</p>
-                ) : (
-                  <ul className="space-y-1.5">
-                    {links.mentioned_by.map((src) => (
-                      <li key={src.id} className="truncate">
-                        <a
-                          href={`/s/${src.id}`}
-                          className="text-primary hover:underline"
-                        >
-                          {src.creator ? `@${src.creator}` : src.platform || src.id}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              {/* Outgoing Links */}
-              <div className="space-y-2 border-t border-border/50 pt-3">
-                <span className="font-medium text-foreground">
-                  Outgoing Links ({links.outgoing?.length ?? 0})
-                </span>
-                {!links.outgoing || links.outgoing.length === 0 ? (
-                  <p className="text-muted-foreground text-[11px]">No outgoing links.</p>
-                ) : (
-                  <ul className="space-y-1.5">
-                    {links.outgoing.map((out) => (
-                      <li key={out.slug} className="truncate">
-                        <Link
-                          to="/c/$slug"
-                          params={{ slug: out.slug }}
-                          className="text-primary hover:underline"
-                        >
-                          {out.title || out.slug}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-          )}
+            {/* Connections Panels: Backlinks, Mentioned by, Outgoing */}
+            <LinkPanels links={links} isLoading={isLinksLoading} />
+          </div>
         </div>
-      </div>
 
-      {/* Reject Confirmation Dialog */}
+        {/* Reject Confirmation Dialog */}
       <RejectDialog
         open={isRejectOpen}
         onOpenChange={setIsRejectOpen}

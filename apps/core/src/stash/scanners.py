@@ -50,16 +50,6 @@ def _skills(*dirs: Path) -> list[Item]:
     return out
 
 
-def _subdirs(d: Path, kind: str, prefix: str) -> list[Item]:
-    if not d.is_dir():
-        return []
-    return [
-        (kind, p.name, f"{prefix}:{p.name.lower()}")
-        for p in sorted(d.iterdir())
-        if p.is_dir() and not p.name.startswith(".")
-    ]
-
-
 def mcp_package(cfg: dict[str, object]) -> str | None:
     """Package a stdio MCP server runs: `npx -y @scope/pkg@1` -> `@scope/pkg`."""
     args = cfg.get("args")
@@ -105,13 +95,17 @@ def claude_code(h: Path) -> list[Item] | None:
         plugin_name = n.split("@")[0]
         items.append(("plugin", plugin_name, f"skill:{plugin_name.lower()}"))
         if isinstance(records, list):
-            for rec in records:
+            for rec in cast(list[object], records):
                 if isinstance(rec, dict):
-                    ipath = rec.get("installPath")
-                    if ipath and isinstance(ipath, str):
+                    rec_dict = cast(dict[str, object], rec)
+                    ipath = rec_dict.get("installPath")
+                    if isinstance(ipath, str):
                         p_dir = Path(ipath)
                         if p_dir.is_dir():
                             items.extend(_skills(p_dir / "skills"))
+    items += [("agent", p.stem, None) for p in sorted((root / "agents").glob("*.md"))]
+    items += _mcp(_json(h / ".claude.json").get("mcpServers"))
+    return _dedup(items)
     items += [("agent", p.stem, None) for p in sorted((root / "agents").glob("*.md"))]
     items += _mcp(_json(h / ".claude.json").get("mcpServers"))
     return _dedup(items)

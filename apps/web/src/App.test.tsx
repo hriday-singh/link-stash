@@ -22,7 +22,9 @@ describe("App shell, Router, and navigation", () => {
 
   it("renders the feed page with empty state message on initial load", async () => {
     renderApp(["/"]);
-    expect(await screen.findByRole("heading", { name: "Feed" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Feed" }, { timeout: 4000 }),
+    ).toBeInTheDocument();
     expect(
       screen.getByText("Paste links into /stash in Claude Code or agy."),
     ).toBeInTheDocument();

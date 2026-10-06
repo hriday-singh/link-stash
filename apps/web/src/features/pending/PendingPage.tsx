@@ -8,6 +8,7 @@ import {
   Alert02Icon,
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
+import { LazyMotion, domAnimation, AnimatePresence, m, useReducedMotion } from "motion/react";
 import { api, unwrap, type PendingItem } from "@/api/client";
 import { queryKeys } from "@/api/keys";
 import { PageHeader } from "@/components/PageHeader";
@@ -15,6 +16,7 @@ import { ResolveForm } from "./ResolveForm";
 
 export function PendingPage() {
   const queryClient = useQueryClient();
+  const shouldReduceMotion = useReducedMotion();
   const [resolvingId, setResolvingId] = React.useState<string | null>(null);
 
   const { data: items, isLoading, isError } = useQuery<PendingItem[]>({
@@ -74,14 +76,21 @@ export function PendingPage() {
           No pending link requests.
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {pendingList.map((item) => {
-            const isOpen = item.status === "open";
-            return (
-              <div
-                key={item.id}
-                className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 shadow-xs transition-colors hover:border-border"
-              >
+        <LazyMotion features={domAnimation}>
+          <div className="flex flex-col gap-3">
+            <AnimatePresence initial={false}>
+              {pendingList.map((item) => {
+                const isOpen = item.status === "open";
+                return (
+                  <m.div
+                    key={item.id}
+                    layout={shouldReduceMotion ? false : "position"}
+                    initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={shouldReduceMotion ? undefined : { opacity: 0, y: -6 }}
+                    transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.15 }}
+                    className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 shadow-xs transition-colors hover:border-border"
+                  >
                 {/* Meta row */}
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <div className="flex items-center gap-2">
@@ -163,11 +172,13 @@ export function PendingPage() {
                     </span>
                   </div>
                 )}
-              </div>
+              </m.div>
             );
           })}
-        </div>
-      )}
+        </AnimatePresence>
+      </div>
+    </LazyMotion>
+  )}
     </div>
   );
 }

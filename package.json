@@ -8,11 +8,12 @@
     "dev:web": "pnpm --filter web dev",
     "build": "pnpm --filter web build",
     "test": "pnpm test:core && pnpm test:web",
-    "test:core": "uv run --directory apps/core pytest",
+    "test:core": "uv run --no-sync --directory apps/core pytest",
     "test:web": "pnpm --filter web test",
-    "lint": "uv run --directory apps/core ruff check && pnpm --filter web lint",
-    "typecheck": "uv run --directory apps/core pyright && pnpm --filter web typecheck",
-    "format": "uv run --directory apps/core ruff format && pnpm --filter web format",
+    "lint": "uv run --no-sync --directory apps/core ruff check && pnpm --filter web lint",
+    "typecheck": "uv run --no-sync --directory apps/core pyright && pnpm --filter web typecheck",
+    "format": "uv run --no-sync --directory apps/core ruff format && pnpm --filter web format",
+    "check:bundle": "node scripts/check-bundle.mjs",
     "gen:api": "uv run --directory apps/core stash openapi > apps/web/openapi.json && pnpm --filter web gen:api"
   },
   "devDependencies": {

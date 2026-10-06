@@ -9,9 +9,7 @@ import {
   GitForkIcon,
   Layers01Icon,
   Layout01Icon,
-  Moon02Icon,
   SidebarLeftIcon,
-  Sun01Icon,
   Video01Icon,
 } from "@hugeicons/core-free-icons";
 import { api, unwrap } from "@/api/client";
@@ -26,7 +24,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { MorphIcon } from "@/components/ui/MorphIcon";
+import { TextMorph } from "@/components/ui/TextMorph";
+import { ThemeToggle } from "./ThemeToggle";
 import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
@@ -40,7 +39,6 @@ import {
   SEED_CATEGORIES,
 } from "@/lib/categories";
 import { useSidebar } from "@/state/sidebar";
-import { useTheme } from "@/state/theme";
 
 interface CategoryItem {
   name: string;
@@ -60,7 +58,6 @@ export function SidebarNav({
   syncStatus = "connected",
 }: SidebarNavProps) {
   const { collapsed, toggleCollapsed } = useSidebar();
-  const { resolved, toggle: toggleTheme } = useTheme();
   const [addOpen, setAddOpen] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [catError, setCatError] = useState<string | null>(null);
@@ -164,7 +161,7 @@ export function SidebarNav({
                   )}
                   {!isCollapsed && typeof item.count === "number" && item.count > 0 && (
                     <span className="ml-auto rounded-full bg-surface-sunken px-1.5 py-0.2 font-mono text-2xs text-muted-foreground">
-                      {item.count}
+                      <TextMorph>{item.count}</TextMorph>
                     </span>
                   )}
                 </Link>
@@ -234,7 +231,7 @@ export function SidebarNav({
                     )}
                     {!isCollapsed && typeof cat.count === "number" && cat.count > 0 && (
                       <span className="ml-auto font-mono text-2xs text-muted-foreground">
-                        {cat.count}
+                        <TextMorph>{cat.count}</TextMorph>
                       </span>
                     )}
                   </Link>
@@ -286,26 +283,8 @@ export function SidebarNav({
             )}
           </div>
 
-          {/* Theme toggle cord */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleTheme}
-            aria-label={resolved === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-            className={`flex h-8 items-center gap-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground ${
-              isCollapsed ? "justify-center px-0" : "w-full justify-start px-2"
-            }`}
-          >
-            <MorphIcon
-              icon={resolved === "dark" ? Moon02Icon : Sun01Icon}
-              size={14}
-              strokeWidth={1.5}
-              spring="snappy"
-            />
-            {!isCollapsed && (
-              <span className="truncate">{resolved === "dark" ? "Dark mode" : "Light mode"}</span>
-            )}
-          </Button>
+          {/* Theme toggle */}
+          <ThemeToggle collapsed={isCollapsed} />
 
           {/* Desktop collapse toggle */}
           {!isMobile && (

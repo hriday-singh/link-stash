@@ -130,7 +130,9 @@ def connect(home: Path) -> sqlite3.Connection:
     index_dir.mkdir(parents=True, exist_ok=True)
     db_path = index_dir / "stash.db"
 
-    con = sqlite3.connect(str(db_path))
+    # FastAPI runs sync dependency setup, endpoint, and teardown on different
+    # threadpool threads. Each connection is still used by one request at a time.
+    con = sqlite3.connect(str(db_path), check_same_thread=False)
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA journal_mode=WAL;")
     con.execute("PRAGMA foreign_keys=ON;")

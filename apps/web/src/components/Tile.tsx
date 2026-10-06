@@ -16,9 +16,14 @@ export interface TileData {
 
 /** Fixed shape: 4:3 media, 2-line title slot, meta row pinned to the bottom. Fills its grid cell. */
 export function Tile({ data, badge }: { data: TileData; badge?: ReactNode }) {
+  const transitionName = `card-${data.slug.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-lg border bg-card shadow-sm transition-[translate,box-shadow] duration-(--duration-base) ease-out hover:-translate-y-0.5 hover:shadow-md">
-      <div className="relative aspect-[4/3] shrink-0 bg-muted">
+      <div
+        style={{ viewTransitionName: transitionName } as React.CSSProperties}
+        className="relative aspect-[4/3] shrink-0 bg-muted"
+      >
         {data.thumbUrl ? (
           <img
             src={data.thumbUrl}

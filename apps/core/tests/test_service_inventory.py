@@ -94,7 +94,12 @@ def test_have_batch_command(tmp_path: Path) -> None:
     entries = have_batch(home, items)
     assert len(entries) == 4
     origins = {e.origin for e in entries}
-    assert origins == {"manual/ui-ux.md", "manual/practices.md", "manual/models.md", "manual/tools.md"}
+    assert origins == {
+        "manual/ui-ux.md",
+        "manual/practices.md",
+        "manual/models.md",
+        "manual/tools.md",
+    }
 
     db = connect(home)
     count = db.execute("SELECT count(*) FROM inventory WHERE origin LIKE 'manual/%'").fetchone()[0]
@@ -119,11 +124,12 @@ def test_antigravity_plugin_skills_scan(tmp_path: Path) -> None:
         / "brainstorming"
     )
     plugin_skill_dir.mkdir(parents=True)
-    (plugin_skill_dir / "SKILL.md").write_text("---\nname: brainstorming\n---\n# Brainstorming", encoding="utf-8")
+    content = "---\nname: brainstorming\n---\n# Brainstorming"
+    (plugin_skill_dir / "SKILL.md").write_text(content, encoding="utf-8")
 
     items = antigravity(user_home)
     assert items is not None
-    names = {name for kind, name, key in items}
+    names = {name for _, name, _ in items}
     assert "superpowers" in names  # plugin name
     assert "brainstorming" in names  # constituent skill name
 

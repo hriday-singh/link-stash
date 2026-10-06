@@ -30,3 +30,11 @@ it("shows title and category pill", () => {
   expect(screen.getByRole("heading", { name: "Agent Kit" })).toBeInTheDocument();
   expect(screen.getByText("repos-tools")).toBeInTheDocument();
 });
+
+it("assigns viewTransitionName matching card slug for shared view transitions", () => {
+  const { container } = render(<Tile data={base} />);
+  const mediaContainer = container.querySelector(".relative.aspect-\\[4\\/3\\]") as HTMLElement;
+  expect(mediaContainer).toBeInTheDocument();
+  expect(mediaContainer.style.viewTransitionName).toBe("card-agent-kit");
+});
+

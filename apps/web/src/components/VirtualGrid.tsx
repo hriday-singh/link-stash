@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { LazyMotion, domAnimation, m, useReducedMotion } from "motion/react";
 import { buildRows, columnsForWidth, type GridRow } from "@/lib/grid";
 import { Tile, type TileData } from "@/components/Tile";
 import { PlatformLogo } from "@/components/ui/BrandLogo";
@@ -29,6 +30,7 @@ export function VirtualGrid<T extends TileData & { added?: string; date?: string
 }: VirtualGridProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollElement } = useMainScroll();
+  const shouldReduceMotion = useReducedMotion();
   const [containerWidth, setContainerWidth] = useState<number>(() => {
     if (typeof window !== "undefined") {
       return window.innerWidth > 0 ? window.innerWidth : 1024;
@@ -117,6 +119,7 @@ export function VirtualGrid<T extends TileData & { added?: string; date?: string
       key={item.slug}
       to="/c/$slug"
       params={{ slug: item.slug }}
+      viewTransition
       className="block h-full outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:rounded-lg"
     >
       <Tile
@@ -133,61 +136,72 @@ export function VirtualGrid<T extends TileData & { added?: string; date?: string
   );
 
   return (
-    <div ref={containerRef} data-slot="virtual-grid-container" className="relative w-full">
-      <div
-        style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-        className="relative w-full"
-      >
-        {displayRows.map((virtualRow) => {
-          const row: GridRow<T> | undefined = rows[virtualRow.index];
-          if (!row) return null;
+    <LazyMotion features={domAnimation}>
+      <div ref={containerRef} data-slot="virtual-grid-container" className="relative w-full">
+        <div
+          style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+          className="relative w-full"
+        >
+          {displayRows.map((virtualRow) => {
+            const row: GridRow<T> | undefined = rows[virtualRow.index];
+            if (!row) return null;
 
-          return (
-            <div
-              key={row.id}
-              data-index={virtualRow.index}
-              ref={rowVirtualizer.measureElement}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                transform: `translateY(${virtualRow.start}px)`,
-              }}
-            >
-              {row.type === "header" ? (
-                <div className="flex items-center gap-2 pb-3 pt-4">
-                  <h2 className="text-sm font-semibold tracking-tight text-foreground">
-                    {row.title}
-                  </h2>
-                  <span className="rounded-full bg-surface-sunken px-2 py-0.5 font-mono text-2xs text-muted-foreground">
-                    {row.count}
-                  </span>
-                </div>
-              ) : (
-                <div
-                  className="grid gap-4 pb-4"
-                  style={{
-                    gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-                  }}
-                >
-                  {row.items.map((item) => (
-                    <div key={item.slug || item.key} className="h-full">
-                      {renderItem ? renderItem(item) : defaultRenderItem(item)}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {isLoadingMore && (
-        <div className="flex justify-center py-6 text-xs text-muted-foreground">
-          Loading more cards…
+            return (
+              <div
+                key={row.id}
+                data-index={virtualRow.index}
+                ref={rowVirtualizer.measureElement}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                {row.type === "header" ? (
+                  <div className="flex items-center gap-2 pb-3 pt-4">
+                    <h2 className="text-sm font-semibold tracking-tight text-foreground">
+                      {row.title}
+                    </h2>
+                    <span className="rounded-full bg-surface-sunken px-2 py-0.5 font-mono text-2xs text-muted-foreground">
+                      {row.count}
+                    </span>
+                  </div>
+                ) : (
+                  <div
+                    className="grid gap-4 pb-4"
+                    style={{
+                      gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+                    }}
+                  >
+                    {row.items.map((item) => (
+                      <m.div
+                        key={item.slug || item.key}
+                        layout={shouldReduceMotion ? false : "position"}
+                        transition={
+                          shouldReduceMotion
+                            ? { duration: 0 }
+                            : { type: "spring", stiffness: 350, damping: 25 }
+                        }
+                        className="h-full"
+                      >
+                        {renderItem ? renderItem(item) : defaultRenderItem(item)}
+                      </m.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
-      )}
-    </div>
+
+        {isLoadingMore && (
+          <div className="flex justify-center py-6 text-xs text-muted-foreground">
+            Loading more cards…
+          </div>
+        )}
+      </div>
+    </LazyMotion>
   );
 }

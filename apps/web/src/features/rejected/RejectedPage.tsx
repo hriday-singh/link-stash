@@ -6,6 +6,7 @@ import {
   Loading03Icon,
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
+import { LazyMotion, domAnimation, AnimatePresence, m, useReducedMotion } from "motion/react";
 import { api, ApiError, unwrap, type RejectEntry } from "@/api/client";
 import { queryKeys } from "@/api/keys";
 import { PageHeader } from "@/components/PageHeader";
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/button";
 
 export function RejectedPage() {
   const queryClient = useQueryClient();
+  const shouldReduceMotion = useReducedMotion();
   const [unrejectingKey, setUnrejectingKey] = React.useState<string | null>(null);
 
   const { data: rejects, isLoading, isError } = useQuery<RejectEntry[]>({
@@ -76,46 +78,55 @@ export function RejectedPage() {
           No rejected items.
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {rejectList.map((entry) => {
-            const isProcessing = unrejectingKey === entry.key;
-            return (
-              <div
-                key={entry.key}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border/70 bg-card p-4 shadow-xs transition-colors hover:border-border"
-              >
-                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-xs font-semibold text-foreground truncate max-w-full">
-                      {entry.key}
-                    </span>
-                    <span className="font-mono text-2xs text-muted-foreground">·</span>
-                    <span className="font-mono text-2xs text-muted-foreground">{entry.date}</span>
-                  </div>
+        <LazyMotion features={domAnimation}>
+          <div className="flex flex-col gap-3">
+            <AnimatePresence initial={false}>
+              {rejectList.map((entry) => {
+                const isProcessing = unrejectingKey === entry.key;
+                return (
+                  <m.div
+                    key={entry.key}
+                    layout={shouldReduceMotion ? false : "position"}
+                    initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={shouldReduceMotion ? undefined : { opacity: 0, y: -6 }}
+                    transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.15 }}
+                    className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border/70 bg-card p-4 shadow-xs transition-colors hover:border-border"
+                  >
+                    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-semibold text-foreground truncate max-w-full">
+                          {entry.key}
+                        </span>
+                        <span className="font-mono text-2xs text-muted-foreground">·</span>
+                        <span className="font-mono text-2xs text-muted-foreground">{entry.date}</span>
+                      </div>
 
-                  <p className="text-xs text-muted-foreground leading-normal">
-                    {entry.reason}
-                  </p>
-                </div>
+                      <p className="text-xs text-muted-foreground leading-normal">
+                        {entry.reason}
+                      </p>
+                    </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={isProcessing}
-                  onClick={() => handleUnreject(entry.key)}
-                  className="h-8 shrink-0 gap-1.5 px-3 text-xs"
-                >
-                  {isProcessing ? (
-                    <HugeiconsIcon icon={Loading03Icon} className="size-3.5 animate-spin" strokeWidth={1.5} />
-                  ) : (
-                    <HugeiconsIcon icon={ArrowReloadHorizontalIcon} className="size-3.5" strokeWidth={1.5} />
-                  )}
-                  <span>Un-reject</span>
-                </Button>
-              </div>
-            );
-          })}
-        </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isProcessing}
+                      onClick={() => handleUnreject(entry.key)}
+                      className="h-8 shrink-0 gap-1.5 px-3 text-xs"
+                    >
+                      {isProcessing ? (
+                        <HugeiconsIcon icon={Loading03Icon} className="size-3.5 animate-spin" strokeWidth={1.5} />
+                      ) : (
+                        <HugeiconsIcon icon={ArrowReloadHorizontalIcon} className="size-3.5" strokeWidth={1.5} />
+                      )}
+                      <span>Un-reject</span>
+                    </Button>
+                  </m.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        </LazyMotion>
       )}
     </div>
   );

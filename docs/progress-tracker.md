@@ -15,16 +15,16 @@ Link Stash is divided into two interdependent parts:
 | Area | Milestones Defined | Completed / Substantially Done | Planned / In Progress | Completion % |
 | --- | --- | --- | --- | --- |
 | **Core Pipeline (A1–A10)** | 10 | 9 complete/logic done (A1–A9) | 1 planned (A10) | **90%** |
-| **Web Application (B0–B6)** | 7 | 5 complete (B0, B1, B2, B3, B4) | 2 planned (B5, B6) | **71%** |
-| **Combined System** | 17 | 14 complete/logic done | 3 planned | **82%** |
+| **Web Application (B0–B6)** | 7 | 7 complete (B0–B6) | 0 planned | **100%** |
+| **Combined System** | 17 | 16 complete/logic done | 1 planned (A10) | **94%** |
 
 ### Automated Verification Scorecard
 
 | Component | Test Suite | Pass Count | Lint Status | Typecheck Status | Build Status |
 | --- | --- | --- | --- | --- | --- |
 | **`apps/core` (Python 3.14)** | Pytest 9.1.1 (34 modules) | **222 / 222 passing** (100%) | Ruff: 0 errors | Pyright (strict): 0 errors | N/A (Python package) |
-| **`apps/web` (React 19 / Vite)** | Vitest 5.0.3 (39 test files) | **182 / 182 passing** (100%) | ESLint: 0 errors | `tsc -b`: 0 errors | Vite build: **clean production build** |
-| **Total Automated Tests** | Pytest + Vitest | **404 tests passing** | Clean | Strict clean | Production build clean |
+| **`apps/web` (React 19 / Vite)** | Vitest 5.0.3 (47 test files) | **220 / 220 passing** (100%) | ESLint: 0 errors | `tsc -b`: 0 errors | Vite build: **clean production build** |
+| **Total Automated Tests** | Pytest + Vitest | **442 tests passing** | Clean | Strict clean | Production build clean |
 
 ---
 
@@ -56,8 +56,8 @@ Link Stash is divided into two interdependent parts:
 | **B2 Shell, Grid, Search** | `B2` | [library-app-spec.md](file:///docs/library-app-spec.md#L59-L98) | [2026-10-05-library-app-b2-shell.md](file:///docs/superpowers/plans/2026-10-05-library-app-b2-shell.md) | **Complete (100%)** | 85 tests (17 test files) | TanStack Router, AppShell, collapsible/resizable sidebar & drawer, Lenis smooth scroll, shared virtualized grid, Feed/category/search routes, Ctrl+K palette, URL filters, live sync SSE. |
 | **B3 Card Page** | `B3` | [library-app-spec.md](file:///docs/library-app-spec.md#L126-L138) | [2026-10-05-library-app-b3-card.md](file:///docs/superpowers/plans/2026-10-05-library-app-b3-card.md) | **Complete (100%)** | 49 tests (11 new test files; 134 total web tests) | `/c/$slug` route, read-only markdown body, CodeMirror 6 Notes editor with `[[slug]]` autocomplete, autosave with serialized 409 conflict banner, Properties form with ChipInput, Reject dialog, connection panels. |
 | **B4 Stash Views** | `B4` | [library-app-spec.md](file:///docs/library-app-spec.md#L151-L158) | [2026-10-05-library-app-b4-stash-views.md](file:///docs/superpowers/plans/2026-10-05-library-app-b4-stash-views.md) | **Complete (100%)** | 48 tests (11 test files; 182 total web tests) | Sources list with URL search filters, Source detail page with HTML5 video player and seekable timestamp chips/transcript, Pending resolve form with HTTP/HTTPS validation, Rejected table with quiet 404 un-reject, Inventory grouped view (`groupByOrigin`) with manual add form, brand logo suite (`thesvg.org` SVGs). |
-| **B5 Backlinks and Graph** | `B5` | [library-app-spec.md](file:///docs/library-app-spec.md#L144-L150) | [2026-10-05-library-app-b5-graph.md](file:///docs/superpowers/plans/2026-10-05-library-app-b5-graph.md) | **Planned (0%)** *(Mocked in B0)* | 0 tests | Card link panels (backlinks, mentions, outgoing), sigma.js WebGL graph visualization with ForceAtlas2 worker, 1/2 hop local graph, global `/graph`. |
-| **B6 Polish Pass** | `B6` | [library-app-spec.md](file:///docs/library-app-spec.md#L228-L232) | [2026-10-05-library-app-b6-polish.md](file:///docs/superpowers/plans/2026-10-05-library-app-b6-polish.md) | **Planned (15%)** | 3 tests (`MorphIcon.test.tsx`) | Shared View Transitions, Motion layout animations, torph text morphs, theme cord, and the 4 quality gate checks. `MorphIcon` is already implemented. |
+| **B5 Backlinks and Graph** | `B5` | [library-app-spec.md](file:///docs/library-app-spec.md#L144-L150) | [2026-10-05-library-app-b5-graph.md](file:///docs/superpowers/plans/2026-10-05-library-app-b5-graph.md) | **Complete (100%)** | 29 tests (in web: `LinkPanels.test.tsx`, `colorResolver.test.ts`, `toGraphology.test.ts`, `GraphView.test.tsx`, `LocalGraph.test.tsx`, `GlobalGraph.test.tsx`, plus server `test_graph_and_links`) | Card link panels (backlinks, mentions with thumbnails/platform icons, outgoing with status badges), sigma.js WebGL graph visualization with ForceAtlas2 worker (off-thread with 2.0s stop budget), dynamic CSS token color resolver, isolated card badge, local 1/2-hop neighborhood on card page, full global `/graph` view with filters and routing. |
+| **B6 Polish Pass** | `B6` | [library-app-spec.md](file:///docs/library-app-spec.md#L228-L232) | [2026-10-05-library-app-b6-polish.md](file:///docs/superpowers/plans/2026-10-05-library-app-b6-polish.md) | **Complete (100%)** | 16 tests (`MorphIcon.test.tsx`, `TextMorph.test.tsx`, `Player.test.tsx`, `Tile.test.tsx`, `VirtualGrid.test.tsx`, `tokens.test.tsx`) | Native View Transitions API (`view-transition-name: card-<slug>`), Motion layout reordering and AnimatePresence list exit animations with `useReducedMotion` fallback, spring-animated `MorphIcon`, `TextMorph` title & count transitions, accessible theme toggle, bundle size audit (`scripts/check-bundle.mjs`, initial chunk 121 KB gzip < 250 KB budget), passing all 4 quality gates. |
 
 ---
 
@@ -200,12 +200,19 @@ apps/web/src/
    - Live Rejected table with quiet 404 un-reject (`DELETE /api/rejects/{key}`).
    - Live Inventory tool grouping (`groupByOrigin`) with add form (`POST /api/inventory`).
    - SVG brand logo suite (`src/components/BrandLogo.tsx`) with official SVGs from thesvg.org.
-5. **B5 Graph:**
-   - sigma.js WebGL renderer + `graphology`.
-   - ForceAtlas2 layout executing inside a dedicated Web Worker.
-6. **B6 Polish:**
-   - Native View Transitions API for Tile -> Card shared morph.
-   - Motion presence and grid reordering animations.
+5. **B5 Graph & Backlinks:** **Complete (100%)** (29 tests across web & core).
+   - sigma.js WebGL renderer + `graphology` with dynamic CSS variable color resolution via `culori`.
+   - ForceAtlas2 layout executing inside a dedicated Web Worker with 2.0s auto-stop budget.
+   - Local graph on `/c/$slug` with 1-hop / 2-hop switcher and isolated node overlay badge.
+   - Global graph at `/graph` with edge type and category filters and node click routing.
+   - Link panels on `/c/$slug` for Backlinks, Mentioned by (with platform brand logo & thumbnail), and Outgoing links (with unresolved/inventory badges).
+6. **B6 Polish:** **Complete (100%)**.
+   - Native View Transitions API for Tile -> Card header shared morph with `@media (prefers-reduced-motion: reduce)` override in `tokens.css`.
+   - Motion `LazyMotion` + `domAnimation` layout reordering on `VirtualGrid` and `AnimatePresence` row transitions in `PendingPage` and `RejectedPage` with `useReducedMotion()` fallback.
+   - Spring physics `MorphIcon` wrapping Hugeicons (Play ↔ Pause, Sun ↔ Moon).
+   - Dependency-free `TextMorph` (torph) for sidebar counts and PageHeader title transitions with `respectReducedMotion`.
+   - Dedicated keyboard-accessible `ThemeToggle` with visible focus rings.
+   - All 4 quality gates verified: responsive, keyboard-only, WCAG AA contrast (`tokens.test.ts`), and bundle budget (`scripts/check-bundle.mjs` verifying 131.5 KB gzip <= 250 KB budget).
 
 ---
 

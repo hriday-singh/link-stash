@@ -13,6 +13,9 @@ export type PageSourceRow = components["schemas"]["Page_SourceRow_"];
 export type PendingItem = components["schemas"]["PendingItem"];
 export type RejectEntry = components["schemas"]["RejectEntry"];
 export type InventoryEntry = components["schemas"]["InventoryEntry"];
+export type GraphData = components["schemas"]["GraphData"];
+export type GraphNode = components["schemas"]["GraphNode"];
+export type GraphEdge = components["schemas"]["GraphEdge"];
 
 /**
  * Custom error thrown by unwrap() when an API call fails.

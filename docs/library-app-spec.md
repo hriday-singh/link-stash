@@ -259,7 +259,7 @@ Starts after core milestone A7, when the card format, store and index exist.
 ## Open questions
 
 - [ ] LAN access from the phone (v2): token in `config.toml`, bind to the LAN address only when it is set.
-- [ ] B6: confirm the feralui pull-cord installs cleanly (dependencies, license) and works with keyboard and reduced motion; drop it for the plain toggle if not.
+- [x] B6: confirm the feralui pull-cord installs cleanly: checked npm registry, package feralui does not exist (404 Not Found, unpublished). Dropped for the accessible plain toggle button with MorphIcon (Sun/Moon), full keyboard reachability, and visible focus rings.
 
 **Resolved Oct 5:** library-first layout, no in-app tabs; Notes-only editing; quiet neutral direction, light + dark; generated tiles for cards with no thumbnail; graph kept, built last; Ctrl+O dropped for Ctrl+K; sources with no saved card stay out of the Feed; shadcn on Radix (`radix-nova` style; shadcn now defaults to Base UI) with Hugeicons + morphicons; Lenis, Motion (limited), transitions.dev recipes, theSVG logos, torph and the feralui cord adopted; no charts.
 

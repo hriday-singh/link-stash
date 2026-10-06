@@ -333,7 +333,7 @@ def test_search_and_special_input(test_env: tuple[Config, TestClient]) -> None:
 
 
 def test_graph_and_links(test_env: tuple[Config, TestClient]) -> None:
-    _, client = test_env
+    cfg, client = test_env
 
     # Card links
     resp_links = client.get("/api/cards/tool-one/links")
@@ -342,8 +342,43 @@ def test_graph_and_links(test_env: tuple[Config, TestClient]) -> None:
     assert len(links["mentioned_by"]) >= 1
     assert links["mentioned_by"][0]["id"] == "ig:test1"
 
-    # Global graph
+    # Global graph: verify card, source, and creator nodes exist
     resp_graph = client.get("/api/graph")
     assert resp_graph.status_code == 200
     graph = resp_graph.json()
-    assert len(graph["nodes"]) >= 2
+    node_ids = {n["id"] for n in graph["nodes"]}
+    assert "tool-one" in node_ids
+    assert "ig:test1" in node_ids
+    assert "creator:testcreator" in node_ids
+
+    # Verify edge types
+    edge_types = {e["type"] for e in graph["edges"]}
+    assert "source" in edge_types
+
+    # Local graph centered on tool-one
+    resp_local = client.get("/api/graph?center=tool-one&depth=1")
+    assert resp_local.status_code == 200
+    local_graph = resp_local.json()
+    local_ids = {n["id"] for n in local_graph["nodes"]}
+    assert "tool-one" in local_ids
+    assert "ig:test1" in local_ids
+
+    # Isolated card with no connections: returns exactly 1 node and 0 edges
+    lone_card = Card(
+        schema=1,
+        key="gh:isolated",
+        title="Isolated Card",
+        category="repos-tools",
+        kind="tool",
+        tags=[],
+        added=date(2026, 10, 6),
+        sources=[],
+    )
+    save_card(cfg.home, lone_card, "Lone body", slug="isolated-card")
+
+    resp_lone = client.get("/api/graph?center=isolated-card&depth=1")
+    assert resp_lone.status_code == 200
+    lone_data = resp_lone.json()
+    assert len(lone_data["nodes"]) == 1
+    assert lone_data["nodes"][0]["id"] == "isolated-card"
+    assert len(lone_data["edges"]) == 0
