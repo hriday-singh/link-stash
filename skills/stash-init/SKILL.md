@@ -39,4 +39,11 @@ Guide the user through one category at a time in chat. After each prompt, wait f
      stash have "[model] <model name or Hugging Face URL>"
      ```
 
+5. **Optional: spoken transcripts (off by default):**
+   - Prompt: "When agy and the Gemini API both fail on a reel, stash falls back to a contact sheet. Want a local speech transcript added too? It installs faster-whisper (~150 MB) and downloads a ~460 MB model on first use."
+   - Only if yes: install the extra the way stash was installed (repo checkout: `uv sync --extra whisper` in `apps/core`; uv tool: `uv tool install --reinstall "./apps/core[whisper]"`), then add `whisper = true` near the top of `$STASH_HOME/config.toml`, above any `[table]` (create the file if it is missing).
+
+6. **Optional: burner cookies for blocked reels:**
+   - Mention once: if Instagram blocks the logged-out embed page, stash can retry with yt-dlp using cookies from a **throwaway** Instagram account, never the user's main account. To enable, export that account's cookies in Netscape format to `$STASH_HOME/secrets/ig-cookies.txt`. If Instagram flags the account, stash stops using the cookies and writes `logs/burner_flagged`.
+
 Print a summary of entries recorded into `inventory/manual/*.md` and verified in SQLite.

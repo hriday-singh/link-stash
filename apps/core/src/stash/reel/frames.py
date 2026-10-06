@@ -14,11 +14,13 @@ def build_ffmpeg_tile_command(
     ffmpeg_bin: str = "ffmpeg",
 ) -> list[str]:
     """Constructs the ffmpeg command to extract scene frames and tile them with timestamps."""
-    # Filter graph: select scene changes or fallback uniform fps, scale thumbnail, tile into grid
+    rows = -(-max_frames // 3)
+    # Opening frame + every scene cut + at least one frame per 5 s (talking heads have no cuts).
+    # ponytail: tile keeps the first max_frames; a long reel with many cuts loses its tail.
     filter_complex = (
-        "select='gt(scene,0.3)',scale=480:-1,"
+        "select='isnan(prev_selected_t)+gt(scene,0.3)+gte(t-prev_selected_t,5)',scale=480:-1,"
         "drawtext=text='%{pts\\:hms}':x=10:y=H-th-10:fontcolor=white:fontsize=24:box=1:boxcolor=black@0.6,"
-        "tile=3x4"
+        f"tile=3x{rows}"
     )
     return [
         ffmpeg_bin,
@@ -75,11 +77,13 @@ def generate_contact_sheet(
         ) from e
 
     if proc.returncode != 0:
+        rows = -(-max_frames // 3)
         # If scene selection produced no frames or failed, retry with uniform fps sampling
         fallback_filter = (
+            # Label before fps: fps re-stamps frames, so a later label drifts from source time.
+            "drawtext=text='%{pts\\:hms}':x=10:y=H-th-10:fontcolor=white:fontsize=h/20:box=1:boxcolor=black@0.6,"
             "fps=1/5,scale=480:-1,"
-            "drawtext=text='%{pts\\:hms}':x=10:y=H-th-10:fontcolor=white:fontsize=24:box=1:boxcolor=black@0.6,"
-            "tile=3x4"
+            f"tile=3x{rows}"
         )
         fallback_cmd = [
             bin_path,

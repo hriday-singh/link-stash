@@ -125,3 +125,72 @@ def test_ingest_reel_invalid_json(tmp_path: Path):
     with pytest.raises(StashError) as exc_info:
         ingest_reel(tmp_path, "invalid_json_src", "not valid json")
     assert exc_info.value.code == "invalid_json"
+
+
+# A9: frames fallback is a handoff to the host agent, never a cached result.
+
+
+def _src(home: Path, sid: str = "ig-F1") -> Path:
+    sdir = home / "library" / "sources" / sid
+    sdir.mkdir(parents=True)
+    (sdir / "video.mp4").write_bytes(b"video bytes")
+    (sdir / "source.md").write_text("---\nstage: fetched\n---\nCaption", encoding="utf-8")
+    return sdir
+
+
+def _engines_down():
+    return (
+        patch("stash.services.reel.run_agy_headless", side_effect=ReelEngineError("agy down")),
+        patch("stash.services.reel.run_gemini_api", side_effect=ReelEngineError("quota")),
+        patch("stash.services.reel.generate_contact_sheet"),
+    )
+
+
+def test_frames_handoff_is_not_cached(tmp_path: Path):
+    sdir = _src(tmp_path)
+    agy, gem, sheet = _engines_down()
+    with agy, gem, sheet, patch("stash.services.reel.transcribe") as tr:
+        record = analyze_reel(tmp_path, "ig-F1")
+        assert record.engine == "frames" and "stash ingest ig-F1 -" in record.summary
+        tr.assert_not_called()  # whisper off by default
+    assert not (sdir / "raw.json").exists()
+    assert "stage: fetched" in (sdir / "source.md").read_text(encoding="utf-8")
+
+
+def test_frames_with_whisper_carries_transcript(tmp_path: Path):
+    _src(tmp_path)
+    agy, gem, sheet = _engines_down()
+    with agy, gem, sheet, patch("stash.services.reel.transcribe", return_value=("hola", "es")):
+        record = analyze_reel(tmp_path, "ig-F1", whisper=True)
+    assert record.transcript == "hola" and record.spoken_language == "es"
+    assert record.transcript_source == "audio"
+
+
+def test_agy_and_gemini_down_still_yields_a_card(tmp_path: Path):
+    """A9 done criterion: frames handoff -> agent ingests -> card saved."""
+    from stash.services.cards import save
+    from stash.store.models import Card, SourceDoc
+    from stash.store.sources import write_source
+
+    sdir = _src(tmp_path)
+    url = "https://www.instagram.com/reel/F1/"
+    write_source(tmp_path, SourceDoc(key="ig:F1", platform="instagram", url=url, stage="fetched"))
+    agy, gem, sheet = _engines_down()
+    with agy, gem, sheet:
+        assert analyze_reel(tmp_path, "ig-F1").engine == "frames"
+    agent_json = json.dumps({"summary": "Shows the widget repo", "confidence": "medium"})
+    ingest_reel(tmp_path, "ig-F1", agent_json)
+    assert analyze_reel(tmp_path, "ig-F1").summary == "Shows the widget repo"  # cached now
+    card = Card.model_validate(
+        {
+            "key": "github:acme/widget",
+            "title": "Widget",
+            "category": "repos-tools",
+            "kind": "repo",
+            "added": "2026-10-06",
+            "sources": ["ig:F1"],
+        }
+    )
+    result = save(tmp_path, card, "From a reel.")
+    assert (tmp_path / result.path).is_file()
+    assert (sdir / "raw.json").is_file()

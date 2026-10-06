@@ -3,6 +3,7 @@
 import os
 import tomllib
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -14,6 +15,10 @@ class Config(BaseModel):
     port: int = Field(default=8765, ge=1, le=65535)
     category_colors: dict[str, str] = Field(default_factory=dict)
     web_dist: Path | None = None
+    reel_engines: list[Literal["agy", "gemini_api", "frames"]] = Field(
+        default_factory=lambda: ["agy", "gemini_api", "frames"], min_length=1
+    )
+    whisper: bool = False
 
 
 def resolve_home(home: Path | None = None) -> Path:

@@ -95,3 +95,8 @@ def test_ffmpeg_fatal_failure(tmp_path: Path):
         with pytest.raises(ReelEngineError) as exc_info:
             generate_contact_sheet(video, out)
         assert "ffmpeg failed to generate contact sheet" in str(exc_info.value)
+
+
+def test_tile_rows_follow_max_frames(tmp_path: Path):
+    cmd = build_ffmpeg_tile_command(tmp_path / "v.mp4", tmp_path / "c.jpg", max_frames=6)
+    assert "tile=3x2" in cmd[cmd.index("-vf") + 1]

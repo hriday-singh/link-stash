@@ -6,21 +6,25 @@ import random
 import re
 import time
 from collections.abc import Callable
+from contextlib import suppress
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
 import httpx
 
-from stash.errors import Blocked, StashError
-from stash.extract.instagram import IgRecord, parse_embed
+from stash.errors import Blocked, Conflict, StashError
+from stash.extract.instagram import IgRecord, detect_cta, parse_embed
+from stash.extract.ytdlp import BurnerFlagged, YtdlpRecord, fetch_with_cookies
+from stash.services.pending import add_pending
 from stash.store.keys import parse_ig_url, source_dir
-from stash.store.models import SourceDoc
+from stash.store.models import PendingItem, SourceDoc
 from stash.store.sources import append_failed, write_source
 
 BATCH = 6
 Kind = Literal["reel", "p"]
 Fetch = Callable[[Kind, str], tuple[int, str]]
+Burner = Callable[[str, Path], YtdlpRecord]
 
 
 class RateLimited(Exception):
@@ -88,12 +92,93 @@ def _fetch_record(fetch: Fetch, kind: Kind, code: str) -> IgRecord:
     return parse_embed(html, kind, code)
 
 
+def cookies_path(home: Path) -> Path:
+    return home / "secrets" / "ig-cookies.txt"
+
+
+def flag_path(home: Path) -> Path:
+    return home / "logs" / "burner_flagged"
+
+
+def default_burner(home: Path) -> Burner | None:
+    """yt-dlp with burner cookies, only if cookies exist and the account was never flagged."""
+    cookies = cookies_path(home)
+    if not cookies.is_file() or flag_path(home).exists():
+        return None
+    return lambda url, dest: fetch_with_cookies(url, dest, cookies)
+
+
+def _extract_fallback(home: Path, burner: Burner | None, kind: Kind, code: str) -> dict[str, Any]:
+    """Embed blocked: use an mp4 the user dropped in, else yt-dlp with burner cookies."""
+    key = f"ig:{code}"
+    sdir = source_dir(home, key)
+    url = f"https://www.instagram.com/{kind}/{code}/"
+    via = "manual" if (sdir / "video.mp4").is_file() else "burner"
+    try:
+        rec = (
+            YtdlpRecord(files=["video.mp4"])
+            if burner is None or via == "manual"
+            else burner(url, sdir)
+        )
+    except BurnerFlagged as e:
+        flag = flag_path(home)
+        flag.parent.mkdir(parents=True, exist_ok=True)
+        flag.write_text(f"{datetime.now(UTC).isoformat()} {e.message}\n", "utf-8")
+        raise Blocked(
+            "burner account flagged by Instagram; cookies now unused. "
+            f"Clear the checkpoint in a browser, then delete {flag}.",
+            {"reason": "burner_flagged"},
+        ) from e
+    raw = {"extractor": via, "files": rec.files, "record": rec.model_dump(mode="json")}
+    (sdir / "raw.json").write_text(json.dumps(raw, indent=2, ensure_ascii=False), "utf-8")
+    keyword = detect_cta(rec.caption or "")
+    write_source(
+        home,
+        SourceDoc(
+            key=key,
+            platform="instagram",
+            creator=rec.author,
+            url=url,
+            stage="fetched",
+            fetched_at=datetime.now(UTC),
+            caption=rec.caption,
+            cta={"type": "comment", "keyword": keyword} if keyword else None,
+            video=sdir.relative_to(home) / "video.mp4",
+        ),
+    )
+    return {"key": key, "status": "fetched", "via": via, "dir": str(sdir), "files": rec.files}
+
+
+def _blocked_pending(home: Path, key: str) -> None:
+    """Last resort: ask the user for the mp4. One pending item per post."""
+    rel = source_dir(home, key).relative_to(home).as_posix()
+    item = PendingItem(
+        id=f"p-blocked-{key.removeprefix('ig:')}",
+        kind="blocked",
+        source_key=key,
+        instruction=f"Fetch blocked. Save the reel as {rel}/video.mp4, then rerun stash extract.",
+        added=datetime.now(UTC).date(),
+    )
+    with suppress(Conflict):
+        add_pending(home, item)
+
+
 def _extract_one(
-    home: Path, client: httpx.Client, fetch: Fetch, kind: Kind, code: str
+    home: Path,
+    client: httpx.Client,
+    fetch: Fetch,
+    kind: Kind,
+    code: str,
+    burner: Burner | None = None,
 ) -> dict[str, Any]:
     key = f"ig:{code}"
     sdir = source_dir(home, key)
-    rec = _fetch_record(fetch, kind, code)
+    try:
+        rec = _fetch_record(fetch, kind, code)
+    except Blocked:
+        if burner is None and not (sdir / "video.mp4").is_file():
+            raise
+        return _extract_fallback(home, burner, kind, code)
     sdir.mkdir(parents=True, exist_ok=True)
     tmp_dir = home / "cache"
     tmp_dir.mkdir(parents=True, exist_ok=True)
@@ -155,6 +240,7 @@ def extract(
     fetch: Fetch = fetch_embed,
     client: httpx.Client | None = None,
     sleep: Callable[[float], None] = time.sleep,
+    burner: Burner | None = None,
 ) -> list[dict[str, Any]]:
     """One result per link: invalid ones first, then unique links in input order.
 
@@ -170,6 +256,7 @@ def extract(
             continue
         todo.setdefault(code, (kind, code, url))
 
+    burner = burner or default_burner(home)
     own_client = client is None
     http = client or httpx.Client(
         timeout=60, follow_redirects=True, transport=httpx.HTTPTransport(retries=2)
@@ -190,7 +277,7 @@ def extract(
                 sleep(random.uniform(10, 20) if fetched % BATCH == 0 else random.uniform(2, 5))
             fetched += 1
             try:
-                results.append(_extract_one(home, http, fetch, kind, code))
+                results.append(_extract_one(home, http, fetch, kind, code, burner))
             except RateLimited:
                 stopped = True
                 results.append(
@@ -210,6 +297,8 @@ def extract(
                     "at": datetime.now(UTC).isoformat(),
                 }
                 append_failed(home, entry)
+                if isinstance(e, Blocked):
+                    _blocked_pending(home, key)
                 results.append({"key": key, "status": "failed", **entry})
     finally:
         if own_client:

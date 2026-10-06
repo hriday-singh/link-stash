@@ -53,3 +53,15 @@ def test_bad_config_raises_invalid_with_path(tmp_path: Path, text: str) -> None:
         load_config(tmp_path)
     assert info.value.code == "invalid"
     assert info.value.details["path"] == str(tmp_path.resolve() / "config.toml")
+
+
+def test_reel_engines_and_whisper_defaults(tmp_path: Path) -> None:
+    cfg = load_config(tmp_path)
+    assert cfg.reel_engines == ["agy", "gemini_api", "frames"]
+    assert cfg.whisper is False
+
+
+def test_unknown_reel_engine_rejected(tmp_path: Path) -> None:
+    (tmp_path / "config.toml").write_text('reel_engines = ["vlc"]\n', encoding="utf-8")
+    with pytest.raises(Invalid):
+        load_config(tmp_path)

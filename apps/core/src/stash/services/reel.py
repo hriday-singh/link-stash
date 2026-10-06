@@ -9,6 +9,7 @@ from stash.reel.agy import ReelEngineError, run_agy_headless
 from stash.reel.frames import generate_contact_sheet
 from stash.reel.gemini_api import run_gemini_api
 from stash.reel.models import ReelRecord
+from stash.reel.whisper import transcribe
 
 DEFAULT_ENGINES: list[str] = ["agy", "gemini_api", "frames"]
 
@@ -97,8 +98,13 @@ def analyze_reel(
     engine: str | None = None,
     engines_order: list[str] | None = None,
     gemini_client: Any = None,
+    whisper: bool = False,
 ) -> ReelRecord:
-    """Orchestrates reel analysis: checks cache, executes engine chain, and persists raw.json."""
+    """Orchestrates reel analysis: checks cache, executes engine chain, and persists raw.json.
+
+    The frames engine is a handoff, not a result: it writes contact.jpg (+ transcript.json when
+    `whisper`) for the host agent to read, and is never cached, so `stash ingest` fills it in.
+    """
     source_dir = resolve_source_dir(home, source_id)
     if not source_dir.is_dir():
         raise NotFound(
@@ -144,16 +150,19 @@ def analyze_reel(
                 )
                 break
             elif eng == "frames":
-                contact_path = source_dir / "contact.jpg"
-                generate_contact_sheet(video_path=video_path, output_path=contact_path)
-                # Draft fallback record awaiting agent inspection
+                generate_contact_sheet(
+                    video_path=video_path, output_path=source_dir / "contact.jpg"
+                )
+                # ponytail: whisper always runs when enabled; "skip if the caption already
+                # carries the speech" needs the on-screen text, which only the agent sees.
+                cache = source_dir / "transcript.json"
+                heard = transcribe(video_path, cache) if whisper else None
                 record = ReelRecord(
-                    summary="Contact sheet generated via frames fallback; pending agent review.",
-                    transcript_source="none",
-                    on_screen_text=[],
-                    mentions=[],
-                    features={},
-                    takeaways=[],
+                    summary="Frames fallback: read contact.jpg with the caption, fill the schema, "
+                    f"pipe it to `stash ingest {source_id} -`.",
+                    transcript=heard[0] if heard else None,
+                    spoken_language=heard[1] if heard else None,
+                    transcript_source="audio" if heard else "none",
                     engine="frames",
                     confidence="low",
                 )
@@ -169,6 +178,9 @@ def analyze_reel(
             f"All reel engines failed for source: {source_id}",
             {"source_id": source_id, "errors": errors},
         )
+
+    if record.engine == "frames":
+        return record
 
     # Persist raw.json and update source.md
     raw_json_path.write_text(record.model_dump_json(indent=2), encoding="utf-8")

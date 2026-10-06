@@ -9,7 +9,7 @@ import typer
 
 from stash.config import load_config
 from stash.errors import StashError
-from stash.services.reel import analyze_reel, ingest_reel
+from stash.services.reel import analyze_reel, ingest_reel, resolve_source_dir
 
 
 def _print(data: object) -> None:
@@ -35,8 +35,22 @@ def register_reel_commands(app: typer.Typer) -> None:
         """Analyze a downloaded reel video using agy, Gemini API, or frames fallback."""
         try:
             cfg = load_config()
-            record = analyze_reel(cfg.home, source_id, engine=engine)
-            _print(record.model_dump())
+            record = analyze_reel(
+                cfg.home,
+                source_id,
+                engine=engine,
+                engines_order=list(cfg.reel_engines),
+                whisper=cfg.whisper,
+            )
+            out = record.model_dump()
+            if record.engine == "frames":
+                sdir = resolve_source_dir(cfg.home, source_id)
+                out["needs_agent"] = {
+                    "contact": str(sdir / "contact.jpg"),
+                    "caption": str(sdir / "source.md"),
+                    "next": f"stash ingest {source_id} -",
+                }
+            _print(out)
         except StashError as e:
             _fail(e)
 

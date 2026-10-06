@@ -14,17 +14,17 @@ Link Stash is divided into two interdependent parts:
 
 | Area | Milestones Defined | Completed / Substantially Done | Planned / In Progress | Completion % |
 | --- | --- | --- | --- | --- |
-| **Core Pipeline (A1–A10)** | 10 | 8 complete/logic done (A1–A8) + 1 in progress (A9) | 1 planned (A10) | **85%** |
+| **Core Pipeline (A1–A10)** | 10 | 9 complete/logic done (A1–A9) | 1 planned (A10) | **90%** |
 | **Web Application (B0–B6)** | 7 | 2 complete (B0, B1) | 5 planned (B2–B6) | **29%** |
-| **Combined System** | 17 | 10 complete/logic done | 7 planned | **65%** |
+| **Combined System** | 17 | 11 complete/logic done | 6 planned | **65%** |
 
 ### Automated Verification Scorecard
 
 | Component | Test Suite | Pass Count | Lint Status | Typecheck Status | Build Status |
 | --- | --- | --- | --- | --- | --- |
-| **`apps/core` (Python 3.14)** | Pytest 9.1.1 (34 modules) | **203 / 203 passing** (100%) | Ruff: 0 errors | Pyright (strict): 0 errors | N/A (Python package) |
+| **`apps/core` (Python 3.14)** | Pytest 9.1.1 (34 modules) | **219 / 219 passing** (100%) | Ruff: 0 errors | Pyright (strict): 0 errors | N/A (Python package) |
 | **`apps/web` (React 19 / Vite)** | Vitest 5.0.3 (9 test files) | **58 / 58 passing** (100%) | ESLint: 0 errors | `tsc -b`: 0 errors | Vite build: **0.87 kB HTML, 404 kB JS, 51 kB CSS** |
-| **Total Automated Tests** | Pytest + Vitest | **261 tests passing** | Clean | Strict clean | Production build clean |
+| **Total Automated Tests** | Pytest + Vitest | **277 tests passing** | Clean | Strict clean | Production build clean |
 
 ---
 
@@ -42,7 +42,7 @@ Link Stash is divided into two interdependent parts:
 | **A6 Inventory** | `A6` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L236-L269) | [2026-10-05-core-a6-inventory.md](file:///docs/superpowers/plans/2026-10-05-core-a6-inventory.md) | **Complete (100% logic)** | 3 tests (`test_service_inventory.py`) | Host scanners (Claude, Antigravity, Codex, Qwen, tools, Ollama, LM Studio, HF cache), 24h freshness check, `inventory/auto/` and `inventory/manual/`, `scan_inventory` and `have` services. |
 | **A7 Check, Save, Queue** | `A7` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L366-L372) | [2026-10-05-core-a7-triage-save.md](file:///docs/superpowers/plans/2026-10-05-core-a7-triage-save.md) | **Complete (100% logic)** | 12 tests (`test_service_check.py`, `test_service_rejects_pending.py`, `test_service_save_card.py`, `test_service_queue.py`) | Exact dedup, RapidFuzz overlap ranking (`check_item`), card save with slug collision & source stage updates (`save`), `rejects`, `pending`, IG backlog export parser, and triage queue (`queue`). |
 | **A8 Agent Skills** | `A8` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L348-L408) | Planned | **Complete (100% logic)** | 2 tests (`test_service_skills.py`) | 5 portable `SKILL.md` files: `skills/stash/`, `skills/stash-init/`, `skills/stash-have/`, `skills/stash-pending/`, `skills/stash-scan/`; `install_skills` junction/symlink installer service. |
-| **A9 Fallbacks** | `A9` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L494) | Planned | **In Progress (~50%)** | 6 tests (`test_reel_frames.py`) | Contact sheet generator (`frames.py`) and scene change detection built; faster-whisper integration and yt-dlp burner cookie fallback pending. |
+| **A9 Fallbacks** | `A9` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L494) | Planned | **Complete (100% logic)** | 16 tests (`test_reel_frames.py`, `test_reel_whisper.py`, `test_reel_service.py`, `test_extract_service.py`) | Frames engine is now a handoff (not cached; `analyze` prints `needs_agent`, agent pipes to `ingest`). Contact sheet: opening frame + scene cuts + 5 s cadence, source-time labels. Optional faster-whisper transcript (`[whisper]` extra + `whisper = true`, offered in `/stash-init`). Blocked embed: manual mp4, then yt-dlp burner cookies (`secrets/ig-cookies.txt`, flag stops it), then `blocked` pending item. `reel_engines` read from config. Live burner run untested. |
 | **A10 First Real Run** | `A10` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L495) | Planned | **Planned (0%)** | 0 tests | Full end-to-end user test with backlog import and initial manual inventory seeding. Ready to run. |
 
 ---
@@ -101,7 +101,7 @@ The Core Contract defined in [2026-10-05-library-app-00-overview.md](file:///doc
 | **Reel System Prompt** | `stash/reel/prompt.md` | Mention rules, feature nesting rules, takeaway rules | None. | **100% Done** |
 | **Antigravity Headless** | `stash/reel/agy.py` | `run_agy_headless`, process spawn, structured output | None. | **100% Done** |
 | **Gemini API Engine** | `stash/reel/gemini_api.py` | `run_gemini_api`, inline (<20MB), Files API (>=20MB) | `google-genai` integration complete. | **100% Done** |
-| **Frames Engine** | `stash/reel/frames.py` | `generate_contact_sheet`, ffmpeg scene change detection | Whisper transcription integration (A9). | **75% Done** |
+| **Frames Engine** | `stash/reel/frames.py` | `generate_contact_sheet`, scene cuts + 5 s cadence, `whisper.transcribe` (optional) | None. | **100% Done** |
 | **Reel Service** | `stash/services/reel.py` | `analyze_reel`, `ingest_reel`, engine fallback chain, cache | None. | **100% Done** |
 | **GitHub Extractor** | `stash/extract/github.py` | `parse_github_url`, `extract_github_api`, `extract_github_scrape`, `extract_github`, `GithubRecord` | Dual backend complete with tests. | **100% Done** |
 | **Hugging Face Extractor** | `stash/extract/hf.py` | `parse_hf_url`, `extract_hf_api`, `extract_hf_scrape`, `extract_hf`, `HfRecord` | Hub API + scrape backend with GGUF detection complete. | **100% Done** |
@@ -227,7 +227,7 @@ apps/web/src/
 - **Installed & Verified:** `typer`, `pydantic`, `httpx`, `scrapling[fetchers]`, `watchfiles`, `pyyaml`, `pymupdf`, `huggingface-hub`, `rapidfuzz`, `fastapi`, `uvicorn`, `tomlkit`, `pytest`, `ruff`, `pyright`.
 - **Missing Dependencies to Add:**
   - `google-genai` (not in `pyproject.toml`; required for live Gemini API reel analysis).
-  - `faster-whisper` (Required for A9 audio transcription fallback).
+  - `yt-dlp` added (burner fallback). `faster-whisper` is an optional `[whisper]` extra, off by default.
 
 ### Node.js Environment (`apps/web/package.json`)
 
@@ -248,9 +248,8 @@ apps/web/src/
 
 ## 7. Immediate Next Steps & Critical Path
 
-Done Oct 6: every spec CLI subcommand registered (`cli/triage.py`), so the agent skills can now run end to end.
+Done Oct 6: every spec CLI subcommand registered (`cli/triage.py`); A9 fallbacks (frames handoff, optional whisper, burner cookies, blocked pending).
 
-1. **A9 Fallbacks:** faster-whisper transcript in the frames engine; yt-dlp burner-cookie fallback for blocked IG fetches.
-2. **A10 First Real Run:** `stash install-skills`, `/stash-init`, `stash import-ig-export`, then `/stash` on a real chunk. Fix what breaks.
-3. **B2 Shell, Grid, Search:** replace the B0 mock shell with TanStack Router + Query against `stash serve`.
-4. **Housekeeping:** add `google-genai` to `pyproject.toml`; root Husky + lint-staged.
+1. **A10 First Real Run:** `stash install-skills`, `/stash-init`, `stash import-ig-export`, then `/stash` on a real chunk. Fix what breaks.
+2. **B2 Shell, Grid, Search:** replace the B0 mock shell with TanStack Router + Query against `stash serve`.
+3. **Housekeeping:** add `google-genai` to `pyproject.toml`; root Husky + lint-staged.

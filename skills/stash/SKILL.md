@@ -34,6 +34,10 @@ This updates `inventory/auto/` if older than 24 hours without delaying if alread
 
 For Instagram reels, run `stash analyze <id>` (or use `stash ingest <id> -` if analyzing directly in-session) to extract mentions, takeaways, CTA keywords, and summary.
 
+If `stash analyze` returns `engine: "frames"` with a `needs_agent` block, every video engine failed and the reel is not analyzed yet. Open the `contact` image (labeled timestamps on each tile), read the caption in `source.md` and any `transcript` in the output, fill the reel schema yourself, and pipe the JSON to the `next` command (`stash ingest <id> -`).
+
+If `stash extract` reports `blocked`, a `blocked` pending item is created asking for the mp4. Tell the user where to save it; rerunning `stash extract` on that link picks it up.
+
 ### 4. Split Records into Candidates
 Split each extracted source record into candidate things:
 - One candidate per mention (repo, model, tool, skill, plugin, mcp, link)
