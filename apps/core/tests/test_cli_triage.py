@@ -115,4 +115,44 @@ def test_extract_retry_failed_adds_logged_links(home: Path) -> None:
 def test_install_skills_uses_given_dir(home: Path, tmp_path: Path) -> None:
     with patch("stash.cli.triage.install_skills", return_value={"t": ["stash"]}) as inst:
         assert _ok(["install-skills", "--skills-dir", str(tmp_path)]) == {"t": ["stash"]}
-        inst.assert_called_once_with(tmp_path)
+        inst.assert_called_once_with(tmp_path, mode="copy", workspace=False)
+
+
+def test_install_skills_cli_flags(home: Path, tmp_path: Path) -> None:
+    with patch("stash.cli.triage.install_skills", return_value={"t": ["stash"]}) as inst:
+        assert _ok(
+            ["install-skills", "--skills-dir", str(tmp_path), "--mode", "symlink", "--workspace"]
+        ) == {"t": ["stash"]}
+        inst.assert_called_once_with(tmp_path, mode="symlink", workspace=True)
+
+
+def test_install_skills_invalid_mode(home: Path) -> None:
+    err = _err(["install-skills", "--mode", "unknown"])
+    assert err["error"]["code"] == "invalid"
+
+
+def test_have_batch_via_stdin(home: Path) -> None:
+    batch_input = "[tool] Alpha — first tool\n[ui_ref] Beta — second UI https://beta.design\n"
+    res = _ok(["have", "-"], input=batch_input)
+    assert isinstance(res, list)
+    assert len(res) == 2
+    assert res[0]["name"] == "Alpha"
+    assert res[1]["name"] == "Beta"
+
+
+def test_check_raw_url_and_raw_name(home: Path) -> None:
+    # First save an item into manual inventory
+    _ok(["have", "[ui_ref] shadcn/ui — UI kit https://ui.shadcn.com"])
+
+    # Checking directly by URL without JSON formatting
+    checked_url = _ok(["check", "https://ui.shadcn.com"])
+    assert checked_url["status"] in ("duplicate_inventory", "overlap")
+
+    # Checking directly by name without JSON formatting
+    checked_name = _ok(["check", "shadcn"])
+    assert checked_name["status"] in ("duplicate_inventory", "overlap")
+
+    # Checking non-existent thing
+    checked_new = _ok(["check", "something-completely-brand-new-999"])
+    assert checked_new["status"] == "new"
+

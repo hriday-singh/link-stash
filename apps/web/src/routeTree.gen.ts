@@ -18,6 +18,7 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as CSlugRouteImport } from './routes/c.$slug'
 import { Route as CategoryNameRouteImport } from './routes/category.$name'
+import { Route as SSourceIdRouteImport } from './routes/s.$sourceId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,11 @@ const CategoryNameRoute = CategoryNameRouteImport.update({
   path: '/category/$name',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SSourceIdRoute = SSourceIdRouteImport.update({
+  id: '/s/$sourceId',
+  path: '/s/$sourceId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/sources': typeof SourcesRoute
   '/c/$slug': typeof CSlugRoute
   '/category/$name': typeof CategoryNameRoute
+  '/s/$sourceId': typeof SSourceIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/sources': typeof SourcesRoute
   '/c/$slug': typeof CSlugRoute
   '/category/$name': typeof CategoryNameRoute
+  '/s/$sourceId': typeof SSourceIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/sources': typeof SourcesRoute
   '/c/$slug': typeof CSlugRoute
   '/category/$name': typeof CategoryNameRoute
+  '/s/$sourceId': typeof SSourceIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/sources'
     | '/c/$slug'
     | '/category/$name'
+    | '/s/$sourceId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/sources'
     | '/c/$slug'
     | '/category/$name'
+    | '/s/$sourceId'
   id:
     | '__root__'
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/sources'
     | '/c/$slug'
     | '/category/$name'
+    | '/s/$sourceId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +157,7 @@ export interface RootRouteChildren {
   SourcesRoute: typeof SourcesRoute
   CSlugRoute: typeof CSlugRoute
   CategoryNameRoute: typeof CategoryNameRoute
+  SSourceIdRoute: typeof SSourceIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategoryNameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/s/$sourceId': {
+      id: '/s/$sourceId'
+      path: '/s/$sourceId'
+      fullPath: '/s/$sourceId'
+      preLoaderRoute: typeof SSourceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -225,6 +245,7 @@ const rootRouteChildren: RootRouteChildren = {
   SourcesRoute: SourcesRoute,
   CSlugRoute: CSlugRoute,
   CategoryNameRoute: CategoryNameRoute,
+  SSourceIdRoute: SSourceIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

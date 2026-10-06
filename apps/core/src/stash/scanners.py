@@ -84,29 +84,57 @@ def _mcp(servers: object) -> list[Item]:
     ]
 
 
+def _dedup(items: list[Item]) -> list[Item]:
+    seen: set[tuple[str, str]] = set()
+    out: list[Item] = []
+    for kind, name, key in items:
+        token = (kind, name.lower())
+        if token not in seen:
+            seen.add(token)
+            out.append((kind, name, key))
+    return out
+
+
 def claude_code(h: Path) -> list[Item] | None:
     root = h / ".claude"
     if not root.is_dir():
         return None
     items = _skills(root / "skills")
     plugins = _obj(_json(root / "plugins" / "installed_plugins.json").get("plugins"))
-    items += [("plugin", n.split("@")[0], f"skill:{n.split('@')[0].lower()}") for n in plugins]
+    for n, records in plugins.items():
+        plugin_name = n.split("@")[0]
+        items.append(("plugin", plugin_name, f"skill:{plugin_name.lower()}"))
+        if isinstance(records, list):
+            for rec in records:
+                if isinstance(rec, dict):
+                    ipath = rec.get("installPath")
+                    if ipath and isinstance(ipath, str):
+                        p_dir = Path(ipath)
+                        if p_dir.is_dir():
+                            items.extend(_skills(p_dir / "skills"))
     items += [("agent", p.stem, None) for p in sorted((root / "agents").glob("*.md"))]
-    return items + _mcp(_json(h / ".claude.json").get("mcpServers"))
+    items += _mcp(_json(h / ".claude.json").get("mcpServers"))
+    return _dedup(items)
 
 
 def agent_skills(h: Path) -> list[Item] | None:
     dirs = [h / ".agents" / "skills", h / ".agent" / "skills"]
-    return _skills(*dirs) if any(d.is_dir() for d in dirs) else None
+    return _dedup(_skills(*dirs)) if any(d.is_dir() for d in dirs) else None
 
 
 def antigravity(h: Path) -> list[Item] | None:
     cli, cfg = h / ".gemini" / "antigravity-cli", h / ".gemini" / "config"
     if not (cli.is_dir() or cfg.is_dir()):
         return None
-    items = _skills(cli / "skills", cfg / "skills")
-    items += _subdirs(cli / "plugins", "plugin", "skill")
-    return items + _mcp(_json(cfg / "mcp_config.json").get("mcpServers"))
+    items = _skills(cli / "skills", cfg / "skills", cli / "builtin" / "skills")
+    for pd in (cli / "plugins", cfg / "plugins"):
+        if pd.is_dir():
+            for p in sorted(pd.iterdir()):
+                if p.is_dir() and not p.name.startswith("."):
+                    items.append(("plugin", p.name, f"skill:{p.name.lower()}"))
+                    items.extend(_skills(p / "skills"))
+    items += _mcp(_json(cfg / "mcp_config.json").get("mcpServers"))
+    return _dedup(items)
 
 
 def codex(h: Path) -> list[Item] | None:

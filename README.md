@@ -62,36 +62,61 @@ Your stash is stored entirely on disk in plain files:
 - Node.js 20+ and [pnpm](https://pnpm.io/)
 - `ffmpeg` on your PATH (for reel video processing and audio extraction)
 
-### Core setup (Python)
+### Quick start (Dev server)
 
-```bash
-cd apps/core
-uv sync
-uv run stash --help
-```
-
-### Web app setup (React + Vite)
+Install dependencies:
 
 ```bash
 pnpm install
-pnpm --filter @stash/web dev
+cd apps/core && uv sync && cd ../..
 ```
 
-To build the static frontend:
+Run both backend and frontend development servers concurrently:
 
 ```bash
-pnpm --filter @stash/web build
+pnpm dev
 ```
 
-## Running tests
+This starts:
+- FastAPI backend on `http://127.0.0.1:8765`
+- React/Vite frontend on `http://localhost:5173` (proxies `/api` to the backend)
+
+### Individual services
 
 ```bash
-# Backend tests (apps/core)
-cd apps/core
-uv run pytest
+# Run backend API server only
+pnpm dev:api
 
-# Frontend tests (apps/web)
-pnpm --filter @stash/web test
+# Run Vite frontend only
+pnpm dev:web
+
+# Build static frontend
+pnpm build
+```
+
+## Running tests & quality checks
+
+```bash
+# Run both backend and frontend test suites
+pnpm test
+
+# Run backend tests only (apps/core)
+pnpm test:core
+
+# Run frontend tests only (apps/web)
+pnpm test:web
+
+# Run linters (Ruff + ESLint)
+pnpm lint
+
+# Run type checks (Pyright + TypeScript)
+pnpm typecheck
+
+# Format code (Ruff + Prettier)
+pnpm format
+
+# Update OpenAPI schema and frontend TypeScript types
+pnpm gen:api
 ```
 
 ## License

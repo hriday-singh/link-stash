@@ -14,7 +14,7 @@ from stash.errors import Invalid, StashError
 from stash.services.cards import save
 from stash.services.check import CheckInput, check_item
 from stash.services.extract import extract_urls, failed_urls
-from stash.services.inventory import have, scan_inventory
+from stash.services.inventory import have, have_batch, scan_inventory
 from stash.services.pending import add_pending, list_pending, new_id, resolve_pending
 from stash.services.rejects import add_reject
 from stash.services.skills import install_skills
@@ -86,19 +86,58 @@ def register_triage_commands(app: typer.Typer) -> None:
             _fail(e)
 
     @app.command("have")
-    def have_cmd(text: Annotated[str, typer.Argument(help="Name, URL, or `[kind] name`.")]) -> None:
-        """Add one installed thing to inventory/manual/."""
+    def have_cmd(
+        text: Annotated[str, typer.Argument(help="Name, URL, `[kind] name`, or `-` for stdin.")]
+    ) -> None:
+        """Add one or more installed things to inventory/manual/."""
         try:
-            _print(have(load_config().home, text).model_dump(mode="json"))
+            home = load_config().home
+            if text == "-":
+                raw = sys.stdin.read()
+                lines = [line.strip() for line in raw.splitlines() if line.strip()]
+                if not lines:
+                    raise Invalid("nothing to add: empty input")
+                if len(lines) == 1:
+                    _print(have(home, lines[0]).model_dump(mode="json"))
+                else:
+                    results = have_batch(home, lines)
+                    _print([r.model_dump(mode="json") for r in results])
+            elif "\n" in text:
+                lines = [line.strip() for line in text.splitlines() if line.strip()]
+                results = have_batch(home, lines)
+                _print([r.model_dump(mode="json") for r in results])
+            else:
+                _print(have(home, text).model_dump(mode="json"))
         except StashError as e:
             _fail(e)
 
     @app.command()
-    def check(record: Annotated[str, typer.Argument(help="Candidate JSON file, or `-`.")]) -> None:
+    def check(
+        record: Annotated[str, typer.Argument(help="Candidate JSON file, URL, name, or `-`.")]
+    ) -> None:
         """Check a candidate against library, inventory and rejects."""
         try:
-            item = CheckInput.model_validate(_read_json(record))
-            _print(check_item(load_config().home, item).model_dump(mode="json"))
+            home = load_config().home
+            if record == "-":
+                raw = sys.stdin.read().strip()
+                try:
+                    data = json.loads(raw)
+                    if isinstance(data, dict):
+                        item = CheckInput.model_validate(data)
+                    else:
+                        raise Invalid(f"expected a JSON object, got {type(data).__name__}")
+                except json.JSONDecodeError:
+                    if raw.startswith(("http://", "https://")):
+                        item = CheckInput(url=raw)
+                    else:
+                        item = CheckInput(name=raw)
+            elif record.startswith(("http://", "https://")):
+                item = CheckInput(url=record)
+            elif not Path(record).exists() and not record.endswith((".json", ".jsonl")):
+                item = CheckInput(name=record)
+            else:
+                item = CheckInput.model_validate(_read_json(record))
+            _print(check_item(home, item).model_dump(mode="json"))
         except ValidationError as e:
             _fail(_invalid(e))
         except StashError as e:
@@ -140,10 +179,24 @@ def register_triage_commands(app: typer.Typer) -> None:
         skills_dir: Annotated[
             Path, typer.Option("--skills-dir", help="Folder holding the skill folders.")
         ] = DEFAULT_SKILLS_DIR,
+        mode: Annotated[
+            str,
+            typer.Option(
+                "--mode", help="Installation mode: 'copy' (default, universal) or 'symlink'."
+            ),
+        ] = "copy",
+        workspace: Annotated[
+            bool,
+            typer.Option(
+                "--workspace", "-w", help="Also install into .agents/skills in project."
+            ),
+        ] = False,
     ) -> None:
-        """Link the stash skills into Claude Code and Antigravity."""
+        """Link or copy the stash skills into Claude Code and Antigravity."""
         try:
-            _print(install_skills(skills_dir))
+            if mode not in ("copy", "symlink"):
+                raise Invalid(f"invalid install mode: {mode!r}, expected 'copy' or 'symlink'")
+            _print(install_skills(skills_dir, mode=mode, workspace=workspace))
         except StashError as e:
             _fail(e)
 

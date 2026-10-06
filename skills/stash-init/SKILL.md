@@ -1,46 +1,51 @@
 ---
 name: stash-init
-description: Guided brain dump into inventory/manual/ for tools, UI references, and practices.
+description: Guided or bulk brain dump into inventory/manual/ for tools, UI references, and practices.
 ---
 
-# `/stash-init` — Guided Inventory Onboarding
+# `/stash-init` — Inventory Onboarding & Brain Dump
 
-Use this skill to help the user perform an initial inventory brain dump or expand their manual inventory across tools, UI references, and engineering practices.
+Use this skill to help the user perform an initial inventory brain dump or expand their manual inventory across tools, UI references, custom models, and engineering practices.
 
 ## Workflow
 
-Guide the user through one category at a time in chat. After each prompt, wait for their answer and record each provided item using `stash have`:
+### 1. Show Auto-Scanned Baseline First
+Always start by ensuring the inventory is fresh and showing what Stash already detected:
+```bash
+stash scan --if-stale
+```
+Display a concise summary so the user knows what tools, agent plugins, skills, and models are already indexed, and what remains to be captured:
+- **Auto-scanned:** Claude Code & Antigravity plugins, constituent skills, local models (Ollama, HF), dev tools
+- **Missing / Manual:** UI & UX references, custom engineering rules, and unscanned external utilities
 
+### 2. Ingestion Modes
+
+#### Mode A: Brain Dump (Fast / Default if user provides bulk text)
+If the user provides a freeform dump, list of URLs, or text from other agents:
+1. Parse all categories at once:
+   - `[tool] <name> — <description> <optional_url>`
+   - `[ui_ref] <name> — <description> <optional_url>`
+   - `[practice] <rule statement>`
+   - `[model] <name or URL>`
+2. Preserve user nuances and verdicts in the note (e.g. `— preferred scroll engine`, `— only free blocks`, `— main icon kit`).
+3. Ingest all items in a single batch via stdin:
+   ```bash
+   stash have -
+   ```
+   Pass the lines via stdin. Each line follows `[kind] Name — Note (optional URL)`.
+
+#### Mode B: Guided Step-by-Step (If user starts empty or asks for guidance)
+Step through one category at a time:
 1. **Repositories & Tools:**
-   - Prompt: "What command-line tools, libraries, dev applications, or scraping utilities do you currently use that aren't auto-scanned?"
-   - For each item, run:
-     ```bash
-     stash have "[tool] <name> — <description> <optional_url>"
-     ```
-
+   - Prompt: "What CLI tools, dev apps, or utilities do you use that aren't auto-scanned?"
 2. **UI & UX References:**
-   - Prompt: "What design systems, UI kits, icon sets, or frontend component references do you regularly build with or refer to (e.g., shadcn/ui, Radix, Tailwind, Lucide)?"
-   - For each item, run:
-     ```bash
-     stash have "[ui_ref] <name> — <description> <optional_url>"
-     ```
-
+   - Prompt: "What design systems, UI kits, icon sets, or frontend component references do you regularly build with or refer to (e.g., shadcn/ui, Lenis, Motion, Lucide)?"
 3. **Engineering Practices:**
-   - Prompt: "What engineering rules, prompting guidelines, or workflow practices do you follow (e.g., 'Plan mode before multi-file edits', 'Never commit directly')?"
-   - For each item, run:
-     ```bash
-     stash have "[practice] <rule statement>"
-     ```
-
+   - Prompt: "What engineering rules or workflow practices do you follow (e.g., 'Plan before building', 'Never commit directly')?"
 4. **Custom Models:**
    - Prompt: "Are there any fine-tunes, external endpoints, or custom models you use regularly?"
-   - For each item, run:
-     ```bash
-     stash have "[model] <model name or Hugging Face URL>"
-     ```
+5. **Optional: Spoken Transcripts (off by default):**
+   - Prompt: "When video engines fail on a reel, stash falls back to a contact sheet. Want a local speech transcript added too? (installs faster-whisper ~150 MB + ~460 MB model)."
 
-5. **Optional: spoken transcripts (off by default):**
-   - Prompt: "When agy and the Gemini API both fail on a reel, stash falls back to a contact sheet. Want a local speech transcript added too? It installs faster-whisper (~150 MB) and downloads a ~460 MB model on first use."
-   - Only if yes: install the extra the way stash was installed (repo checkout: `uv sync --extra whisper` in `apps/core`; uv tool: `uv tool install --reinstall "./apps/core[whisper]"`), then add `whisper = true` near the top of `$STASH_HOME/config.toml`, above any `[table]` (create the file if it is missing).
-
-Print a summary of entries recorded into `inventory/manual/*.md` and verified in SQLite.
+### 3. Verification & Summary
+Print a clean summary of entries recorded into `inventory/manual/*.md` and verified in SQLite.

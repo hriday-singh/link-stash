@@ -15,16 +15,16 @@ Link Stash is divided into two interdependent parts:
 | Area | Milestones Defined | Completed / Substantially Done | Planned / In Progress | Completion % |
 | --- | --- | --- | --- | --- |
 | **Core Pipeline (A1–A10)** | 10 | 9 complete/logic done (A1–A9) | 1 planned (A10) | **90%** |
-| **Web Application (B0–B6)** | 7 | 3 complete (B0, B1, B2) | 4 planned (B3–B6) | **43%** |
-| **Combined System** | 17 | 12 complete/logic done | 5 planned | **71%** |
+| **Web Application (B0–B6)** | 7 | 5 complete (B0, B1, B2, B3, B4) | 2 planned (B5, B6) | **71%** |
+| **Combined System** | 17 | 14 complete/logic done | 3 planned | **82%** |
 
 ### Automated Verification Scorecard
 
 | Component | Test Suite | Pass Count | Lint Status | Typecheck Status | Build Status |
 | --- | --- | --- | --- | --- | --- |
-| **`apps/core` (Python 3.14)** | Pytest 9.1.1 (33 modules) | **211 / 211 passing** (100%) | Ruff: 0 errors | Pyright (strict): 0 errors | N/A (Python package) |
-| **`apps/web` (React 19 / Vite)** | Vitest 5.0.3 (17 test files) | **85 / 85 passing** (100%) | ESLint: 0 errors | `tsc -b`: 0 errors | Vite build: **1.19 kB HTML, 451 kB JS, 61 kB CSS** |
-| **Total Automated Tests** | Pytest + Vitest | **296 tests passing** | Clean | Strict clean | Production build clean |
+| **`apps/core` (Python 3.14)** | Pytest 9.1.1 (34 modules) | **222 / 222 passing** (100%) | Ruff: 0 errors | Pyright (strict): 0 errors | N/A (Python package) |
+| **`apps/web` (React 19 / Vite)** | Vitest 5.0.3 (39 test files) | **182 / 182 passing** (100%) | ESLint: 0 errors | `tsc -b`: 0 errors | Vite build: **clean production build** |
+| **Total Automated Tests** | Pytest + Vitest | **404 tests passing** | Clean | Strict clean | Production build clean |
 
 ---
 
@@ -54,8 +54,8 @@ Link Stash is divided into two interdependent parts:
 | **B0 Visual Design** | `B0` | [library-app-spec.md](file:///docs/library-app-spec.md#L224-L232) | [2026-10-05-library-app-b0-design.md](file:///docs/superpowers/plans/2026-10-05-library-app-b0-design.md) | **Complete (100%)** | 51 tests | `tokens.css` with 0 hardcoded colors/px, WCAG AA contrast tests, system/manual theme toggle, `Tile`, `GeneratedTile`, `CategoryPill`, `SegmentedControl`, `StashLogo`, `MorphIcon`, mock feed, card, and interactive views. |
 | **B1 Serve and API** | `B1` | [library-app-spec.md](file:///docs/library-app-spec.md#L170-L192) | [2026-10-05-library-app-b1-api.md](file:///docs/superpowers/plans/2026-10-05-library-app-b1-api.md) | **Complete (100%)** | 33 tests (`test_store_notes.py`, `test_services_paging.py`, `test_server_api.py`, `test_server_events.py`, `test_cli_serve.py`) | `stash serve` FastAPI server, CRUD endpoints, Notes section parser/patcher, range-supported media streaming, watcher SSE events, OpenAPI TS types (`schema.d.ts`), typed client (`client.ts`). |
 | **B2 Shell, Grid, Search** | `B2` | [library-app-spec.md](file:///docs/library-app-spec.md#L59-L98) | [2026-10-05-library-app-b2-shell.md](file:///docs/superpowers/plans/2026-10-05-library-app-b2-shell.md) | **Complete (100%)** | 85 tests (17 test files) | TanStack Router, AppShell, collapsible/resizable sidebar & drawer, Lenis smooth scroll, shared virtualized grid, Feed/category/search routes, Ctrl+K palette, URL filters, live sync SSE. |
-| **B3 Card Page** | `B3` | [library-app-spec.md](file:///docs/library-app-spec.md#L126-L138) | [2026-10-05-library-app-b3-card.md](file:///docs/superpowers/plans/2026-10-05-library-app-b3-card.md) | **Planned (0%)** | 0 tests | `/c/$slug` route, read-only markdown body, CodeMirror 6 Notes editor with `[[slug]]` autocomplete, autosave with 409 conflict banner, Properties form with ChipInput, Reject dialog. |
-| **B4 Stash Views** | `B4` | [library-app-spec.md](file:///docs/library-app-spec.md#L151-L158) | [2026-10-05-library-app-b4-stash-views.md](file:///docs/superpowers/plans/2026-10-05-library-app-b4-stash-views.md) | **Planned (0%)** *(Mocked in B0)* | 0 tests | Sources list + video player with seekable timestamp chips, Pending resolve form, Rejected table with un-reject, Inventory view, theSVG brand logos. |
+| **B3 Card Page** | `B3` | [library-app-spec.md](file:///docs/library-app-spec.md#L126-L138) | [2026-10-05-library-app-b3-card.md](file:///docs/superpowers/plans/2026-10-05-library-app-b3-card.md) | **Complete (100%)** | 49 tests (11 new test files; 134 total web tests) | `/c/$slug` route, read-only markdown body, CodeMirror 6 Notes editor with `[[slug]]` autocomplete, autosave with serialized 409 conflict banner, Properties form with ChipInput, Reject dialog, connection panels. |
+| **B4 Stash Views** | `B4` | [library-app-spec.md](file:///docs/library-app-spec.md#L151-L158) | [2026-10-05-library-app-b4-stash-views.md](file:///docs/superpowers/plans/2026-10-05-library-app-b4-stash-views.md) | **Complete (100%)** | 48 tests (11 test files; 182 total web tests) | Sources list with URL search filters, Source detail page with HTML5 video player and seekable timestamp chips/transcript, Pending resolve form with HTTP/HTTPS validation, Rejected table with quiet 404 un-reject, Inventory grouped view (`groupByOrigin`) with manual add form, brand logo suite (`thesvg.org` SVGs). |
 | **B5 Backlinks and Graph** | `B5` | [library-app-spec.md](file:///docs/library-app-spec.md#L144-L150) | [2026-10-05-library-app-b5-graph.md](file:///docs/superpowers/plans/2026-10-05-library-app-b5-graph.md) | **Planned (0%)** *(Mocked in B0)* | 0 tests | Card link panels (backlinks, mentions, outgoing), sigma.js WebGL graph visualization with ForceAtlas2 worker, 1/2 hop local graph, global `/graph`. |
 | **B6 Polish Pass** | `B6` | [library-app-spec.md](file:///docs/library-app-spec.md#L228-L232) | [2026-10-05-library-app-b6-polish.md](file:///docs/superpowers/plans/2026-10-05-library-app-b6-polish.md) | **Planned (15%)** | 3 tests (`MorphIcon.test.tsx`) | Shared View Transitions, Motion layout animations, torph text morphs, theme cord, and the 4 quality gate checks. `MorphIcon` is already implemented. |
 
@@ -185,28 +185,21 @@ apps/web/src/
 └── App.tsx                      <- Full interactive shell integrating all views with hash routing
 ```
 
-### Web Milestone Gaps (B1–B6)
+### Web Milestones Status (B1–B6)
 
-1. **B1 FastAPI Server & Client:**
-   - Need `apps/core/src/stash/server/` with routes: `cards.py`, `sources.py`, `state.py`, `misc.py`.
-   - Need `apps/core/src/stash/store/notes.py` (split and replace notes section).
-   - Need `apps/core/src/stash/services/library.py` (cursor pagination, FTS formatting).
-   - Need `apps/core/src/stash/server/events.py` (SSE live events hub).
-   - Need `openapi-typescript` generation script producing `apps/web/src/api/schema.d.ts`.
-2. **B2 App Shell & Live Grid:**
-   - Need TanStack Router integration (`src/routes/`).
-   - Need TanStack Query integration (`src/api/client.ts`).
-   - Need TanStack Virtual shared grid (`VirtualGrid.tsx`).
-   - Need Lenis smooth scrolling wrapper (`MainScroll.tsx`).
-   - Need Ctrl+K Command Palette with FTS5 highlight markups.
-3. **B3 Card Editing:**
-   - Need CodeMirror 6 markdown editor with debounced autosave.
-   - Need 409 conflict reconciliation banner ("Reload from disk" vs "Keep mine").
-   - Need `PropertiesForm.tsx` with `ChipInput.tsx` for tags.
-4. **B4 Stash Views:**
-   - Live HTML5 video player with seekable timestamp chips (`MM:SS`).
+1. **B1 FastAPI Server & Client:** **Complete (100%)** (33 tests in Python).
+   - FastAPI endpoints for cards, sources, state, misc, notes patcher, library cursor paging, watcher SSE events, OpenAPI TS schema and client.
+2. **B2 App Shell & Live Grid:** **Complete (100%)** (85 tests in Web).
+   - TanStack Router integration, AppShell, collapsible/resizable sidebar & drawer, Lenis smooth scrolling, VirtualGrid, Ctrl+K search palette, URL filters, SSE live updates.
+3. **B3 Card Editing:** **Complete (100%)** (49 tests in Web, 134 total).
+   - `/c/$slug` route, CardBody markdown with wikilink router links, CodeMirror 6 Notes editor with `[[` autocomplete, autosave with serialized promise queue & 409 conflict banner, PropertiesForm with ChipInput, RejectDialog, connection panels.
+4. **B4 Stash Views:** **Complete (100%)** (48 tests in Web, 182 total).
+   - Live HTML5 video player with seekable timestamp chips (`MM:SS`) and transcript.
+   - Sources list with filters in URL (`/sources` and `/s/$sourceId`).
    - Live Pending resolution form (`POST /api/pending/{id}/resolve`).
-   - Live Inventory tool grouping.
+   - Live Rejected table with quiet 404 un-reject (`DELETE /api/rejects/{key}`).
+   - Live Inventory tool grouping (`groupByOrigin`) with add form (`POST /api/inventory`).
+   - SVG brand logo suite (`src/components/BrandLogo.tsx`) with official SVGs from thesvg.org.
 5. **B5 Graph:**
    - sigma.js WebGL renderer + `graphology`.
    - ForceAtlas2 layout executing inside a dedicated Web Worker.

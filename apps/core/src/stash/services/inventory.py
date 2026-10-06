@@ -104,11 +104,8 @@ def _is_ig(url: str) -> bool:
         return False
 
 
-def have(home: Path, text: str) -> InventoryEntry:
-    """Append `- [kind] name (key: k)` to inventory/manual/<file>.md. Idempotent on key.
-
-    Text forms: `owner/repo URL`, `[tool] Scrapling — stealth scraping https://...`, plain words.
-    """
+def parse_have_text(text: str) -> tuple[str, str, str | None, str | None, str]:
+    """Parse raw have text into (kind, name, key, note, file_stem)."""
     text = " ".join(text.split())
     kind: str | None = None
     if m := _KIND.match(text):
@@ -123,11 +120,26 @@ def have(home: Path, text: str) -> InventoryEntry:
         key, url_kind, url_name = key_for_url(url)
         kind = kind or url_kind
         name = (text[: url_m.start()] + text[url_m.end() :]).strip(" —-:") or url_name
-    name, _, note = (p.strip() for p in name.partition(" — "))
+    note = None
+    for sep in (" — ", " -- ", " - ", ": "):
+        if sep in name:
+            name, _, note = name.partition(sep)
+            name = name.strip()
+            note = note.strip()
+            break
     if not name:
         raise Invalid("nothing to add: give a name or a URL")
     kind = kind or "tool"
     file_stem = MANUAL_FILE.get(kind, "tools")
+    return kind, name, key, note or None, file_stem
+
+
+def have(home: Path, text: str) -> InventoryEntry:
+    """Append `- [kind] name (key: k)` to inventory/manual/<file>.md. Idempotent on key.
+
+    Text forms: `owner/repo URL`, `[tool] Scrapling — stealth scraping https://...`, plain words.
+    """
+    kind, name, key, note, file_stem = parse_have_text(text)
     origin = f"manual/{file_stem}.md"
 
     with write_lock(home):
@@ -142,8 +154,58 @@ def have(home: Path, text: str) -> InventoryEntry:
         finally:
             db.close()
         path = home / "inventory" / origin
-        line = inventory_line(kind, name, key, note or None)
+        line = inventory_line(kind, name, key, note)
         write_lines(home, path, [*read_lines(path), line])
     entry = parse_inventory_line(line, origin)
     assert entry is not None
     return entry
+
+
+def have_batch(home: Path, items: list[str]) -> list[InventoryEntry]:
+    """Append multiple entries to inventory/manual under a single write lock."""
+    parsed: list[tuple[str, str, str | None, str | None, str]] = []
+    for raw in items:
+        cleaned = raw.strip()
+        if cleaned and not cleaned.startswith("#"):
+            parsed.append(parse_have_text(cleaned))
+    if not parsed:
+        return []
+
+    entries: list[InventoryEntry] = []
+    by_file: dict[str, list[tuple[str, str, str | None, str | None]]] = {}
+    for kind, name, key, note, file_stem in parsed:
+        by_file.setdefault(file_stem, []).append((kind, name, key, note))
+
+    with write_lock(home):
+        db = connect(home)
+        try:
+            for file_stem, file_items in by_file.items():
+                origin = f"manual/{file_stem}.md"
+                path = home / "inventory" / origin
+                current_lines = read_lines(path)
+                new_lines: list[str] = []
+                for kind, name, key, note in file_items:
+                    if key:
+                        row = db.execute("SELECT * FROM inventory WHERE key = ?", (key,)).fetchone()
+                        if row:
+                            entries.append(
+                                InventoryEntry(
+                                    key=row["key"],
+                                    name=row["name"],
+                                    kind=row["kind"],
+                                    origin=row["origin"],
+                                )
+                            )
+                            continue
+                    line = inventory_line(kind, name, key, note)
+                    new_lines.append(line)
+                    ent = parse_inventory_line(line, origin)
+                    if ent:
+                        entries.append(ent)
+                if new_lines:
+                    write_lines(home, path, [*current_lines, *new_lines])
+        finally:
+            db.close()
+
+    return entries
+

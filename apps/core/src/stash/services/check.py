@@ -127,6 +127,18 @@ def _candidates(db: sqlite3.Connection, item: CheckInput) -> list[OverlapMatch]:
 
 def check_item(home: Path, item: CheckInput) -> CheckResult:
     """Order: library key, library URL, inventory key, reject key; candidates always included."""
+    if item.url and not item.key:
+        from stash.services.inventory import key_for_url
+
+        try:
+            inferred_key, inferred_kind, inferred_name = key_for_url(item.url)
+            item.key = inferred_key
+            item.kind = item.kind or inferred_kind
+            if not (item.title or item.name):
+                item.name = inferred_name
+        except Exception:
+            pass
+
     db = connect(home)
     try:
         candidates = _candidates(db, item)

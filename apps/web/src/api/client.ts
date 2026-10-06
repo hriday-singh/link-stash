@@ -1,5 +1,18 @@
 import createClient from "openapi-fetch";
-import type { paths } from "./schema";
+import type { components, paths } from "./schema";
+
+export type CardDetail = components["schemas"]["CardDetail"];
+export type CardPatch = components["schemas"]["CardPatch"];
+export type CardTile = components["schemas"]["CardTile"];
+export type CardLinks = components["schemas"]["CardLinks"];
+export type MetaResponse = components["schemas"]["MetaResponse"];
+export type SearchHit = components["schemas"]["SearchHit"];
+export type SourceRow = components["schemas"]["SourceRow"];
+export type SourceDetail = components["schemas"]["SourceDetail"];
+export type PageSourceRow = components["schemas"]["Page_SourceRow_"];
+export type PendingItem = components["schemas"]["PendingItem"];
+export type RejectEntry = components["schemas"]["RejectEntry"];
+export type InventoryEntry = components["schemas"]["InventoryEntry"];
 
 /**
  * Custom error thrown by unwrap() when an API call fails.

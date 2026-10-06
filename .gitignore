@@ -107,3 +107,6 @@ Desktop.ini
 
 # Playwright MCP artifacts
 .playwright-mcp/
+
+# Local agent workspace skills
+.agents/

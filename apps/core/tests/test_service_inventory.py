@@ -77,3 +77,53 @@ def test_have_command(tmp_path: Path) -> None:
     assert row is not None
     assert row["origin"] == "manual/tools.md"
     db.close()
+
+
+def test_have_batch_command(tmp_path: Path) -> None:
+    from stash.services.inventory import have_batch
+
+    home = tmp_path / "stash"
+    home.mkdir()
+
+    items = [
+        "[ui_ref] shadcn/ui — component kit https://ui.shadcn.com",
+        "[practice] Plan before building",
+        "[model] my-model https://huggingface.co/org/my-model",
+        "https://github.com/astral-sh/uv",
+    ]
+    entries = have_batch(home, items)
+    assert len(entries) == 4
+    origins = {e.origin for e in entries}
+    assert origins == {"manual/ui-ux.md", "manual/practices.md", "manual/models.md", "manual/tools.md"}
+
+    db = connect(home)
+    count = db.execute("SELECT count(*) FROM inventory WHERE origin LIKE 'manual/%'").fetchone()[0]
+    assert count == 4
+    db.close()
+
+
+def test_antigravity_plugin_skills_scan(tmp_path: Path) -> None:
+    from stash.scanners import antigravity
+
+    user_home = tmp_path / "user"
+    user_home.mkdir()
+
+    # Create mock Antigravity config plugin with skills
+    plugin_skill_dir = (
+        user_home
+        / ".gemini"
+        / "config"
+        / "plugins"
+        / "superpowers"
+        / "skills"
+        / "brainstorming"
+    )
+    plugin_skill_dir.mkdir(parents=True)
+    (plugin_skill_dir / "SKILL.md").write_text("---\nname: brainstorming\n---\n# Brainstorming", encoding="utf-8")
+
+    items = antigravity(user_home)
+    assert items is not None
+    names = {name for kind, name, key in items}
+    assert "superpowers" in names  # plugin name
+    assert "brainstorming" in names  # constituent skill name
+

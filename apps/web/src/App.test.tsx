@@ -62,7 +62,7 @@ describe("App shell, Router, and navigation", () => {
     const sourcesLink = await screen.findByRole("link", { name: /sources/i });
     await user.click(sourcesLink);
 
-    expect(await screen.findByRole("heading", { name: /all sources/i })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /^sources/i })).toBeInTheDocument();
   });
 
   it("navigates to Pending view when clicked in sidebar", async () => {

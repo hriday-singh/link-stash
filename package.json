@@ -1,0 +1,21 @@
+{
+  "name": "stash-monorepo",
+  "private": true,
+  "description": "Monorepo root for Link Stash",
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue.bold,green.bold --kill-others-on-fail \"pnpm dev:api\" \"pnpm dev:web\"",
+    "dev:api": "uv run --directory apps/core stash serve --dev",
+    "dev:web": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "test": "pnpm test:core && pnpm test:web",
+    "test:core": "uv run --directory apps/core pytest",
+    "test:web": "pnpm --filter web test",
+    "lint": "uv run --directory apps/core ruff check && pnpm --filter web lint",
+    "typecheck": "uv run --directory apps/core pyright && pnpm --filter web typecheck",
+    "format": "uv run --directory apps/core ruff format && pnpm --filter web format",
+    "gen:api": "uv run --directory apps/core stash openapi > apps/web/openapi.json && pnpm --filter web gen:api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
