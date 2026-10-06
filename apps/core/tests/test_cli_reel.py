@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 from unittest.mock import patch
 
@@ -8,7 +9,7 @@ from stash.cli import app
 from stash.errors import NotFound
 from stash.reel.models import ReelRecord
 
-runner = CliRunner()
+runner = CliRunner(env={"NO_COLOR": "1"})
 
 
 def make_dummy_record() -> ReelRecord:
@@ -27,8 +28,9 @@ def make_dummy_record() -> ReelRecord:
 def test_cli_analyze_help():
     result = runner.invoke(app, ["analyze", "--help"])
     assert result.exit_code == 0
-    assert "Analyze a downloaded reel video" in result.stdout
-    assert "--engine" in result.stdout
+    clean_out = re.sub(r"\x1b\[[0-9;]*[a-zA-Z]", "", result.stdout)
+    assert "Analyze a downloaded reel video" in clean_out
+    assert "--engine" in clean_out
 
 
 def test_cli_ingest_help():
