@@ -22,7 +22,11 @@ export function PendingPage() {
   const shouldReduceMotion = useReducedMotion();
   const [resolvingId, setResolvingId] = React.useState<string | null>(null);
 
-  const { data: items, isLoading, isError } = useQuery<PendingItem[]>({
+  const {
+    data: items,
+    isLoading,
+    isError,
+  } = useQuery<PendingItem[]>({
     queryKey: queryKeys.pending(),
     queryFn: async () => {
       return await unwrap(api.GET("/api/pending"));
@@ -36,7 +40,7 @@ export function PendingPage() {
         api.POST("/api/pending/{id}/resolve", {
           params: { path: { id } },
           body: { url },
-        })
+        }),
       );
       toast.success("Resolved pending link. Will be triaged on next /stash run.");
       await Promise.all([
@@ -60,9 +64,7 @@ export function PendingPage() {
   const handleRecheck = async (id: string) => {
     setResolvingId(id);
     try {
-      const res = await unwrap(
-        api.POST("/api/pending/{id}/recheck", { params: { path: { id } } }),
-      );
+      const res = await unwrap(api.POST("/api/pending/{id}/recheck", { params: { path: { id } } }));
       if (res.status === "failed") toast.error("Still blocked. Save the reel manually.");
       else toast.success("Fetched. Will be triaged on next /stash run.");
       await refresh();
@@ -129,121 +131,121 @@ export function PendingPage() {
                     transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.15 }}
                     className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 shadow-xs transition-colors hover:border-border"
                   >
-                {/* Meta row */}
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`rounded-md border px-2 py-0.5 font-mono text-2xs uppercase tracking-wider ${
-                        item.kind === "blocked"
-                          ? "border-destructive/30 bg-destructive/10 text-destructive"
-                          : "border-warning/30 bg-warning/10 text-warning"
-                      }`}
-                    >
-                      {item.kind}
-                    </span>
+                    {/* Meta row */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`rounded-md border px-2 py-0.5 font-mono text-2xs uppercase tracking-wider ${
+                            item.kind === "blocked"
+                              ? "border-destructive/30 bg-destructive/10 text-destructive"
+                              : "border-warning/30 bg-warning/10 text-warning"
+                          }`}
+                        >
+                          {item.kind}
+                        </span>
 
-                    <span
-                      className={`rounded-md border px-2 py-0.5 font-mono text-2xs uppercase tracking-wider ${
-                        isOpen
-                          ? "border-border/60 bg-muted/60 text-muted-foreground"
-                          : "border-success/30 bg-success/15 text-success font-semibold"
-                      }`}
-                    >
-                      {item.status}
-                    </span>
+                        <span
+                          className={`rounded-md border px-2 py-0.5 font-mono text-2xs uppercase tracking-wider ${
+                            isOpen
+                              ? "border-border/60 bg-muted/60 text-muted-foreground"
+                              : "border-success/30 bg-success/15 text-success font-semibold"
+                          }`}
+                        >
+                          {item.status}
+                        </span>
 
-                    {item.source_key && (
-                      <Link
-                        to="/s/$sourceId"
-                        params={{ sourceId: item.source_key }}
-                        className="font-mono text-2xs text-primary hover:underline"
-                      >
-                        {item.source_key}
-                      </Link>
-                    )}
-                  </div>
+                        {item.source_key && (
+                          <Link
+                            to="/s/$sourceId"
+                            params={{ sourceId: item.source_key }}
+                            className="font-mono text-2xs text-primary hover:underline"
+                          >
+                            {item.source_key}
+                          </Link>
+                        )}
+                      </div>
 
-                  <div className="flex items-center gap-1">
-                    <span className="mr-1 font-mono text-2xs text-muted-foreground">
-                      {item.added}
-                    </span>
-                    {item.kind === "blocked" && isOpen && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={resolvingId === item.id}
-                        onClick={() => handleRecheck(item.id)}
-                        className="gap-1 text-xs"
-                      >
-                        <HugeiconsIcon icon={RefreshIcon} strokeWidth={1.5} />
-                        Recheck
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={resolvingId === item.id}
-                      onClick={() => handleDelete(item.id)}
-                      className="gap-1 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                      aria-label={`Delete ${item.id}`}
-                    >
-                      <HugeiconsIcon icon={Delete02Icon} strokeWidth={1.5} />
-                      Delete
-                    </Button>
-                  </div>
-                </div>
+                      <div className="flex items-center gap-1">
+                        <span className="mr-1 font-mono text-2xs text-muted-foreground">
+                          {item.added}
+                        </span>
+                        {item.kind === "blocked" && isOpen && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={resolvingId === item.id}
+                            onClick={() => handleRecheck(item.id)}
+                            className="gap-1 text-xs"
+                          >
+                            <HugeiconsIcon icon={RefreshIcon} strokeWidth={1.5} />
+                            Recheck
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={resolvingId === item.id}
+                          onClick={() => handleDelete(item.id)}
+                          className="gap-1 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          aria-label={`Delete ${item.id}`}
+                        >
+                          <HugeiconsIcon icon={Delete02Icon} strokeWidth={1.5} />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
 
-                {/* Instruction */}
-                <div className="flex items-start gap-2.5">
-                  <HugeiconsIcon
-                    icon={item.kind === "blocked" ? Alert02Icon : Comment01Icon}
-                    className={`mt-0.5 size-4 shrink-0 ${
-                      item.kind === "blocked" ? "text-destructive" : "text-warning"
-                    }`}
-                    strokeWidth={1.5}
-                  />
-                  <p className="text-xs font-medium leading-relaxed text-foreground">
-                    {item.instruction}
-                  </p>
-                </div>
-
-                {/* Form or Resolved State */}
-                {isOpen ? (
-                  <ResolveForm
-                    itemId={item.id}
-                    isResolving={resolvingId === item.id}
-                    onResolve={(url) => handleResolve(item.id, url)}
-                  />
-                ) : (
-                  <div className="flex items-center justify-between gap-2 rounded-lg border border-success/30 bg-success/5 p-2.5 text-xs">
-                    <div className="flex items-center gap-2 min-w-0">
+                    {/* Instruction */}
+                    <div className="flex items-start gap-2.5">
                       <HugeiconsIcon
-                        icon={CheckmarkCircle02Icon}
-                        className="size-4 shrink-0 text-success"
+                        icon={item.kind === "blocked" ? Alert02Icon : Comment01Icon}
+                        className={`mt-0.5 size-4 shrink-0 ${
+                          item.kind === "blocked" ? "text-destructive" : "text-warning"
+                        }`}
                         strokeWidth={1.5}
                       />
-                      <span className="text-2xs text-muted-foreground">Resolved link:</span>
-                      <a
-                        href={item.url || "#"}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-mono text-2xs text-primary hover:underline truncate"
-                      >
-                        {item.url}
-                      </a>
+                      <p className="text-xs font-medium leading-relaxed text-foreground">
+                        {item.instruction}
+                      </p>
                     </div>
-                    <span className="shrink-0 text-2xs text-muted-foreground">
-                      Ready for next /stash run
-                    </span>
-                  </div>
-                )}
-              </m.div>
-            );
-          })}
-        </AnimatePresence>
-      </div>
-    </LazyMotion>
-  )}
+
+                    {/* Form or Resolved State */}
+                    {isOpen ? (
+                      <ResolveForm
+                        itemId={item.id}
+                        isResolving={resolvingId === item.id}
+                        onResolve={(url) => handleResolve(item.id, url)}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-between gap-2 rounded-lg border border-success/30 bg-success/5 p-2.5 text-xs">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <HugeiconsIcon
+                            icon={CheckmarkCircle02Icon}
+                            className="size-4 shrink-0 text-success"
+                            strokeWidth={1.5}
+                          />
+                          <span className="text-2xs text-muted-foreground">Resolved link:</span>
+                          <a
+                            href={item.url || "#"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-mono text-2xs text-primary hover:underline truncate"
+                          >
+                            {item.url}
+                          </a>
+                        </div>
+                        <span className="shrink-0 text-2xs text-muted-foreground">
+                          Ready for next /stash run
+                        </span>
+                      </div>
+                    )}
+                  </m.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        </LazyMotion>
+      )}
     </div>
   );
 }

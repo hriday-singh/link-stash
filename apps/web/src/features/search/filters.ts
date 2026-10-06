@@ -21,8 +21,14 @@ export const cardFiltersSchema = z.object({
   tag: z.string().optional(),
   bucket: z.enum(BUCKETS).optional(),
   creator: z.string().optional(),
-  since: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  since: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  until: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
   has_video: z
     .union([z.boolean(), z.string().transform((val) => val === "true" || val === "1")])
     .optional(),
@@ -35,9 +41,7 @@ export type CardFilters = z.infer<typeof cardFiltersSchema>;
  * Safely parses URL search params or record into clean CardFilters,
  * dropping any unknown or invalid parameters silently without throwing.
  */
-export function parseCardFilters(
-  input: Record<string, unknown> | URLSearchParams,
-): CardFilters {
+export function parseCardFilters(input: Record<string, unknown> | URLSearchParams): CardFilters {
   const raw: Record<string, unknown> = {};
 
   if (input instanceof URLSearchParams) {
@@ -59,10 +63,7 @@ export function parseCardFilters(
     sanitized.category = raw.category.trim();
   }
 
-  if (
-    typeof raw.kind === "string" &&
-    VALID_KINDS.includes(raw.kind.toLowerCase() as CardKind)
-  ) {
+  if (typeof raw.kind === "string" && VALID_KINDS.includes(raw.kind.toLowerCase() as CardKind)) {
     sanitized.kind = raw.kind.toLowerCase() as CardKind;
   }
 

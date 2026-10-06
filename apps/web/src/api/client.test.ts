@@ -8,7 +8,7 @@ describe("ApiError and unwrap", () => {
       Promise.resolve({
         data: { message: "hello" },
         response: mockResponse,
-      })
+      }),
     );
     expect(result).toEqual({ message: "hello" });
   });

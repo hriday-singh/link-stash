@@ -38,7 +38,6 @@ it("assigns viewTransitionName matching card slug for shared view transitions", 
   expect(mediaContainer.style.viewTransitionName).toBe("card-agent-kit");
 });
 
-
 it("shows the bucket label only when set", () => {
   const { rerender } = render(<Tile data={base} />);
   expect(screen.queryByText("Try now")).not.toBeInTheDocument();

@@ -55,9 +55,7 @@ describe("formatDuration", () => {
 describe("splitStamps", () => {
   it("returns plain text token when no stamps exist", () => {
     const chunks = splitStamps("This is a simple transcript with no stamps.");
-    expect(chunks).toEqual([
-      { type: "text", text: "This is a simple transcript with no stamps." },
-    ]);
+    expect(chunks).toEqual([{ type: "text", text: "This is a simple transcript with no stamps." }]);
   });
 
   it("splits text with valid timestamps", () => {

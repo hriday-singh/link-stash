@@ -116,9 +116,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                 key={hit.slug}
                 value={`${hit.title} ${hit.slug}`}
                 onSelect={() =>
-                  runAndClose(() =>
-                    navigate({ to: "/c/$slug", params: { slug: hit.slug } }),
-                  )
+                  runAndClose(() => navigate({ to: "/c/$slug", params: { slug: hit.slug } }))
                 }
                 className="flex flex-col items-start gap-1 py-2"
               >
@@ -139,9 +137,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             <CommandItem
               value={`view all results for ${debouncedTerm}`}
               onSelect={() =>
-                runAndClose(() =>
-                  navigate({ to: "/search", search: { q: debouncedTerm } }),
-                )
+                runAndClose(() => navigate({ to: "/search", search: { q: debouncedTerm } }))
               }
               className="text-primary font-medium"
             >

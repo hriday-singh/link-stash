@@ -35,7 +35,7 @@ describe("useCardSave", () => {
         slug: "test-card",
         initialHash: "hash-initial",
         saveCard,
-      })
+      }),
     );
 
     expect(result.current.status).toBe("idle");
@@ -68,7 +68,7 @@ describe("useCardSave", () => {
         slug: "test-card",
         initialHash: "hash-0",
         saveCard,
-      })
+      }),
     );
 
     // Trigger two saves simultaneously
@@ -98,7 +98,7 @@ describe("useCardSave", () => {
         slug: "test-card",
         initialHash: "stale-hash",
         saveCard,
-      })
+      }),
     );
 
     await act(async () => {
@@ -130,7 +130,7 @@ describe("useCardSave", () => {
         slug: "test-card",
         initialHash: "stale-hash",
         saveCard,
-      })
+      }),
     );
 
     // Initial save fails with 409
@@ -166,7 +166,7 @@ describe("useCardSave", () => {
         slug: "test-card",
         initialHash: "hash-0",
         onReloadRequest: onReload,
-      })
+      }),
     );
 
     act(() => {

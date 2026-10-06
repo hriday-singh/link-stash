@@ -66,7 +66,7 @@ describe("ChipInput", () => {
         value={[]}
         onChange={onChange}
         suggestions={["typescript", "python", "tailwind"]}
-      />
+      />,
     );
 
     const input = screen.getByRole("textbox");

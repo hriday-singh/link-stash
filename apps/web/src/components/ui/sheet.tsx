@@ -44,17 +44,14 @@ interface SheetContentProps extends React.ComponentProps<typeof DialogPrimitive.
 
 const sideVariants: Record<SheetSide, string> = {
   top: "inset-x-0 top-0 border-b data-open:slide-in-from-top data-closed:slide-out-to-top",
-  bottom: "inset-x-0 bottom-0 border-t data-open:slide-in-from-bottom data-closed:slide-out-to-bottom",
+  bottom:
+    "inset-x-0 bottom-0 border-t data-open:slide-in-from-bottom data-closed:slide-out-to-bottom",
   left: "inset-y-0 left-0 h-full w-3/4 max-w-xs border-r data-open:slide-in-from-left data-closed:slide-out-to-left",
-  right: "inset-y-0 right-0 h-full w-3/4 max-w-xs border-l data-open:slide-in-from-right data-closed:slide-out-to-right",
+  right:
+    "inset-y-0 right-0 h-full w-3/4 max-w-xs border-l data-open:slide-in-from-right data-closed:slide-out-to-right",
 };
 
-function SheetContent({
-  side = "left",
-  className,
-  children,
-  ...props
-}: SheetContentProps) {
+function SheetContent({ side = "left", className, children, ...props }: SheetContentProps) {
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -82,7 +79,11 @@ function SheetContent({
 
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div data-slot="sheet-header" className={cn("flex flex-col gap-1 text-left", className)} {...props} />
+    <div
+      data-slot="sheet-header"
+      className={cn("flex flex-col gap-1 text-left", className)}
+      {...props}
+    />
   );
 }
 
@@ -96,10 +97,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function SheetTitle({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Title>) {
+function SheetTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
       data-slot="sheet-title"

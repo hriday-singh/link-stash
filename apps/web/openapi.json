@@ -7,9 +7,7 @@
   "paths": {
     "/api/cards": {
       "get": {
-        "tags": [
-          "cards"
-        ],
+        "tags": ["cards"],
         "summary": "List Cards",
         "description": "Lists card tiles with optional filters and keyset cursor.",
         "operationId": "list_cards_api_cards_get",
@@ -108,12 +106,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "enum": [
-                    "try-now",
-                    "later",
-                    "upgrade",
-                    "inspiration"
-                  ],
+                  "enum": ["try-now", "later", "upgrade", "inspiration"],
                   "type": "string"
                 },
                 {
@@ -214,9 +207,7 @@
     },
     "/api/cards/{slug}": {
       "get": {
-        "tags": [
-          "cards"
-        ],
+        "tags": ["cards"],
         "summary": "Get Card",
         "description": "Retrieves full card details including markdown body without notes, and notes section.",
         "operationId": "get_card_api_cards__slug__get",
@@ -255,9 +246,7 @@
         }
       },
       "put": {
-        "tags": [
-          "cards"
-        ],
+        "tags": ["cards"],
         "summary": "Edit Card",
         "description": "Updates editable frontmatter and Notes under write lock, guarding with base_hash.",
         "operationId": "edit_card_api_cards__slug__put",
@@ -306,9 +295,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "cards"
-        ],
+        "tags": ["cards"],
         "summary": "Delete Card",
         "description": "Rejects a card, removing it from library and logging to rejected.md.",
         "operationId": "delete_card_api_cards__slug__delete",
@@ -359,9 +346,7 @@
     },
     "/api/cards/{slug}/links": {
       "get": {
-        "tags": [
-          "cards"
-        ],
+        "tags": ["cards"],
         "summary": "Get Links",
         "description": "Retrieves backlinks, mentioned_by, and outgoing links for a card.",
         "operationId": "get_links_api_cards__slug__links_get",
@@ -402,9 +387,7 @@
     },
     "/api/sources": {
       "get": {
-        "tags": [
-          "sources"
-        ],
+        "tags": ["sources"],
         "summary": "List Sources",
         "description": "Retrieves paginated source list with filters.",
         "operationId": "list_sources_api_sources_get",
@@ -528,9 +511,7 @@
     },
     "/api/sources/{id}/video": {
       "get": {
-        "tags": [
-          "sources"
-        ],
+        "tags": ["sources"],
         "summary": "Get Source Video",
         "description": "Streams video file supporting HTTP Range requests.",
         "operationId": "get_source_video_api_sources__id__video_get",
@@ -569,9 +550,7 @@
     },
     "/api/sources/{id}/thumb": {
       "get": {
-        "tags": [
-          "sources"
-        ],
+        "tags": ["sources"],
         "summary": "Get Source Thumb",
         "description": "Returns poster thumbnail image.",
         "operationId": "get_source_thumb_api_sources__id__thumb_get",
@@ -610,9 +589,7 @@
     },
     "/api/sources/{id}": {
       "get": {
-        "tags": [
-          "sources"
-        ],
+        "tags": ["sources"],
         "summary": "Get Source",
         "description": "Retrieves full source metadata, parsed source.md, and linked cards.",
         "operationId": "get_source_api_sources__id__get",
@@ -653,9 +630,7 @@
     },
     "/api/pending": {
       "get": {
-        "tags": [
-          "state"
-        ],
+        "tags": ["state"],
         "summary": "Get Pending",
         "description": "Lists pending link requests from pending.md.",
         "operationId": "get_pending_api_pending_get",
@@ -679,9 +654,7 @@
     },
     "/api/pending/{id}/resolve": {
       "post": {
-        "tags": [
-          "state"
-        ],
+        "tags": ["state"],
         "summary": "Resolve Pending Item",
         "description": "Resolves a pending item by attaching the obtained destination URL.",
         "operationId": "resolve_pending_item_api_pending__id__resolve_post",
@@ -732,9 +705,7 @@
     },
     "/api/pending/{id}": {
       "delete": {
-        "tags": [
-          "state"
-        ],
+        "tags": ["state"],
         "summary": "Delete Pending Item",
         "description": "Drops a pending item (no-op if already gone).",
         "operationId": "delete_pending_item_api_pending__id__delete",
@@ -779,9 +750,7 @@
     },
     "/api/pending/{id}/recheck": {
       "post": {
-        "tags": [
-          "state"
-        ],
+        "tags": ["state"],
         "summary": "Recheck Pending Item",
         "description": "Re-runs the Instagram fetch for a blocked item; success drops it from pending.",
         "operationId": "recheck_pending_item_api_pending__id__recheck_post",
@@ -824,9 +793,7 @@
     },
     "/api/rejects": {
       "get": {
-        "tags": [
-          "state"
-        ],
+        "tags": ["state"],
         "summary": "Get Rejects",
         "description": "Retrieves all rejected items.",
         "operationId": "get_rejects_api_rejects_get",
@@ -850,9 +817,7 @@
     },
     "/api/rejects/{key}": {
       "delete": {
-        "tags": [
-          "state"
-        ],
+        "tags": ["state"],
         "summary": "Delete Reject",
         "description": "Un-rejects an item, removing it from rejected.md.",
         "operationId": "delete_reject_api_rejects__key__delete",
@@ -897,9 +862,7 @@
     },
     "/api/inventory": {
       "get": {
-        "tags": [
-          "state"
-        ],
+        "tags": ["state"],
         "summary": "Get Inventory",
         "description": "Lists all scanned and manual inventory items.",
         "operationId": "get_inventory_api_inventory_get",
@@ -921,9 +884,7 @@
         }
       },
       "post": {
-        "tags": [
-          "state"
-        ],
+        "tags": ["state"],
         "summary": "Add Inventory",
         "description": "Adds a new manual inventory entry to inventory/manual/tools.md.",
         "operationId": "add_inventory_api_inventory_post",
@@ -963,9 +924,7 @@
     },
     "/api/meta": {
       "get": {
-        "tags": [
-          "misc"
-        ],
+        "tags": ["misc"],
         "summary": "Get Metadata",
         "description": "Returns categories, tags, counts, and application version.",
         "operationId": "get_metadata_api_meta_get",
@@ -985,9 +944,7 @@
     },
     "/api/graph": {
       "get": {
-        "tags": [
-          "misc"
-        ],
+        "tags": ["misc"],
         "summary": "Get Graph Data",
         "description": "Returns nodes and edges for global graph or centered neighborhood.",
         "operationId": "get_graph_data_api_graph_get",
@@ -1079,9 +1036,7 @@
     },
     "/api/search": {
       "get": {
-        "tags": [
-          "misc"
-        ],
+        "tags": ["misc"],
         "summary": "Search",
         "description": "Searches cards using SQLite FTS5 with custom highlight snippets.",
         "operationId": "search_api_search_get",
@@ -1139,9 +1094,7 @@
     },
     "/api/reindex": {
       "post": {
-        "tags": [
-          "misc"
-        ],
+        "tags": ["misc"],
         "summary": "Trigger Reindex",
         "description": "Rebuilds the entire SQLite search index from markdown files.",
         "operationId": "trigger_reindex_api_reindex_post",
@@ -1165,9 +1118,7 @@
     },
     "/api/events": {
       "get": {
-        "tags": [
-          "misc"
-        ],
+        "tags": ["misc"],
         "summary": "Sse Events",
         "description": "Subscribes to live Server-Sent Events from the library watcher.",
         "operationId": "sse_events_api_events_get",
@@ -1415,12 +1366,7 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": [
-                  "try-now",
-                  "later",
-                  "upgrade",
-                  "inspiration"
-                ]
+                "enum": ["try-now", "later", "upgrade", "inspiration"]
               },
               {
                 "type": "null"
@@ -1430,13 +1376,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "key",
-          "title",
-          "category",
-          "kind",
-          "added"
-        ],
+        "required": ["key", "title", "category", "kind", "added"],
         "title": "Card",
         "description": "Frontmatter metadata for an item card."
       },
@@ -1470,13 +1410,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "slug",
-          "card",
-          "body",
-          "notes",
-          "hash"
-        ],
+        "required": ["slug", "card", "body", "notes", "hash"],
         "title": "CardDetail"
       },
       "CardLinks": {
@@ -1581,9 +1515,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "base_hash"
-        ],
+        "required": ["base_hash"],
         "title": "CardPatch"
       },
       "CardRejectRequest": {
@@ -1594,9 +1526,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "reason"
-        ],
+        "required": ["reason"],
         "title": "CardRejectRequest"
       },
       "CardTile": {
@@ -1684,12 +1614,7 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": [
-                  "try-now",
-                  "later",
-                  "upgrade",
-                  "inspiration"
-                ]
+                "enum": ["try-now", "later", "upgrade", "inspiration"]
               },
               {
                 "type": "null"
@@ -1699,15 +1624,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "key",
-          "slug",
-          "title",
-          "category",
-          "kind",
-          "added",
-          "hash"
-        ],
+        "required": ["key", "slug", "title", "category", "kind", "added", "hash"],
         "title": "CardTile"
       },
       "CategoryMeta": {
@@ -1727,10 +1644,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "color"
-        ],
+        "required": ["name", "color"],
         "title": "CategoryMeta"
       },
       "GraphData": {
@@ -1765,20 +1679,12 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "wikilink",
-              "source",
-              "overlap"
-            ],
+            "enum": ["wikilink", "source", "overlap"],
             "title": "Type"
           }
         },
         "type": "object",
-        "required": [
-          "source",
-          "target",
-          "type"
-        ],
+        "required": ["source", "target", "type"],
         "title": "GraphEdge"
       },
       "GraphNode": {
@@ -1806,12 +1712,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "label",
-          "category",
-          "kind"
-        ],
+        "required": ["id", "label", "category", "kind"],
         "title": "GraphNode"
       },
       "HTTPValidationError": {
@@ -1835,9 +1736,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "text"
-        ],
+        "required": ["text"],
         "title": "InventoryAddRequest"
       },
       "InventoryEntry": {
@@ -1867,11 +1766,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "kind",
-          "origin"
-        ],
+        "required": ["name", "kind", "origin"],
         "title": "InventoryEntry",
         "description": "An installed agent tool, model, or manually recorded inventory item."
       },
@@ -1909,10 +1804,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "kind",
-          "name"
-        ],
+        "required": ["kind", "name"],
         "title": "Mention",
         "description": "A mentioned entity in a source document."
       },
@@ -1940,13 +1832,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "cards",
-          "sources",
-          "pending",
-          "rejected",
-          "inventory"
-        ],
+        "required": ["cards", "sources", "pending", "rejected", "inventory"],
         "title": "MetaCounts"
       },
       "MetaResponse": {
@@ -1974,12 +1860,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "categories",
-          "tags",
-          "counts",
-          "version"
-        ],
+        "required": ["categories", "tags", "counts", "version"],
         "title": "MetaResponse"
       },
       "Page_CardTile_": {
@@ -2004,9 +1885,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "items"
-        ],
+        "required": ["items"],
         "title": "Page[CardTile]"
       },
       "Page_SourceRow_": {
@@ -2031,9 +1910,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "items"
-        ],
+        "required": ["items"],
         "title": "Page[SourceRow]"
       },
       "PendingItem": {
@@ -2044,10 +1921,7 @@
           },
           "kind": {
             "type": "string",
-            "enum": [
-              "cta",
-              "blocked"
-            ],
+            "enum": ["cta", "blocked"],
             "title": "Kind"
           },
           "source_key": {
@@ -2078,10 +1952,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "open",
-              "ready"
-            ],
+            "enum": ["open", "ready"],
             "title": "Status",
             "default": "open"
           },
@@ -2092,12 +1963,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "kind",
-          "instruction",
-          "added"
-        ],
+        "required": ["id", "kind", "instruction", "added"],
         "title": "PendingItem",
         "description": "A pending item requiring follow-up (e.g. comment-for-link CTA or blocked fetch)."
       },
@@ -2109,9 +1975,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "url"
-        ],
+        "required": ["url"],
         "title": "PendingResolveRequest"
       },
       "RejectEntry": {
@@ -2131,11 +1995,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "key",
-          "date",
-          "reason"
-        ],
+        "required": ["key", "date", "reason"],
         "title": "RejectEntry",
         "description": "A rejected item entry."
       },
@@ -2163,13 +2023,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "slug",
-          "title",
-          "category",
-          "kind",
-          "snippet"
-        ],
+        "required": ["slug", "title", "category", "kind", "snippet"],
         "title": "SearchHit"
       },
       "SourceDetail": {
@@ -2211,9 +2065,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "source"
-        ],
+        "required": ["source"],
         "title": "SourceDetail"
       },
       "SourceDoc": {
@@ -2353,12 +2205,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "key",
-          "platform",
-          "url",
-          "stage"
-        ],
+        "required": ["key", "platform", "url", "stage"],
         "title": "SourceDoc",
         "description": "A captured source record (e.g. Instagram reel, GitHub repo)."
       },
@@ -2434,14 +2281,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "platform",
-          "url",
-          "stage",
-          "has_video",
-          "has_thumb"
-        ],
+        "required": ["id", "platform", "url", "stage", "has_video", "has_thumb"],
         "title": "SourceRow"
       },
       "TagMeta": {
@@ -2456,10 +2296,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "tag",
-          "count"
-        ],
+        "required": ["tag", "count"],
         "title": "TagMeta"
       },
       "ValidationError": {
@@ -2495,11 +2332,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "loc",
-          "msg",
-          "type"
-        ],
+        "required": ["loc", "msg", "type"],
         "title": "ValidationError"
       }
     }

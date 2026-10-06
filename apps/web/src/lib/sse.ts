@@ -14,15 +14,16 @@ export type SyncStatus = "connected" | "connecting" | "disconnected";
 export const cardEventTarget = new EventTarget();
 
 export function dispatchCardEvent(event: string, data: Record<string, unknown>) {
-  cardEventTarget.dispatchEvent(
-    new CustomEvent(event, { detail: data }),
-  );
+  cardEventTarget.dispatchEvent(new CustomEvent(event, { detail: data }));
 }
 
 /**
  * Maps a domain SSE event to the list of TanStack Query key prefixes to invalidate.
  */
-export function keysForEvent(event: string, data: Record<string, unknown> = {}): readonly (readonly unknown[])[] {
+export function keysForEvent(
+  event: string,
+  data: Record<string, unknown> = {},
+): readonly (readonly unknown[])[] {
   switch (event) {
     case "card.changed":
     case "card.deleted": {
@@ -54,12 +55,7 @@ export function keysForEvent(event: string, data: Record<string, unknown> = {}):
     }
 
     case "state.changed":
-      return [
-        queryKeys.pending(),
-        queryKeys.rejects(),
-        queryKeys.inventory(),
-        queryKeys.meta(),
-      ];
+      return [queryKeys.pending(), queryKeys.rejects(), queryKeys.inventory(), queryKeys.meta()];
 
     case "index.rebuilt":
       return [
@@ -109,9 +105,7 @@ export function startLiveSync({
 
     setStatus(retryCount === 0 ? "connecting" : "connecting");
 
-    const createSource =
-      eventSourceFactory ??
-      ((targetUrl: string) => new EventSource(targetUrl));
+    const createSource = eventSourceFactory ?? ((targetUrl: string) => new EventSource(targetUrl));
 
     try {
       source = createSource(url);

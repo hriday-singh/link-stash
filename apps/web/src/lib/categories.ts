@@ -70,4 +70,3 @@ export function categoryNameError(name: string, existing: readonly string[]): st
   if (existing.includes(name)) return "That category already exists.";
   return null;
 }
-

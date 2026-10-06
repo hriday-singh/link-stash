@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 
 export const MIN_SIDEBAR_WIDTH = 200;
 export const MAX_SIDEBAR_WIDTH = 400;
@@ -31,7 +24,8 @@ function loadInitialState(): StoredSidebarState {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return { width: DEFAULT_SIDEBAR_WIDTH, collapsed: false };
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    const width = typeof parsed.width === "number" ? clampWidth(parsed.width) : DEFAULT_SIDEBAR_WIDTH;
+    const width =
+      typeof parsed.width === "number" ? clampWidth(parsed.width) : DEFAULT_SIDEBAR_WIDTH;
     const collapsed = typeof parsed.collapsed === "boolean" ? parsed.collapsed : false;
     return { width, collapsed };
   } catch {
@@ -106,28 +100,31 @@ export function SidebarProvider({
   }, []);
 
   // Drag-to-resize handle logic
-  const startResizing = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    const startX = e.clientX;
-    const initialWidth = persisted.width;
+  const startResizing = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      const startX = e.clientX;
+      const initialWidth = persisted.width;
 
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      const deltaX = moveEvent.clientX - startX;
-      setWidth(initialWidth + deltaX);
-    };
+      const onMouseMove = (moveEvent: MouseEvent) => {
+        const deltaX = moveEvent.clientX - startX;
+        setWidth(initialWidth + deltaX);
+      };
 
-    const onMouseUp = () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-      document.body.style.removeProperty("cursor");
-      document.body.style.removeProperty("user-select");
-    };
+      const onMouseUp = () => {
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+        document.body.style.removeProperty("cursor");
+        document.body.style.removeProperty("user-select");
+      };
 
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-  }, [persisted.width, setWidth]);
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    },
+    [persisted.width, setWidth],
+  );
 
   const contextValue = useMemo<SidebarContextValue>(
     () => ({

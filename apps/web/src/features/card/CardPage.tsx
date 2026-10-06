@@ -57,7 +57,7 @@ export function CardPage() {
       return await unwrap(
         api.GET("/api/cards/{slug}", {
           params: { path: { slug } },
-        })
+        }),
       );
     },
     enabled: Boolean(slug),
@@ -70,7 +70,7 @@ export function CardPage() {
       return await unwrap(
         api.GET("/api/cards/{slug}/links", {
           params: { path: { slug } },
-        })
+        }),
       );
     },
     enabled: Boolean(cardDetail && slug),
@@ -123,7 +123,7 @@ export function CardPage() {
         api.DELETE("/api/cards/{slug}", {
           params: { path: { slug } },
           body: { reason },
-        })
+        }),
       );
       toast.success("Card rejected and moved to log");
       setIsRejectOpen(false);
@@ -139,11 +139,7 @@ export function CardPage() {
     }
   };
 
-  const handleFieldSave = async (patch: {
-    category?: string;
-    kind?: Kind;
-    tags?: string[];
-  }) => {
+  const handleFieldSave = async (patch: { category?: string; kind?: Kind; tags?: string[] }) => {
     try {
       setFieldErrors({});
       await cardSave.save(patch);
@@ -161,9 +157,7 @@ export function CardPage() {
     }
   };
 
-  const categoryMeta = meta?.categories.find(
-    (c) => c.name === cardDetail?.card.category
-  );
+  const categoryMeta = meta?.categories.find((c) => c.name === cardDetail?.card.category);
   const categoryColor = categoryMeta?.color || cardDetail?.card.category || "models";
 
   if (isLoading) {
@@ -276,10 +270,7 @@ export function CardPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                variant="destructive"
-                onClick={() => setIsRejectOpen(true)}
-              >
+              <DropdownMenuItem variant="destructive" onClick={() => setIsRejectOpen(true)}>
                 <HugeiconsIcon icon={Delete02Icon} className="size-3.5 mr-1" />
                 Reject Card
               </DropdownMenuItem>
@@ -353,15 +344,15 @@ export function CardPage() {
             />
           </div>
 
-            {/* Local Neighborhood Graph */}
-            <LocalGraph slug={slug} />
+          {/* Local Neighborhood Graph */}
+          <LocalGraph slug={slug} />
 
-            {/* Connections Panels: Backlinks, Mentioned by, Outgoing */}
-            <LinkPanels links={links} isLoading={isLinksLoading} />
-          </div>
+          {/* Connections Panels: Backlinks, Mentioned by, Outgoing */}
+          <LinkPanels links={links} isLoading={isLinksLoading} />
         </div>
+      </div>
 
-        {/* Reject Confirmation Dialog */}
+      {/* Reject Confirmation Dialog */}
       <RejectDialog
         open={isRejectOpen}
         onOpenChange={setIsRejectOpen}

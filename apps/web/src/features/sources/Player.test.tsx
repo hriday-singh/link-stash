@@ -11,7 +11,7 @@ describe("Player Component", () => {
         videoUrl="/api/sources/src-1/video"
         thumbUrl="https://example.com/poster.jpg"
         title="Sample Poster"
-      />
+      />,
     );
 
     expect(screen.queryByTestId("source-video-element")).not.toBeInTheDocument();
@@ -33,7 +33,7 @@ describe("Player Component", () => {
         hasVideo={true}
         videoUrl="/api/sources/src-1/video"
         thumbUrl="/api/sources/src-1/thumb"
-      />
+      />,
     );
 
     const video = screen.getByTestId("source-video-element") as HTMLVideoElement;
@@ -45,13 +45,7 @@ describe("Player Component", () => {
 
   it("seeks video when seekTo imperative method is called", () => {
     const ref = React.createRef<PlayerHandle>();
-    render(
-      <Player
-        ref={ref}
-        hasVideo={true}
-        videoUrl="/api/sources/src-1/video"
-      />
-    );
+    render(<Player ref={ref} hasVideo={true} videoUrl="/api/sources/src-1/video" />);
 
     const video = screen.getByTestId("source-video-element") as HTMLVideoElement;
     const playSpy = vi.spyOn(video, "play").mockImplementation(async () => {});
@@ -64,12 +58,7 @@ describe("Player Component", () => {
   });
 
   it("renders morph play button and toggles video state on click", () => {
-    render(
-      <Player
-        hasVideo={true}
-        videoUrl="/api/sources/src-1/video"
-      />
-    );
+    render(<Player hasVideo={true} videoUrl="/api/sources/src-1/video" />);
 
     const morphBtn = screen.getByTestId("player-morph-play-button");
     expect(morphBtn).toBeInTheDocument();

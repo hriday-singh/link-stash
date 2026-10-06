@@ -6,9 +6,7 @@ import type { TileData } from "./Tile";
 describe("VirtualGrid component", () => {
   it("renders default empty message when item list is empty", () => {
     render(<VirtualGrid items={[]} />);
-    expect(
-      screen.getByText("Paste links into /stash in Claude Code or agy."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Paste links into /stash in Claude Code or agy.")).toBeInTheDocument();
   });
 
   it("renders custom empty message and subtext when provided", () => {

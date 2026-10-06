@@ -55,15 +55,13 @@ export function RejectDialog({
           <DialogHeader>
             <DialogTitle>Reject Card</DialogTitle>
             <DialogDescription>
-              Are you sure you want to reject &ldquo;{cardTitle}&rdquo;? It will be moved to the rejected log and won&apos;t appear in your library or suggestions.
+              Are you sure you want to reject &ldquo;{cardTitle}&rdquo;? It will be moved to the
+              rejected log and won&apos;t appear in your library or suggestions.
             </DialogDescription>
           </DialogHeader>
 
           <div className="py-4 space-y-2">
-            <label
-              htmlFor="reject-reason"
-              className="text-xs font-medium text-foreground"
-            >
+            <label htmlFor="reject-reason" className="text-xs font-medium text-foreground">
               Reason for rejection <span className="text-destructive">*</span>
             </label>
             <textarea
@@ -78,9 +76,7 @@ export function RejectDialog({
               disabled={isRejecting}
               className="w-full rounded-lg border border-border bg-surface-sunken p-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:outline-hidden focus:ring-1 focus:ring-ring disabled:opacity-50"
             />
-            {error && (
-              <p className="text-xs text-destructive font-medium">{error}</p>
-            )}
+            {error && <p className="text-xs text-destructive font-medium">{error}</p>}
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
@@ -93,12 +89,7 @@ export function RejectDialog({
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              variant="destructive"
-              size="sm"
-              disabled={isRejecting}
-            >
+            <Button type="submit" variant="destructive" size="sm" disabled={isRejecting}>
               {isRejecting ? "Rejecting…" : "Reject Card"}
             </Button>
           </DialogFooter>

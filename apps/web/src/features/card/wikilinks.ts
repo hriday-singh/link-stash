@@ -14,31 +14,28 @@ const WIKILINK_TOKEN_REGEX =
  */
 export function preprocessWikilinks(
   content: string,
-  resolved: Record<string, string> = {}
+  resolved: Record<string, string> = {},
 ): string {
   if (!content) return "";
 
-  return content.replace(
-    WIKILINK_TOKEN_REGEX,
-    (_match, codeSegment, slugMatch, aliasMatch) => {
-      // If inside code block or inline code, keep untouched
-      if (codeSegment) {
-        return codeSegment;
-      }
-
-      const slug = (slugMatch || "").trim();
-      const alias = aliasMatch?.trim();
-      const isResolved = Object.prototype.hasOwnProperty.call(resolved, slug);
-
-      if (isResolved) {
-        const displayText = alias || resolved[slug] || slug;
-        return `[${displayText}](/c/${slug})`;
-      } else {
-        const displayText = alias || slug;
-        return `[${displayText}](#stash-unresolved:${slug})`;
-      }
+  return content.replace(WIKILINK_TOKEN_REGEX, (_match, codeSegment, slugMatch, aliasMatch) => {
+    // If inside code block or inline code, keep untouched
+    if (codeSegment) {
+      return codeSegment;
     }
-  );
+
+    const slug = (slugMatch || "").trim();
+    const alias = aliasMatch?.trim();
+    const isResolved = Object.prototype.hasOwnProperty.call(resolved, slug);
+
+    if (isResolved) {
+      const displayText = alias || resolved[slug] || slug;
+      return `[${displayText}](/c/${slug})`;
+    } else {
+      const displayText = alias || slug;
+      return `[${displayText}](#stash-unresolved:${slug})`;
+    }
+  });
 }
 
 /**

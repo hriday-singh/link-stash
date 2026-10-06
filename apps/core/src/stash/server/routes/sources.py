@@ -132,4 +132,3 @@ def recheck_source(
     updated = doc.model_copy(update={"stage": next_stage})
     write_source(home, updated)
     return get_source_detail(home, conn, id)
-

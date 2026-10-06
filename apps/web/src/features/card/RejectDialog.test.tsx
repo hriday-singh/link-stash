@@ -11,7 +11,7 @@ describe("RejectDialog", () => {
         onOpenChange={vi.fn()}
         cardTitle="Super Duper Agent"
         onConfirmReject={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByRole("heading", { name: "Reject Card" })).toBeInTheDocument();
@@ -29,13 +29,15 @@ describe("RejectDialog", () => {
         onOpenChange={vi.fn()}
         cardTitle="Test Item"
         onConfirmReject={onConfirmReject}
-      />
+      />,
     );
 
     const submitBtn = screen.getByRole("button", { name: "Reject Card" });
     await user.click(submitBtn);
 
-    expect(screen.getByText("Please provide a reason for rejecting this card.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Please provide a reason for rejecting this card."),
+    ).toBeInTheDocument();
     expect(onConfirmReject).not.toHaveBeenCalled();
   });
 
@@ -49,7 +51,7 @@ describe("RejectDialog", () => {
         onOpenChange={vi.fn()}
         cardTitle="Test Item"
         onConfirmReject={onConfirmReject}
-      />
+      />,
     );
 
     const textarea = screen.getByRole("textbox");
@@ -71,7 +73,7 @@ describe("RejectDialog", () => {
         onOpenChange={onOpenChange}
         cardTitle="Test Item"
         onConfirmReject={vi.fn()}
-      />
+      />,
     );
 
     const cancelBtn = screen.getByRole("button", { name: "Cancel" });

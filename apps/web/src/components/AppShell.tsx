@@ -1,12 +1,7 @@
 import { type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Menu01Icon,
-  Moon02Icon,
-  Search01Icon,
-  Sun01Icon,
-} from "@hugeicons/core-free-icons";
+import { Menu01Icon, Moon02Icon, Search01Icon, Sun01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { MorphIcon } from "@/components/ui/MorphIcon";
 import {
@@ -27,11 +22,7 @@ interface AppShellProps {
   syncStatus?: "connected" | "connecting" | "disconnected";
 }
 
-export function AppShell({
-  children,
-  onOpenPalette,
-  syncStatus = "connected",
-}: AppShellProps) {
+export function AppShell({ children, onOpenPalette, syncStatus = "connected" }: AppShellProps) {
   const { width, collapsed, mobileOpen, setMobileOpen, startResizing } = useSidebar();
   const { resolved, toggle: toggleTheme } = useTheme();
 
@@ -131,9 +122,7 @@ export function AppShell({
                 <StashLogo size={20} />
                 <span>Link Stash</span>
               </SheetTitle>
-              <SheetDescription className="sr-only">
-                Main mobile navigation drawer
-              </SheetDescription>
+              <SheetDescription className="sr-only">Main mobile navigation drawer</SheetDescription>
             </SheetHeader>
             <div className="h-[calc(100%-4rem)] overflow-y-auto">
               <SidebarNav
@@ -146,9 +135,7 @@ export function AppShell({
         </Sheet>
 
         {/* Main Content View Container */}
-        <main className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden">
-          {children}
-        </main>
+        <main className="relative flex min-w-0 flex-1 flex-col overflow-x-hidden">{children}</main>
       </div>
     </div>
   );

@@ -105,7 +105,6 @@ class SuggestResult(BaseModel):
     practices: list[PracticeSuggestion] = Field(default_factory=list[PracticeSuggestion])
 
 
-
 def tokenize_query(query: str) -> list[str]:
     """Extract lowercase search tokens, filtering out punctuation and stop words."""
     raw = re.findall(r"\b[a-zA-Z0-9_\-]+\b", query.lower())

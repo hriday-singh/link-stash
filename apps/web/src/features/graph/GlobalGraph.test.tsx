@@ -36,22 +36,13 @@ vi.mock("./GraphView", () => ({
     <div data-testid="mock-graph-view">
       <span data-testid="mock-nodes-count">{graphData.nodes?.length ?? 0}</span>
       <span>{emptyMessage}</span>
-      <button
-        type="button"
-        onClick={() => onSelectNode?.("card-1", "card")}
-      >
+      <button type="button" onClick={() => onSelectNode?.("card-1", "card")}>
         Select Card
       </button>
-      <button
-        type="button"
-        onClick={() => onSelectNode?.("ig:test-1", "source")}
-      >
+      <button type="button" onClick={() => onSelectNode?.("ig:test-1", "source")}>
         Select Source
       </button>
-      <button
-        type="button"
-        onClick={() => onSelectNode?.("creator:devlead", "creator")}
-      >
+      <button type="button" onClick={() => onSelectNode?.("creator:devlead", "creator")}>
         Select Creator
       </button>
     </div>
@@ -147,7 +138,9 @@ describe("GlobalGraph & parseGraphSearch", () => {
       await renderGlobalGraph({ filters: {}, onFilterChange }, queryClient);
 
       expect(screen.getByText("Global knowledge graph")).toBeInTheDocument();
-      expect(await screen.findByText("2 nodes · 1 edges across cards, sources and creators")).toBeInTheDocument();
+      expect(
+        await screen.findByText("2 nodes · 1 edges across cards, sources and creators"),
+      ).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Wikilinks" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Sources" })).toBeInTheDocument();
@@ -222,7 +215,7 @@ describe("GlobalGraph & parseGraphSearch", () => {
       const onFilterChange = vi.fn();
       await renderGlobalGraph(
         { filters: { category: "models", edge_type: "source" }, onFilterChange },
-        queryClient
+        queryClient,
       );
 
       const resetBtn = screen.getByRole("button", { name: /Reset filters/i });

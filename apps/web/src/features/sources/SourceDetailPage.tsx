@@ -43,13 +43,17 @@ export function SourceDetailPage() {
   const queryClient = useQueryClient();
   const [isUpdatingStage, setIsUpdatingStage] = React.useState(false);
 
-  const { data: detail, isLoading, isError } = useQuery<SourceDetail>({
+  const {
+    data: detail,
+    isLoading,
+    isError,
+  } = useQuery<SourceDetail>({
     queryKey: queryKeys.source(sourceId),
     queryFn: async () => {
       return await unwrap(
         api.GET("/api/sources/{id}", {
           params: { path: { id: sourceId } },
-        })
+        }),
       );
     },
     enabled: Boolean(sourceId),
@@ -89,7 +93,6 @@ export function SourceDetailPage() {
   const handleSeek = (seconds: number) => {
     playerRef.current?.seekTo(seconds);
   };
-
 
   const handleSetStage = async (stage: "fetched" | "analyzed" | "triaged") => {
     try {
@@ -137,7 +140,8 @@ export function SourceDetailPage() {
   };
 
   const handleTriagePrompt = async () => {
-    const cmd = source.stage === "fetched" ? `/stash analyze ${source.key}` : `/stash triage ${source.key}`;
+    const cmd =
+      source.stage === "fetched" ? `/stash analyze ${source.key}` : `/stash triage ${source.key}`;
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(cmd);
@@ -154,7 +158,9 @@ export function SourceDetailPage() {
       `[${title}] ${source.url}`,
       `Key: ${source.key} | Stage: ${stageLabel(source.stage)}`,
       source.caption ? `\n${source.caption.slice(0, 300)}` : "",
-    ].filter(Boolean).join("\n");
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     try {
       if (navigator.clipboard?.writeText) {
@@ -234,7 +240,11 @@ export function SourceDetailPage() {
                         className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-surface-sunken px-2 py-1 text-xs font-medium text-foreground hover:border-primary/50 hover:bg-muted transition-colors"
                       >
                         <span>Open User</span>
-                        <HugeiconsIcon icon={LinkSquare02Icon} className="size-3 text-muted-foreground" strokeWidth={1.5} />
+                        <HugeiconsIcon
+                          icon={LinkSquare02Icon}
+                          className="size-3 text-muted-foreground"
+                          strokeWidth={1.5}
+                        />
                       </a>
                     )}
                   </div>
@@ -255,7 +265,11 @@ export function SourceDetailPage() {
                     className="inline-flex items-center gap-1.5 rounded-md border border-border/70 bg-surface-sunken px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-muted"
                   >
                     <span>Open Original</span>
-                    <HugeiconsIcon icon={LinkSquare02Icon} className="size-3 text-muted-foreground" strokeWidth={1.5} />
+                    <HugeiconsIcon
+                      icon={LinkSquare02Icon}
+                      className="size-3 text-muted-foreground"
+                      strokeWidth={1.5}
+                    />
                   </a>
                 )}
               </div>
@@ -298,12 +312,17 @@ export function SourceDetailPage() {
                     className="h-7 gap-1.5 text-xs font-medium"
                   >
                     <HugeiconsIcon icon={SparklesIcon} className="size-3.5" strokeWidth={1.5} />
-                    <span>{source.stage === "fetched" ? "Analyze with Agent" : "Triage with Agent"}</span>
+                    <span>
+                      {source.stage === "fetched" ? "Analyze with Agent" : "Triage with Agent"}
+                    </span>
                   </Button>
                 )}
 
                 {/* Stage selector chips */}
-                <div data-testid="source-stage-selector" className="flex items-center gap-1 text-xs">
+                <div
+                  data-testid="source-stage-selector"
+                  className="flex items-center gap-1 text-xs"
+                >
                   <span className="text-2xs text-muted-foreground mr-0.5">Stage:</span>
                   {(["fetched", "analyzed", "triaged"] as const).map((st) => (
                     <button
@@ -362,13 +381,19 @@ export function SourceDetailPage() {
           {/* Cards Extracted from this Source */}
           <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 shadow-xs">
             <div className="flex items-center gap-2">
-              <HugeiconsIcon icon={Layers01Icon} className="size-4 text-primary" strokeWidth={1.5} />
+              <HugeiconsIcon
+                icon={Layers01Icon}
+                className="size-4 text-primary"
+                strokeWidth={1.5}
+              />
               <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Cards Extracted From This Source ({cards.length})
               </h2>
             </div>
             {cards.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No cards extracted from this source yet.</p>
+              <p className="text-xs text-muted-foreground">
+                No cards extracted from this source yet.
+              </p>
             ) : (
               <div className="flex flex-wrap gap-2 pt-1">
                 {cards.map((cardMap, index) => {
@@ -422,7 +447,11 @@ export function SourceDetailPage() {
           {source.summary && (
             <div className="flex flex-col gap-2 rounded-xl border border-border/70 bg-card p-4 shadow-xs">
               <div className="flex items-center gap-2">
-                <HugeiconsIcon icon={SparklesIcon} className="size-4 text-primary" strokeWidth={1.5} />
+                <HugeiconsIcon
+                  icon={SparklesIcon}
+                  className="size-4 text-primary"
+                  strokeWidth={1.5}
+                />
                 <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Summary
                 </h2>
@@ -436,14 +465,21 @@ export function SourceDetailPage() {
             <div className="flex flex-col gap-2 rounded-xl border border-border/70 bg-card p-4 shadow-xs">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <HugeiconsIcon icon={TextIcon} className="size-4 text-primary" strokeWidth={1.5} />
+                  <HugeiconsIcon
+                    icon={TextIcon}
+                    className="size-4 text-primary"
+                    strokeWidth={1.5}
+                  />
                   <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Transcript
                   </h2>
                 </div>
                 <span className="text-2xs text-muted-foreground">Click stamp to seek</span>
               </div>
-              <div className="mt-2 max-h-80 overflow-y-auto pr-1 text-xs leading-relaxed text-foreground" data-lenis-prevent>
+              <div
+                className="mt-2 max-h-80 overflow-y-auto pr-1 text-xs leading-relaxed text-foreground"
+                data-lenis-prevent
+              >
                 {transcriptChunks.map((chunk, index) => {
                   if (chunk.type === "stamp") {
                     return (
@@ -505,7 +541,11 @@ export function SourceDetailPage() {
                           className="flex shrink-0 items-center gap-1 rounded border border-border/60 bg-background px-2 py-1 font-mono text-2xs font-medium text-foreground hover:border-primary/50"
                           title={`Seek video to ${m.at}`}
                         >
-                          <HugeiconsIcon icon={Clock01Icon} className="size-3 text-primary" strokeWidth={1.5} />
+                          <HugeiconsIcon
+                            icon={Clock01Icon}
+                            className="size-3 text-primary"
+                            strokeWidth={1.5}
+                          />
                           <span>{m.at}</span>
                         </button>
                       )}

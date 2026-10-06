@@ -93,7 +93,7 @@ export function ChipInput({
       className={cn(
         "relative flex min-h-9 w-full flex-wrap items-center gap-1.5 rounded-lg border border-border bg-surface-sunken p-1.5 text-xs text-foreground transition-colors focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-ring",
         disabled && "opacity-50 cursor-not-allowed",
-        className
+        className,
       )}
       onClick={() => inputRef.current?.focus()}
     >
@@ -151,7 +151,7 @@ export function ChipInput({
                 "flex w-full items-center px-2 py-1.5 text-left text-xs rounded-md transition-colors",
                 idx === selectedIndex
                   ? "bg-muted text-foreground font-medium"
-                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
               )}
             >
               {suggestion}

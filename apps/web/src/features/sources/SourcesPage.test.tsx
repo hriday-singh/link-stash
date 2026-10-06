@@ -79,7 +79,7 @@ describe("SourcesPage", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <SourcesPage filters={{}} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText("@agentbuilder")).toBeInTheDocument();
@@ -106,7 +106,7 @@ describe("SourcesPage", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <SourcesPage filters={{ platform: "instagram" }} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText("No sources found.")).toBeInTheDocument();

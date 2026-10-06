@@ -30,7 +30,7 @@ function DropdownMenuContent({
         sideOffset={sideOffset}
         className={cn(
           "z-50 min-w-36 overflow-hidden rounded-lg border border-border bg-popover p-1 text-xs text-popover-foreground shadow-md animate-in fade-in-80",
-          className
+          className,
         )}
         {...props}
       />
@@ -52,9 +52,10 @@ function DropdownMenuItem({
       data-slot="dropdown-menu-item"
       className={cn(
         "relative flex cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-xs outline-hidden transition-colors focus:bg-muted focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-        variant === "destructive" && "text-destructive focus:bg-destructive/10 focus:text-destructive",
+        variant === "destructive" &&
+          "text-destructive focus:bg-destructive/10 focus:text-destructive",
         inset && "pl-8",
-        className
+        className,
       )}
       {...props}
     />

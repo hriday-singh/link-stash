@@ -61,10 +61,7 @@ export function VirtualGrid<T extends TileData & { added?: string; date?: string
   }, []);
 
   const cols = useMemo(() => columnsForWidth(containerWidth), [containerWidth]);
-  const rows = useMemo(
-    () => buildRows(items, cols, groupByDay),
-    [items, cols, groupByDay],
-  );
+  const rows = useMemo(() => buildRows(items, cols, groupByDay), [items, cols, groupByDay]);
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -107,9 +104,7 @@ export function VirtualGrid<T extends TileData & { added?: string; date?: string
         <p className="max-w-md text-sm font-medium text-foreground">
           {emptyMessage ?? "Paste links into /stash in Claude Code or agy."}
         </p>
-        {emptySubtext && (
-          <p className="mt-1 text-xs text-muted-foreground">{emptySubtext}</p>
-        )}
+        {emptySubtext && <p className="mt-1 text-xs text-muted-foreground">{emptySubtext}</p>}
       </div>
     );
   }
@@ -138,10 +133,7 @@ export function VirtualGrid<T extends TileData & { added?: string; date?: string
   return (
     <LazyMotion features={domAnimation}>
       <div ref={containerRef} data-slot="virtual-grid-container" className="relative w-full">
-        <div
-          style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-          className="relative w-full"
-        >
+        <div style={{ height: `${rowVirtualizer.getTotalSize()}px` }} className="relative w-full">
           {displayRows.map((virtualRow) => {
             const row: GridRow<T> | undefined = rows[virtualRow.index];
             if (!row) return null;

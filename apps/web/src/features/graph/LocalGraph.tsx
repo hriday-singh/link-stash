@@ -29,7 +29,7 @@ export function LocalGraph({ slug, className = "" }: LocalGraphProps) {
               depth,
             },
           },
-        })
+        }),
       );
     },
     enabled: Boolean(slug),

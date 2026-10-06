@@ -23,7 +23,8 @@ describe("preprocessWikilinks", () => {
   });
 
   it("preserves code blocks and inline code containing wikilink brackets", () => {
-    const text = "Use `[[not-a-link]]` or:\n```\n[[also-not-a-link]]\n```\nbut this [[real-link]] works.";
+    const text =
+      "Use `[[not-a-link]]` or:\n```\n[[also-not-a-link]]\n```\nbut this [[real-link]] works.";
     const resolved = { "real-link": "Real Title" };
     const result = preprocessWikilinks(text, resolved);
     expect(result).toContain("`[[not-a-link]]`");

@@ -182,7 +182,11 @@ export function GraphView({
         style={{ height }}
       >
         <div className="flex flex-col items-center gap-2">
-          <HugeiconsIcon icon={InformationCircleIcon} className="size-5 opacity-60" strokeWidth={1.5} />
+          <HugeiconsIcon
+            icon={InformationCircleIcon}
+            className="size-5 opacity-60"
+            strokeWidth={1.5}
+          />
           <span>{emptyMessage}</span>
         </div>
       </div>
@@ -243,7 +247,11 @@ export function GraphView({
                   e.currentTarget.style.display = "none";
                 }}
               />
-              <HugeiconsIcon icon={Video01Icon} className="size-4 text-muted-foreground" strokeWidth={1.5} />
+              <HugeiconsIcon
+                icon={Video01Icon}
+                className="size-4 text-muted-foreground"
+                strokeWidth={1.5}
+              />
             </div>
           ) : (
             <span

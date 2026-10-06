@@ -3,8 +3,7 @@ import { parseSourceFilters, type SourceFilters } from "@/features/sources/filte
 import { SourcesPage } from "@/features/sources/SourcesPage";
 
 export const Route = createFileRoute("/sources")({
-  validateSearch: (search: Record<string, unknown>): SourceFilters =>
-    parseSourceFilters(search),
+  validateSearch: (search: Record<string, unknown>): SourceFilters => parseSourceFilters(search),
   component: RouteComponent,
 });
 

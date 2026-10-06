@@ -106,7 +106,7 @@ describe("CardPage Route (/c/$slug)", () => {
     return render(
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
   }
 

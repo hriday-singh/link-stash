@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  resolveCssVarToHex,
-  resolveCategoryColor,
-  resolveEdgeColor,
-} from "./colorResolver";
+import { resolveCssVarToHex, resolveCategoryColor, resolveEdgeColor } from "./colorResolver";
 
 describe("colorResolver", () => {
   it("resolves CSS var fallback in test environment when not defined", () => {

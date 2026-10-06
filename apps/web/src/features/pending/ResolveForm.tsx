@@ -59,7 +59,11 @@ export function ResolveForm({ itemId, isResolving, onResolve }: ResolveFormProps
           className="h-8 px-3 text-xs gap-1.5 shrink-0"
         >
           {isResolving ? (
-            <HugeiconsIcon icon={Loading03Icon} className="size-3.5 animate-spin" strokeWidth={1.5} />
+            <HugeiconsIcon
+              icon={Loading03Icon}
+              className="size-3.5 animate-spin"
+              strokeWidth={1.5}
+            />
           ) : (
             <HugeiconsIcon icon={CheckmarkBadge01Icon} className="size-3.5" strokeWidth={1.5} />
           )}

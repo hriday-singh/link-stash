@@ -59,7 +59,7 @@ describe("InventoryPage", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <InventoryPage />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText("Ollama Models (1)")).toBeInTheDocument();
@@ -89,7 +89,7 @@ describe("InventoryPage", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <InventoryPage />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const input = screen.getByLabelText("New inventory entry");
@@ -115,7 +115,7 @@ describe("InventoryPage", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <InventoryPage />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText(/No inventory items recorded/)).toBeInTheDocument();

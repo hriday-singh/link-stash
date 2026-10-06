@@ -1,10 +1,7 @@
 import * as React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  ArrowReloadHorizontalIcon,
-  Loading03Icon,
-} from "@hugeicons/core-free-icons";
+import { ArrowReloadHorizontalIcon, Loading03Icon } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 import { LazyMotion, domAnimation, AnimatePresence, m, useReducedMotion } from "motion/react";
 import { api, ApiError, unwrap, type RejectEntry } from "@/api/client";
@@ -17,7 +14,11 @@ export function RejectedPage() {
   const shouldReduceMotion = useReducedMotion();
   const [unrejectingKey, setUnrejectingKey] = React.useState<string | null>(null);
 
-  const { data: rejects, isLoading, isError } = useQuery<RejectEntry[]>({
+  const {
+    data: rejects,
+    isLoading,
+    isError,
+  } = useQuery<RejectEntry[]>({
     queryKey: queryKeys.rejects(),
     queryFn: async () => {
       return await unwrap(api.GET("/api/rejects"));
@@ -30,7 +31,7 @@ export function RejectedPage() {
       await unwrap(
         api.DELETE("/api/rejects/{key}", {
           params: { path: { key } },
-        })
+        }),
       );
       toast.success("Removed from rejected log. Item can be suggested again.");
     } catch (err) {
@@ -99,12 +100,12 @@ export function RejectedPage() {
                           {entry.key}
                         </span>
                         <span className="font-mono text-2xs text-muted-foreground">·</span>
-                        <span className="font-mono text-2xs text-muted-foreground">{entry.date}</span>
+                        <span className="font-mono text-2xs text-muted-foreground">
+                          {entry.date}
+                        </span>
                       </div>
 
-                      <p className="text-xs text-muted-foreground leading-normal">
-                        {entry.reason}
-                      </p>
+                      <p className="text-xs text-muted-foreground leading-normal">{entry.reason}</p>
                     </div>
 
                     <Button
@@ -115,9 +116,17 @@ export function RejectedPage() {
                       className="h-8 shrink-0 gap-1.5 px-3 text-xs"
                     >
                       {isProcessing ? (
-                        <HugeiconsIcon icon={Loading03Icon} className="size-3.5 animate-spin" strokeWidth={1.5} />
+                        <HugeiconsIcon
+                          icon={Loading03Icon}
+                          className="size-3.5 animate-spin"
+                          strokeWidth={1.5}
+                        />
                       ) : (
-                        <HugeiconsIcon icon={ArrowReloadHorizontalIcon} className="size-3.5" strokeWidth={1.5} />
+                        <HugeiconsIcon
+                          icon={ArrowReloadHorizontalIcon}
+                          className="size-3.5"
+                          strokeWidth={1.5}
+                        />
                       )}
                       <span>Un-reject</span>
                     </Button>

@@ -54,14 +54,14 @@ export function SourcesPage({ filters }: SourcesPageProps) {
               cursor: filters.cursor,
             },
           },
-        })
+        }),
       );
     },
   });
 
   const sources = data?.items ?? [];
   const hasActiveFilters = Boolean(
-    filters.platform || filters.stage || filters.creator || filters.has_video
+    filters.platform || filters.stage || filters.creator || filters.has_video,
   );
 
   const updateFilters = (next: Partial<SourceFilters>) => {
@@ -113,7 +113,9 @@ export function SourcesPage({ filters }: SourcesPageProps) {
             aria-pressed={Boolean(filters.has_video)}
             onClick={() => updateFilters({ has_video: !filters.has_video })}
             className={`h-8 gap-1.5 text-xs ${
-              filters.has_video ? "border-primary/50 bg-primary/10 text-primary" : "text-muted-foreground"
+              filters.has_video
+                ? "border-primary/50 bg-primary/10 text-primary"
+                : "text-muted-foreground"
             }`}
           >
             <HugeiconsIcon icon={Video01Icon} strokeWidth={1.5} />
@@ -158,7 +160,11 @@ export function SourcesPage({ filters }: SourcesPageProps) {
         </div>
       ) : sources.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
-          <HugeiconsIcon icon={FilterIcon} className="size-8 text-muted-foreground/60" strokeWidth={1.5} />
+          <HugeiconsIcon
+            icon={FilterIcon}
+            className="size-8 text-muted-foreground/60"
+            strokeWidth={1.5}
+          />
           <p className="text-sm font-medium text-foreground">No sources found.</p>
           <p className="text-xs">
             {hasActiveFilters

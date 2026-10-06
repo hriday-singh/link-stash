@@ -51,7 +51,7 @@ describe("RejectedPage", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <RejectedPage />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText("github:langchain-ai/legacy-wrapper")).toBeInTheDocument();
@@ -86,7 +86,7 @@ describe("RejectedPage", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <RejectedPage />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText("github:langchain-ai/legacy-wrapper")).toBeInTheDocument();
@@ -98,7 +98,7 @@ describe("RejectedPage", () => {
       params: { path: { key: "github:langchain-ai/legacy-wrapper" } },
     });
     expect(toast.success).toHaveBeenCalledWith(
-      "Removed from rejected log. Item can be suggested again."
+      "Removed from rejected log. Item can be suggested again.",
     );
     expect(toast.error).not.toHaveBeenCalled();
   });
@@ -131,7 +131,7 @@ describe("RejectedPage", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <RejectedPage />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText("github:already-removed")).toBeInTheDocument();
@@ -154,7 +154,7 @@ describe("RejectedPage", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <RejectedPage />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText("No rejected items.")).toBeInTheDocument();

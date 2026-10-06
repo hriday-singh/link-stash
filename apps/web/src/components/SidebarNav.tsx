@@ -24,12 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { TextMorph } from "@/components/ui/TextMorph";
 import { Separator } from "@/components/ui/separator";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   categoryColorVar,
   categoryNameError,
@@ -71,18 +66,17 @@ export function SidebarNav({
     count: 0,
   }));
 
-  const serverCategories: CategoryItem[] = meta?.categories?.map((c) => ({
-    name: c.name,
-    color: c.color,
-    count: c.count,
-  })) ?? initialCategories;
+  const serverCategories: CategoryItem[] =
+    meta?.categories?.map((c) => ({
+      name: c.name,
+      color: c.color,
+      count: c.count,
+    })) ?? initialCategories;
 
   // Merge server categories with any user-added extra categories
   const categories: CategoryItem[] = [
     ...serverCategories,
-    ...extraCategories.filter(
-      (ec) => !serverCategories.some((sc) => sc.name === ec.name),
-    ),
+    ...extraCategories.filter((ec) => !serverCategories.some((sc) => sc.name === ec.name)),
   ];
 
   const handleCreateCategory = (e: React.FormEvent) => {
@@ -324,12 +318,7 @@ export function SidebarNav({
               </div>
 
               <DialogFooter className="mt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setAddOpen(false)}
-                >
+                <Button type="button" variant="outline" size="sm" onClick={() => setAddOpen(false)}>
                   Cancel
                 </Button>
                 <Button type="submit" size="sm">

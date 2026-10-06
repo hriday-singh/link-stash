@@ -35,7 +35,7 @@ function formatTime(seconds: number): string {
 
 export const Player = React.forwardRef<PlayerHandle, PlayerProps>(function Player(
   { videoUrl, thumbUrl, hasVideo, title, className = "", onTimeUpdate },
-  ref
+  ref,
 ) {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
@@ -71,7 +71,7 @@ export const Player = React.forwardRef<PlayerHandle, PlayerProps>(function Playe
         return videoRef.current ? videoRef.current.currentTime : 0;
       },
     }),
-    []
+    [],
   );
 
   const resetHideTimer = React.useCallback(() => {
@@ -145,16 +145,18 @@ export const Player = React.forwardRef<PlayerHandle, PlayerProps>(function Playe
         className={`relative aspect-video w-full overflow-hidden rounded-xl border border-border/70 bg-surface-sunken flex flex-col items-center justify-center shadow-xs ${className}`.trim()}
       >
         {thumbUrl ? (
-          <img
-            src={thumbUrl}
-            alt={title || "Source poster"}
-            className="size-full object-contain"
-          />
+          <img src={thumbUrl} alt={title || "Source poster"} className="size-full object-contain" />
         ) : (
           <div className="flex flex-col items-center gap-2 p-6 text-center text-muted-foreground">
-            <HugeiconsIcon icon={Image01Icon} className="size-10 text-muted-foreground/50" strokeWidth={1.5} />
+            <HugeiconsIcon
+              icon={Image01Icon}
+              className="size-10 text-muted-foreground/50"
+              strokeWidth={1.5}
+            />
             <p className="text-xs font-medium text-foreground">Media Poster</p>
-            <span className="font-mono text-2xs text-muted-foreground">No video file available</span>
+            <span className="font-mono text-2xs text-muted-foreground">
+              No video file available
+            </span>
           </div>
         )}
         <div className="absolute bottom-3 right-3 rounded-md bg-background/80 px-2 py-0.5 text-2xs font-medium text-muted-foreground backdrop-blur-xs border border-border/40">

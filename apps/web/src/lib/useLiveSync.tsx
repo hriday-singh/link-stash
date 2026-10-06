@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { startLiveSync, type SyncStatus } from "./sse";
 
@@ -30,9 +24,7 @@ export function LiveSyncProvider({
   disabled?: boolean;
 }) {
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<SyncStatus>(() =>
-    disabled ? "connected" : "connecting",
-  );
+  const [status, setStatus] = useState<SyncStatus>(() => (disabled ? "connected" : "connecting"));
 
   useEffect(() => {
     if (disabled || typeof window === "undefined") {
@@ -48,9 +40,5 @@ export function LiveSyncProvider({
     return cleanup;
   }, [url, queryClient, disabled]);
 
-  return (
-    <LiveSyncContext.Provider value={{ status }}>
-      {children}
-    </LiveSyncContext.Provider>
-  );
+  return <LiveSyncContext.Provider value={{ status }}>{children}</LiveSyncContext.Provider>;
 }

@@ -10,8 +10,7 @@ import type { Kind } from "@/lib/kinds";
 import type { TileData } from "@/components/Tile";
 
 export const Route = createFileRoute("/search")({
-  validateSearch: (search: Record<string, unknown>): CardFilters =>
-    parseCardFilters(search),
+  validateSearch: (search: Record<string, unknown>): CardFilters => parseCardFilters(search),
   component: SearchPage,
 });
 
@@ -68,9 +67,7 @@ function SearchPage() {
       </div>
 
       {isLoading ? (
-        <div className="py-12 text-center text-xs text-muted-foreground">
-          Searching…
-        </div>
+        <div className="py-12 text-center text-xs text-muted-foreground">Searching…</div>
       ) : query.trim() ? (
         <VirtualGrid
           items={items}

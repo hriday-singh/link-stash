@@ -35,22 +35,13 @@ vi.mock("./GraphView", () => ({
     <div data-testid="mock-graph-view">
       <span data-testid="mock-node-count">{graphData.nodes?.length ?? 0}</span>
       <span>{emptyMessage}</span>
-      <button
-        type="button"
-        onClick={() => onSelectNode?.("connected-card", "card")}
-      >
+      <button type="button" onClick={() => onSelectNode?.("connected-card", "card")}>
         Click Card
       </button>
-      <button
-        type="button"
-        onClick={() => onSelectNode?.("ig:test-reel", "source")}
-      >
+      <button type="button" onClick={() => onSelectNode?.("ig:test-reel", "source")}>
         Click Source
       </button>
-      <button
-        type="button"
-        onClick={() => onSelectNode?.("creator:promptdev", "creator")}
-      >
+      <button type="button" onClick={() => onSelectNode?.("creator:promptdev", "creator")}>
         Click Creator
       </button>
     </div>
@@ -90,7 +81,9 @@ describe("LocalGraph", () => {
   it("renders 1 hop and 2 hops depth switcher", async () => {
     vi.mocked(api.GET).mockResolvedValue({
       data: {
-        nodes: [{ id: "test-card", label: "Test Card", category: "models", kind: "model", size: 12 }],
+        nodes: [
+          { id: "test-card", label: "Test Card", category: "models", kind: "model", size: 12 },
+        ],
         edges: [],
       },
       error: undefined,
@@ -116,7 +109,13 @@ describe("LocalGraph", () => {
           data: {
             nodes: [
               { id: "test-card", label: "Test Card", category: "models", kind: "model", size: 12 },
-              { id: "sibling-card", label: "Sibling Card", category: "models", kind: "model", size: 12 },
+              {
+                id: "sibling-card",
+                label: "Sibling Card",
+                category: "models",
+                kind: "model",
+                size: 12,
+              },
             ],
             edges: [{ source: "test-card", target: "sibling-card", type: "wikilink" }],
           },
@@ -127,7 +126,9 @@ describe("LocalGraph", () => {
 
       return Promise.resolve({
         data: {
-          nodes: [{ id: "test-card", label: "Test Card", category: "models", kind: "model", size: 12 }],
+          nodes: [
+            { id: "test-card", label: "Test Card", category: "models", kind: "model", size: 12 },
+          ],
           edges: [],
         },
         error: undefined,
@@ -151,7 +152,9 @@ describe("LocalGraph", () => {
 
     vi.mocked(api.GET).mockResolvedValue({
       data: {
-        nodes: [{ id: "test-card", label: "Test Card", category: "models", kind: "model", size: 12 }],
+        nodes: [
+          { id: "test-card", label: "Test Card", category: "models", kind: "model", size: 12 },
+        ],
         edges: [],
       },
       error: undefined,

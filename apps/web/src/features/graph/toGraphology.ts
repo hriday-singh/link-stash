@@ -7,10 +7,7 @@ export interface ToGraphologyOptions {
   resolveEdgeColor?: (edgeType: string) => string;
 }
 
-export function toGraphology(
-  data: GraphData,
-  options: ToGraphologyOptions = {}
-): Graph {
+export function toGraphology(data: GraphData, options: ToGraphologyOptions = {}): Graph {
   const graph = new Graph({ type: "directed", multi: false });
   const nodes = data.nodes ?? [];
   const edges = data.edges ?? [];

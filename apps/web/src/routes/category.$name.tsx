@@ -6,8 +6,7 @@ import { VirtualGrid } from "@/components/VirtualGrid";
 import { categoryColorVar } from "@/lib/categories";
 
 export const Route = createFileRoute("/category/$name")({
-  validateSearch: (search: Record<string, unknown>): CardFilters =>
-    parseCardFilters(search),
+  validateSearch: (search: Record<string, unknown>): CardFilters => parseCardFilters(search),
   component: CategoryPage,
 });
 
@@ -21,8 +20,7 @@ function CategoryPage() {
     category: name,
   };
 
-  const { items, hasNextPage, isFetchingNextPage, fetchNextPage } =
-    useCards(effectiveFilters);
+  const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useCards(effectiveFilters);
 
   const handleFilterChange = (nextFilters: CardFilters) => {
     navigate({
@@ -46,11 +44,7 @@ function CategoryPage() {
         </h1>
       </div>
 
-      <FilterBar
-        filters={effectiveFilters}
-        onChange={handleFilterChange}
-        hideCategory
-      />
+      <FilterBar filters={effectiveFilters} onChange={handleFilterChange} hideCategory />
 
       <div className="mt-4">
         <VirtualGrid

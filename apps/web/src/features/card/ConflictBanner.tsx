@@ -31,7 +31,8 @@ export function ConflictBanner({
               Concurrent Edit Conflict (409)
             </h4>
             <p className="text-foreground/80 leading-relaxed text-xs">
-              This card was modified on disk or via CLI while you were editing. How would you like to proceed?
+              This card was modified on disk or via CLI while you were editing. How would you like
+              to proceed?
             </p>
           </div>
         </div>

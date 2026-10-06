@@ -44,10 +44,10 @@ export function useCardSave({
         api.PUT("/api/cards/{slug}", {
           params: { path: { slug: targetSlug } },
           body: patch,
-        })
+        }),
       );
     },
-    []
+    [],
   );
 
   const executeSave = saveCard ?? defaultSaveCard;
@@ -80,7 +80,8 @@ export function useCardSave({
             return updated;
           } catch (err: unknown) {
             if (err instanceof ApiError && err.status === 409) {
-              const details = err.details as { current_hash?: string; base_hash?: string } | undefined;
+              const details = err.details as
+                { current_hash?: string; base_hash?: string } | undefined;
               const serverHash = details?.current_hash || "";
               setConflictHash(serverHash);
               setPendingPatch(patch);
@@ -96,7 +97,7 @@ export function useCardSave({
       queueRef.current = queuedOperation;
       return queuedOperation;
     },
-    [executeSave, onSaveSuccess, slug]
+    [executeSave, onSaveSuccess, slug],
   );
 
   const keepMine = useCallback(async (): Promise<CardDetail | void> => {

@@ -68,7 +68,7 @@ export function brandFor(platformOrTool: string | null | undefined): BrandInfo |
   if (!raw) return null;
 
   // Strip prefixes like "github:", "ig:", "instagram:", "hf:", etc.
-  const name = raw.includes(":") ? (raw.split(":")[0]?.trim() || raw) : raw;
+  const name = raw.includes(":") ? raw.split(":")[0]?.trim() || raw : raw;
 
   if (name === "instagram" || name === "ig" || raw.includes("instagram")) {
     return BRAND_DEFINITIONS.instagram;
@@ -133,13 +133,7 @@ export interface BrandLogoProps extends React.ImgHTMLAttributes<HTMLImageElement
  * Renders the official brand SVG logo sourced from thesvg.org,
  * with accessible alt text and lazy loading.
  */
-export function BrandLogo({
-  brand,
-  size = 16,
-  className = "",
-  style,
-  ...props
-}: BrandLogoProps) {
+export function BrandLogo({ brand, size = 16, className = "", style, ...props }: BrandLogoProps) {
   const info = brandFor(brand);
   if (!info) return null;
 

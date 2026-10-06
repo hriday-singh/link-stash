@@ -61,7 +61,7 @@ describe("toGraphology", () => {
       },
       {
         resolveColor: (cat) => customColors[cat] ?? "#000000",
-      }
+      },
     );
 
     expect(graph.getNodeAttribute("m1", "color")).toBe("#ff00ff");

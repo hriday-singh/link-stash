@@ -10,10 +10,7 @@ export interface CardBodyProps {
 }
 
 export function CardBody({ body, resolved = {}, className = "" }: CardBodyProps) {
-  const processed = useMemo(
-    () => preprocessWikilinks(body, resolved),
-    [body, resolved]
-  );
+  const processed = useMemo(() => preprocessWikilinks(body, resolved), [body, resolved]);
 
   return (
     <div className={`space-y-4 text-foreground/90 ${className}`}>
@@ -35,9 +32,7 @@ export function CardBody({ body, resolved = {}, className = "" }: CardBodyProps)
             </h3>
           ),
           p: ({ children }) => (
-            <p className="text-sm leading-relaxed text-foreground/90 mb-3 last:mb-0">
-              {children}
-            </p>
+            <p className="text-sm leading-relaxed text-foreground/90 mb-3 last:mb-0">{children}</p>
           ),
           ul: ({ children }) => (
             <ul className="list-disc list-inside space-y-1 text-sm text-foreground/90 mb-3 pl-1">

@@ -64,11 +64,7 @@ export function PropertiesForm({
         <label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
           Category
         </label>
-        <Select
-          value={card.category}
-          onValueChange={handleCategoryChange}
-          disabled={disabled}
-        >
+        <Select value={card.category} onValueChange={handleCategoryChange} disabled={disabled}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select category" />
           </SelectTrigger>
@@ -96,11 +92,7 @@ export function PropertiesForm({
         <label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
           Kind
         </label>
-        <Select
-          value={card.kind}
-          onValueChange={handleKindChange}
-          disabled={disabled}
-        >
+        <Select value={card.kind} onValueChange={handleKindChange} disabled={disabled}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select kind" />
           </SelectTrigger>
@@ -118,9 +110,7 @@ export function PropertiesForm({
             })}
           </SelectContent>
         </Select>
-        {fieldErrors.kind && (
-          <p className="text-[11px] text-destructive">{fieldErrors.kind}</p>
-        )}
+        {fieldErrors.kind && <p className="text-[11px] text-destructive">{fieldErrors.kind}</p>}
       </div>
 
       {/* Tags */}
@@ -135,9 +125,7 @@ export function PropertiesForm({
           disabled={disabled}
           placeholder="Add tag…"
         />
-        {fieldErrors.tags && (
-          <p className="text-[11px] text-destructive">{fieldErrors.tags}</p>
-        )}
+        {fieldErrors.tags && <p className="text-[11px] text-destructive">{fieldErrors.tags}</p>}
       </div>
 
       <div className="border-t border-border/60 pt-4 space-y-4">
@@ -146,9 +134,7 @@ export function PropertiesForm({
           <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
             Key
           </span>
-          <p className="font-mono text-xs text-foreground/80 break-all select-all">
-            {card.key}
-          </p>
+          <p className="font-mono text-xs text-foreground/80 break-all select-all">{card.key}</p>
         </div>
 
         {/* URL */}
@@ -166,7 +152,10 @@ export function PropertiesForm({
               >
                 {card.url}
               </a>
-              <HugeiconsIcon icon={LinkSquare02Icon} className="size-3 text-muted-foreground shrink-0" />
+              <HugeiconsIcon
+                icon={LinkSquare02Icon}
+                className="size-3 text-muted-foreground shrink-0"
+              />
             </div>
           </div>
         )}

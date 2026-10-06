@@ -68,10 +68,12 @@ describe("PendingPage", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PendingPage />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
-    expect(await screen.findByText("Comment 'TOOLKIT' on reel for prompt guide")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Comment 'TOOLKIT' on reel for prompt guide"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Paste manual link for blocked embed")).toBeInTheDocument();
     expect(screen.getByText("open")).toBeInTheDocument();
     expect(screen.getByText("ready")).toBeInTheDocument();
@@ -120,10 +122,12 @@ describe("PendingPage", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PendingPage />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
-    expect(await screen.findByText("Comment 'TOOLKIT' on reel for prompt guide")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Comment 'TOOLKIT' on reel for prompt guide"),
+    ).toBeInTheDocument();
 
     const input = screen.getByRole("textbox");
     const resolveBtn = screen.getByRole("button", { name: "Resolve & Save" });
@@ -148,7 +152,7 @@ describe("PendingPage", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <PendingPage />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText("No pending link requests.")).toBeInTheDocument();

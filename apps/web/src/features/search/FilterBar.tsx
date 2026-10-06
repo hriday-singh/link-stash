@@ -1,10 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Cancel01Icon,
-  FilterIcon,
-  Video01Icon,
-} from "@hugeicons/core-free-icons";
+import { Cancel01Icon, FilterIcon, Video01Icon } from "@hugeicons/core-free-icons";
 import { api, unwrap } from "@/api/client";
 import { queryKeys } from "@/api/keys";
 import { Button } from "@/components/ui/button";
@@ -35,13 +31,13 @@ export function FilterBar({ filters, onChange, hideCategory = false }: FilterBar
 
   const hasActiveFilters = Boolean(
     filters.kind ||
-      (!hideCategory && filters.category) ||
-      filters.tag ||
-      filters.bucket ||
-      filters.creator ||
-      filters.since ||
-      filters.until ||
-      filters.has_video,
+    (!hideCategory && filters.category) ||
+    filters.tag ||
+    filters.bucket ||
+    filters.creator ||
+    filters.since ||
+    filters.until ||
+    filters.has_video,
   );
 
   const clearAll = () => {

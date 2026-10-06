@@ -1,12 +1,7 @@
 import * as React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Add01Icon,
-  Wrench01Icon,
-  File01Icon,
-  Loading03Icon,
-} from "@hugeicons/core-free-icons";
+import { Add01Icon, Wrench01Icon, File01Icon, Loading03Icon } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 import { api, unwrap, type InventoryEntry } from "@/api/client";
 import { queryKeys } from "@/api/keys";
@@ -21,7 +16,11 @@ export function InventoryPage() {
   const [inputText, setInputText] = React.useState("");
   const [isAdding, setIsAdding] = React.useState(false);
 
-  const { data: items, isLoading, isError } = useQuery<InventoryEntry[]>({
+  const {
+    data: items,
+    isLoading,
+    isError,
+  } = useQuery<InventoryEntry[]>({
     queryKey: queryKeys.inventory(),
     queryFn: async () => {
       return await unwrap(api.GET("/api/inventory"));
@@ -38,7 +37,7 @@ export function InventoryPage() {
       await unwrap(
         api.POST("/api/inventory", {
           body: { text },
-        })
+        }),
       );
       toast.success("Added to inventory.");
       setInputText("");
@@ -83,7 +82,11 @@ export function InventoryPage() {
               className="h-9 gap-1.5 px-3 text-xs shrink-0"
             >
               {isAdding ? (
-                <HugeiconsIcon icon={Loading03Icon} className="size-3.5 animate-spin" strokeWidth={1.5} />
+                <HugeiconsIcon
+                  icon={Loading03Icon}
+                  className="size-3.5 animate-spin"
+                  strokeWidth={1.5}
+                />
               ) : (
                 <HugeiconsIcon icon={Add01Icon} className="size-3.5" strokeWidth={1.5} />
               )}
@@ -91,7 +94,8 @@ export function InventoryPage() {
             </Button>
           </div>
           <p className="text-2xs text-muted-foreground">
-            Saves to <code className="font-mono">inventory/manual/tools.md</code>. Automatically checks for duplicates.
+            Saves to <code className="font-mono">inventory/manual/tools.md</code>. Automatically
+            checks for duplicates.
           </p>
         </form>
       </div>
@@ -112,7 +116,8 @@ export function InventoryPage() {
         </div>
       ) : groups.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border/80 p-8 text-center text-xs text-muted-foreground">
-          No inventory items recorded. Run <code className="font-mono">stash scan</code> or add items above.
+          No inventory items recorded. Run <code className="font-mono">stash scan</code> or add
+          items above.
         </div>
       ) : (
         <div className="flex flex-col gap-8">
@@ -122,9 +127,17 @@ export function InventoryPage() {
                 {group.brand ? (
                   <BrandLogo brand={group.brand} size={16} />
                 ) : group.isAuto ? (
-                  <HugeiconsIcon icon={Wrench01Icon} className="size-4 text-primary" strokeWidth={1.5} />
+                  <HugeiconsIcon
+                    icon={Wrench01Icon}
+                    className="size-4 text-primary"
+                    strokeWidth={1.5}
+                  />
                 ) : (
-                  <HugeiconsIcon icon={File01Icon} className="size-4 text-muted-foreground" strokeWidth={1.5} />
+                  <HugeiconsIcon
+                    icon={File01Icon}
+                    className="size-4 text-muted-foreground"
+                    strokeWidth={1.5}
+                  />
                 )}
                 <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {group.title} ({group.items.length})

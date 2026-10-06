@@ -71,7 +71,7 @@ if (typeof globalThis.ResizeObserver === "undefined") {
 // jsdom has no WebGL2RenderingContext needed by Sigma.js
 if (typeof globalThis.WebGL2RenderingContext === "undefined") {
   const webglConstants: Record<string, number> = {
-    BOOL: 0x8B56,
+    BOOL: 0x8b56,
     BYTE: 0x1400,
     UNSIGNED_BYTE: 0x1401,
     SHORT: 0x1402,
@@ -88,6 +88,6 @@ if (typeof globalThis.WebGL2RenderingContext === "undefined") {
 }
 
 if (typeof globalThis.WebGLRenderingContext === "undefined") {
-  globalThis.WebGLRenderingContext = globalThis.WebGL2RenderingContext as unknown as typeof WebGLRenderingContext;
+  globalThis.WebGLRenderingContext =
+    globalThis.WebGL2RenderingContext as unknown as typeof WebGLRenderingContext;
 }
-

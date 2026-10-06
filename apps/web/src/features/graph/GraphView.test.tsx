@@ -3,14 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { GraphView } from "./GraphView";
 
-const {
-  mockKillSigma,
-  mockZoom,
-  mockReset,
-  mockRefresh,
-  mockOn,
-  mockAssign,
-} = vi.hoisted(() => ({
+const { mockKillSigma, mockZoom, mockReset, mockRefresh, mockOn, mockAssign } = vi.hoisted(() => ({
   mockKillSigma: vi.fn(),
   mockZoom: vi.fn(),
   mockReset: vi.fn(),
@@ -70,7 +63,7 @@ describe("GraphView", () => {
           nodes: [{ id: "n1", label: "Node 1", category: "models", kind: "model", size: 10 }],
           edges: [],
         }}
-      />
+      />,
     );
 
     const container = screen.getByTestId("graph-container");
@@ -81,10 +74,18 @@ describe("GraphView", () => {
     render(
       <GraphView
         graphData={{
-          nodes: [{ id: "lone-card", label: "Lone Card", category: "repos-tools", kind: "tool", size: 12 }],
+          nodes: [
+            {
+              id: "lone-card",
+              label: "Lone Card",
+              category: "repos-tools",
+              kind: "tool",
+              size: 12,
+            },
+          ],
           edges: [],
         }}
-      />
+      />,
     );
 
     expect(screen.getByTestId("isolated-notice")).toBeInTheDocument();
@@ -101,7 +102,7 @@ describe("GraphView", () => {
           ],
           edges: [{ source: "n1", target: "n2", type: "wikilink" }],
         }}
-      />
+      />,
     );
 
     expect(mockAssign).toHaveBeenCalledTimes(1);
@@ -117,7 +118,7 @@ describe("GraphView", () => {
           ],
           edges: [{ source: "n1", target: "n2", type: "wikilink" }],
         }}
-      />
+      />,
     );
 
     unmount();
@@ -136,7 +137,7 @@ describe("GraphView", () => {
           ],
           edges: [{ source: "n1", target: "n2", type: "wikilink" }],
         }}
-      />
+      />,
     );
 
     const zoomInBtn = screen.getByLabelText("Zoom in");

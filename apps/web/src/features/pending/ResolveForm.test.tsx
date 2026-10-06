@@ -22,9 +22,7 @@ describe("ResolveForm Component", () => {
     const user = userEvent.setup();
     const handleResolve = vi.fn().mockResolvedValue(undefined);
 
-    render(
-      <ResolveForm itemId="p-1" isResolving={false} onResolve={handleResolve} />
-    );
+    render(<ResolveForm itemId="p-1" isResolving={false} onResolve={handleResolve} />);
 
     const input = screen.getByRole("textbox");
     const submitBtn = screen.getByRole("button", { name: "Resolve & Save" });
@@ -33,7 +31,7 @@ describe("ResolveForm Component", () => {
     await user.click(submitBtn);
 
     expect(screen.getByTestId("resolve-error")).toHaveTextContent(
-      "Please enter a valid http(s) URL."
+      "Please enter a valid http(s) URL.",
     );
     expect(handleResolve).not.toHaveBeenCalled();
   });
@@ -42,9 +40,7 @@ describe("ResolveForm Component", () => {
     const user = userEvent.setup();
     const handleResolve = vi.fn().mockResolvedValue(undefined);
 
-    render(
-      <ResolveForm itemId="p-1" isResolving={false} onResolve={handleResolve} />
-    );
+    render(<ResolveForm itemId="p-1" isResolving={false} onResolve={handleResolve} />);
 
     const input = screen.getByRole("textbox");
     const submitBtn = screen.getByRole("button", { name: "Resolve & Save" });

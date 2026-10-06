@@ -1,7 +1,7 @@
 {
   "name": "web",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,8 @@
     "test": "vitest run --pool=forks",
     "lint": "eslint .",
     "typecheck": "tsc -b",
-    "format": "prettier --check .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "check:bundle": "node ../../scripts/check-bundle.mjs",
     "gen:api": "openapi-typescript openapi.json -o src/api/schema.d.ts",
     "preview": "vite preview"

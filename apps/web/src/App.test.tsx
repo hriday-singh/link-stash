@@ -25,17 +25,13 @@ describe("App shell, Router, and navigation", () => {
     expect(
       await screen.findByRole("heading", { name: "Feed" }, { timeout: 4000 }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText("Paste links into /stash in Claude Code or agy."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Paste links into /stash in Claude Code or agy.")).toBeInTheDocument();
   });
 
   it("drops unknown/invalid URL params silently and still loads the page", async () => {
     renderApp(["/?kind=banana&since=not-a-date&unknown_param=true"]);
     expect(await screen.findByRole("heading", { name: "Feed" })).toBeInTheDocument();
-    expect(
-      screen.getByText("Paste links into /stash in Claude Code or agy."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Paste links into /stash in Claude Code or agy.")).toBeInTheDocument();
   });
 
   it("opens Command Palette on Ctrl+K and closes on escape", async () => {
@@ -74,9 +70,7 @@ describe("App shell, Router, and navigation", () => {
     const pendingLink = await screen.findByRole("link", { name: /pending/i });
     await user.click(pendingLink);
 
-    expect(
-      await screen.findByRole("heading", { name: /pending resolution/i }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /pending resolution/i })).toBeInTheDocument();
   });
 
   it("navigates to Rejected view when clicked in sidebar", async () => {
@@ -86,9 +80,7 @@ describe("App shell, Router, and navigation", () => {
     const rejectedLink = await screen.findByRole("link", { name: /rejected/i });
     await user.click(rejectedLink);
 
-    expect(
-      await screen.findByRole("heading", { name: /rejected log/i }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /rejected log/i })).toBeInTheDocument();
   });
 
   it("navigates to Inventory view when clicked in sidebar", async () => {
@@ -98,9 +90,7 @@ describe("App shell, Router, and navigation", () => {
     const inventoryLink = await screen.findByRole("link", { name: /inventory/i });
     await user.click(inventoryLink);
 
-    expect(
-      await screen.findByRole("heading", { name: /system inventory/i }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /system inventory/i })).toBeInTheDocument();
   });
 
   it("navigates to category route with category indicator", async () => {

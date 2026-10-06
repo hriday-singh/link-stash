@@ -4,7 +4,11 @@ import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
 import { EditorState } from "@codemirror/state";
 import { EditorView, keymap, placeholder as cmPlaceholder } from "@codemirror/view";
-import { createWikilinkCompletion, defaultFetchCards, type CardSuggestion } from "./wikilinkCompletion";
+import {
+  createWikilinkCompletion,
+  defaultFetchCards,
+  type CardSuggestion,
+} from "./wikilinkCompletion";
 
 export interface NotesEditorProps {
   initialValue?: string;

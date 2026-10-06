@@ -66,9 +66,7 @@ describe("SourceDetailPage", () => {
             video_url: "/api/sources/ig:DE-3r3_s/video",
             thumb_url: "/api/sources/ig:DE-3r3_s/thumb",
             // Both server dict shape {slug, title, ...} and key-value shape supported
-            cards: [
-              { slug: "agent-kit", title: "Agent Kit", category: "models", kind: "model" },
-            ],
+            cards: [{ slug: "agent-kit", title: "Agent Kit", category: "models", kind: "model" }],
           },
           response: new Response(null, { status: 200 }),
         } as unknown as ReturnType<typeof api.GET>;
@@ -82,11 +80,13 @@ describe("SourceDetailPage", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <SourceDetailPage />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText("@agentbuilder")).toBeInTheDocument();
-    expect(screen.getByText("How to build modular coding agents without frameworks")).toBeInTheDocument();
+    expect(
+      screen.getByText("How to build modular coding agents without frameworks"),
+    ).toBeInTheDocument();
     expect(screen.getByText("A practical guide to building coding agents.")).toBeInTheDocument();
     expect(screen.getByText("Agent Kit")).toBeInTheDocument();
     expect(screen.getByText("Claude Code")).toBeInTheDocument();
@@ -147,7 +147,7 @@ describe("SourceDetailPage", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <SourceDetailPage />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText("@octocat")).toBeInTheDocument();
@@ -208,11 +208,10 @@ describe("SourceDetailPage", () => {
       response: new Response(null, { status: 200 }),
     } as unknown as Awaited<ReturnType<typeof api.GET>>);
 
-
     render(
       <QueryClientProvider client={queryClient}>
         <SourceDetailPage />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     // Verify recheck button is rendered for triaged source
@@ -226,13 +225,15 @@ describe("SourceDetailPage", () => {
     expect(stageSelector).toBeInTheDocument();
     const fetchedChip = screen.getByRole("button", { name: "New" });
     await user.click(fetchedChip);
-    expect(patchSpy).toHaveBeenCalledWith("/api/sources/{id}/stage", expect.objectContaining({
-      body: { stage: "fetched" },
-    }));
+    expect(patchSpy).toHaveBeenCalledWith(
+      "/api/sources/{id}/stage",
+      expect.objectContaining({
+        body: { stage: "fetched" },
+      }),
+    );
 
     // Verify share button and copy URL button are rendered
     expect(screen.getByTestId("source-share-button")).toBeInTheDocument();
     expect(screen.getByTestId("source-copy-url-button")).toBeInTheDocument();
   });
 });
-

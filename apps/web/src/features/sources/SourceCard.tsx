@@ -83,7 +83,10 @@ export function SourceCard({ source }: { source: SourceRow }) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const cmd = source.stage === "triaged" ? `/stash recheck ${source.id}` : `/stash triage ${source.id}`;
+                const cmd =
+                  source.stage === "triaged"
+                    ? `/stash recheck ${source.id}`
+                    : `/stash triage ${source.id}`;
                 if (navigator.clipboard?.writeText) {
                   void navigator.clipboard.writeText(cmd);
                   toast.success(`Copied agent command: ${cmd}`);

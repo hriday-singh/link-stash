@@ -40,7 +40,11 @@ export function LinkPanels({ links, isLoading = false }: LinkPanelsProps) {
       className="space-y-4 rounded-xl border border-border/70 bg-card p-4 shadow-xs text-xs"
     >
       <div className="flex items-center gap-1.5 font-semibold text-foreground">
-        <HugeiconsIcon icon={LinkSquare02Icon} className="size-3.5 text-primary" strokeWidth={1.5} />
+        <HugeiconsIcon
+          icon={LinkSquare02Icon}
+          className="size-3.5 text-primary"
+          strokeWidth={1.5}
+        />
         <span className="text-2xs uppercase tracking-wider text-muted-foreground">Connections</span>
       </div>
 
@@ -141,11 +145,16 @@ export function LinkPanels({ links, isLoading = false }: LinkPanelsProps) {
               const isResolved = Boolean(out.slug && out.slug.trim().length > 0);
               const label = out.title || out.slug || out.target;
               const isInventoryOverlap =
-                out.type === "overlap" || out.target?.startsWith("tool:") || out.target?.startsWith("model:");
+                out.type === "overlap" ||
+                out.target?.startsWith("tool:") ||
+                out.target?.startsWith("model:");
 
               if (isResolved) {
                 return (
-                  <li key={`${out.slug}-${idx}`} className="flex items-center justify-between gap-2">
+                  <li
+                    key={`${out.slug}-${idx}`}
+                    className="flex items-center justify-between gap-2"
+                  >
                     <Link
                       to="/c/$slug"
                       params={{ slug: out.slug }}

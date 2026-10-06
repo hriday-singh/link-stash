@@ -1,4 +1,8 @@
-import type { CompletionContext, CompletionResult, CompletionSource } from "@codemirror/autocomplete";
+import type {
+  CompletionContext,
+  CompletionResult,
+  CompletionSource,
+} from "@codemirror/autocomplete";
 import { api, unwrap } from "@/api/client";
 
 export type CardSuggestion = {
@@ -10,7 +14,7 @@ export type CardSuggestion = {
  * Creates a CodeMirror 6 completion source that detects `[[` and suggests card links.
  */
 export function createWikilinkCompletion(
-  fetchCards: (query: string) => Promise<CardSuggestion[]>
+  fetchCards: (query: string) => Promise<CardSuggestion[]>,
 ): CompletionSource {
   return async (context: CompletionContext): Promise<CompletionResult | null> => {
     // Match [[ followed by any non-bracket characters up to the cursor
@@ -48,14 +52,14 @@ export async function defaultFetchCards(query: string): Promise<CardSuggestion[]
       const hits = await unwrap(
         api.GET("/api/search", {
           params: { query: { q: query.trim(), limit: 10 } },
-        })
+        }),
       );
       return hits.map((h) => ({ slug: h.slug, title: h.title }));
     } else {
       const page = await unwrap(
         api.GET("/api/cards", {
           params: { query: { limit: 10 } },
-        })
+        }),
       );
       return page.items.map((c) => ({ slug: c.slug, title: c.title }));
     }

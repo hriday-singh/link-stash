@@ -26,11 +26,7 @@ describe("NotesEditor", () => {
     const onDirtyChange = vi.fn();
 
     const { unmount } = render(
-      <NotesEditor
-        initialValue="Original"
-        onSave={onSave}
-        onDirtyChange={onDirtyChange}
-      />
+      <NotesEditor initialValue="Original" onSave={onSave} onDirtyChange={onDirtyChange} />,
     );
 
     // Simulate typing by finding the content element and dispatching an input or setting doc
@@ -54,13 +50,7 @@ describe("NotesEditor", () => {
     const onSave = vi.fn();
     const onDirtyChange = vi.fn();
 
-    render(
-      <NotesEditor
-        initialValue=""
-        onSave={onSave}
-        onDirtyChange={onDirtyChange}
-      />
-    );
+    render(<NotesEditor initialValue="" onSave={onSave} onDirtyChange={onDirtyChange} />);
 
     const content = document.querySelector(".cm-content");
     expect(content).toBeInTheDocument();

@@ -62,7 +62,7 @@ export const api = createApiClient();
  * or throwing an ApiError with status, code, message and details.
  */
 export async function unwrap<T, E>(
-  promise: Promise<{ data?: T; error?: E; response: Response }>
+  promise: Promise<{ data?: T; error?: E; response: Response }>,
 ): Promise<T> {
   const { data, error, response } = await promise;
   if (!response.ok || error !== undefined) {
