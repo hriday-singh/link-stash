@@ -263,12 +263,14 @@ def _index_card(home: Path, path: Path, posix_path: str, db: sqlite3.Connection)
 
     # Search FTS5
     db.execute("DELETE FROM search WHERE key = ?", (card.key,))
+    extra_text = " ".join([*card.tags, *card.features])
+    search_body = f"{body}\n{extra_text}".strip() if extra_text else body
     db.execute(
         """
         INSERT INTO search (key, doc_type, title, body, transcript, caption)
         VALUES (?, 'card', ?, ?, NULL, NULL)
         """,
-        (card.key, card.title, body),
+        (card.key, card.title, search_body),
     )
 
 
@@ -332,6 +334,10 @@ def _index_inventory(home: Path, path: Path, db: sqlite3.Connection) -> None:
     except Exception:
         origin = path.stem
     db.execute("DELETE FROM inventory WHERE origin = ?", (origin,))
+    db.execute(
+        "DELETE FROM search WHERE doc_type = 'inventory' AND body LIKE ?",
+        (f"%origin:{origin}%",),
+    )
     for e in parse_all(
         path.read_text(encoding="utf-8"), lambda ln: parse_inventory_line(ln, origin)
     ):
@@ -339,6 +345,15 @@ def _index_inventory(home: Path, path: Path, db: sqlite3.Connection) -> None:
         db.execute(
             "INSERT OR IGNORE INTO inventory (key, name, kind, origin) VALUES (?, ?, ?, ?)",
             (e.key, e.name, e.kind, e.origin),
+        )
+        inv_search_key = e.key or f"inv:{e.origin}:{e.name}"
+        inv_body = f"[{e.kind}] {e.note or ''} origin:{e.origin}".strip()
+        db.execute(
+            """
+            INSERT INTO search (key, doc_type, title, body, transcript, caption)
+            VALUES (?, 'inventory', ?, ?, NULL, NULL)
+            """,
+            (inv_search_key, e.name, inv_body),
         )
 
 
@@ -387,7 +402,15 @@ def remove_path(home: Path, path: Path, con: sqlite3.Connection | None = None) -
         elif rel_parts == ("library", "pending.md"):
             db.execute("DELETE FROM pending")
         elif rel_parts and rel_parts[0] == "inventory" and path.suffix == ".md":
-            db.execute("DELETE FROM inventory WHERE origin = ?", (path.stem,))
+            try:
+                origin = path.relative_to(home / "inventory").as_posix()
+            except Exception:
+                origin = path.stem
+            db.execute("DELETE FROM inventory WHERE origin = ?", (origin,))
+            db.execute(
+                "DELETE FROM search WHERE doc_type = 'inventory' AND body LIKE ?",
+                (f"%origin:{origin}%",),
+            )
         db.commit()
 
         # Check if source was deleted

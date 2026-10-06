@@ -5,6 +5,7 @@ import { queryKeys } from "@/api/keys";
 import { VirtualGrid } from "@/components/VirtualGrid";
 import { Input } from "@/components/ui/input";
 import { parseCardFilters, type CardFilters } from "@/features/search/filters";
+import { getCategoryToken } from "@/lib/categories";
 import type { Kind } from "@/lib/kinds";
 import type { TileData } from "@/components/Tile";
 
@@ -37,7 +38,7 @@ function SearchPage() {
       key: hit.slug,
       title: hit.title,
       category: hit.category,
-      categoryColor: `cat-${hit.category}`,
+      categoryColor: getCategoryToken(hit.category),
       kind: hit.kind as Kind,
       thumbUrl: null,
       platform: null,

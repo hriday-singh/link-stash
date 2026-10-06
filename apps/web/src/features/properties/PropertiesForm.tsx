@@ -202,12 +202,13 @@ export function PropertiesForm({
             <ul className="space-y-1">
               {card.sources.map((sourceId) => (
                 <li key={sourceId} className="text-xs">
-                  <a
-                    href={`/s/${sourceId}`}
+                  <Link
+                    to="/s/$sourceId"
+                    params={{ sourceId }}
                     className="text-primary hover:underline"
                   >
                     {sourceId}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

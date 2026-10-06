@@ -249,6 +249,17 @@ def test_sources_and_media_range(test_env: tuple[Config, TestClient]) -> None:
     assert resp_thumb.status_code == 200
     assert resp_thumb.content == b"fake jpeg thumb bytes"
 
+    # Stage patch test
+    resp_patch = client.patch("/api/sources/ig:test1/stage", json={"stage": "analyzed"})
+    assert resp_patch.status_code == 200
+    assert resp_patch.json()["source"]["stage"] == "analyzed"
+
+    # Recheck test transitions triaged back to analyzed
+    client.patch("/api/sources/ig:test1/stage", json={"stage": "triaged"})
+    resp_recheck = client.post("/api/sources/ig:test1/recheck")
+    assert resp_recheck.status_code == 200
+    assert resp_recheck.json()["source"]["stage"] == "analyzed"
+
 
 def test_media_path_traversal_blocked(test_env: tuple[Config, TestClient]) -> None:
     cfg, client = test_env

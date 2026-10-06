@@ -230,3 +230,42 @@ def test_append_failed(tmp_path: Path) -> None:
     assert len(lines) == 2
     assert "blocked:login" in lines[0]
     assert "timeout" in lines[1]
+
+
+def test_inventory_and_card_tags_indexed_in_fts(tmp_path: Path) -> None:
+    from stash.store.index import connect, reindex_path
+
+    home = tmp_path
+    inv_dir = home / "inventory" / "manual"
+    inv_dir.mkdir(parents=True)
+    inv_file = inv_dir / "ui-ux.md"
+    inv_file.write_text(
+        "- [ui_ref] Lenis — Smooth scrolling library (key: url:lenis.dev)\n",
+        encoding="utf-8",
+    )
+
+    reindex_path(home, inv_file)
+
+    con = connect(home)
+    row = con.execute("SELECT * FROM search WHERE search MATCH 'scrolling'").fetchone()
+    assert row is not None
+    assert row["doc_type"] == "inventory"
+    assert row["title"] == "Lenis"
+
+    # Also test card tags/features are in FTS
+    card = Card(
+        schema=1,
+        key="url:test-tags.dev",
+        title="Taggy",
+        category="ui-ux",
+        kind="ui_ref",
+        tags=["liquid-gl", "morphing"],
+        features=["Fast shader effect"],
+        added=date(2026, 10, 5),
+    )
+    save_card(home, card, "Just a body")
+    row_tag = con.execute("SELECT * FROM search WHERE search MATCH 'morphing'").fetchone()
+    assert row_tag is not None
+    assert row_tag["doc_type"] == "card"
+    assert row_tag["title"] == "Taggy"
+    con.close()

@@ -34,7 +34,7 @@ describe("SourceDetailPage", () => {
     });
   });
 
-  it("renders source metadata, transcript stamps, mentions and cards", async () => {
+  it("renders source metadata, transcript stamps, mentions, and extracted cards with proper links", async () => {
     const user = userEvent.setup();
 
     vi.spyOn(api, "GET").mockImplementation(async (path: string) => {
@@ -65,7 +65,10 @@ describe("SourceDetailPage", () => {
             },
             video_url: "/api/sources/ig:DE-3r3_s/video",
             thumb_url: "/api/sources/ig:DE-3r3_s/thumb",
-            cards: [{ "agent-kit": "Agent Kit" }],
+            // Both server dict shape {slug, title, ...} and key-value shape supported
+            cards: [
+              { slug: "agent-kit", title: "Agent Kit", category: "models", kind: "model" },
+            ],
           },
           response: new Response(null, { status: 200 }),
         } as unknown as ReturnType<typeof api.GET>;
@@ -87,6 +90,19 @@ describe("SourceDetailPage", () => {
     expect(screen.getByText("A practical guide to building coding agents.")).toBeInTheDocument();
     expect(screen.getByText("Agent Kit")).toBeInTheDocument();
     expect(screen.getByText("Claude Code")).toBeInTheDocument();
+
+    // Verify Open User button is rendered beside creator with direct link
+    const openUserLink = screen.getByTitle("Open @agentbuilder profile on instagram");
+    expect(openUserLink).toBeInTheDocument();
+    expect(openUserLink).toHaveAttribute("href", "https://instagram.com/agentbuilder");
+
+    // Verify Open Original source link is rendered in header
+    const openOriginalLink = screen.getByRole("link", { name: /Open Original/i });
+    expect(openOriginalLink).toHaveAttribute("href", "https://instagram.com/reel/DE-3r3_s");
+
+    // Verify extracted card routes to /c/agent-kit, not /c/slug
+    const cardLink = screen.getByRole("link", { name: /Agent Kit/i });
+    expect(cardLink).toHaveAttribute("href", "/c/agent-kit");
 
     // Verify video element is rendered
     const video = screen.getByTestId("source-video-element") as HTMLVideoElement;
@@ -137,5 +153,86 @@ describe("SourceDetailPage", () => {
     expect(await screen.findByText("@octocat")).toBeInTheDocument();
     expect(screen.queryByTestId("source-video-element")).not.toBeInTheDocument();
     expect(screen.getByTestId("player-fallback")).toBeInTheDocument();
+
+    // Verify Triage with Agent button is rendered for analyzed source
+    const triageBtn = screen.getByTestId("source-triage-button");
+    expect(triageBtn).toBeInTheDocument();
+    expect(triageBtn).toHaveTextContent("Triage with Agent");
+  });
+
+  it("handles stage update, recheck request, and share actions", async () => {
+    const user = userEvent.setup();
+
+    const patchSpy = vi.spyOn(api, "PATCH").mockResolvedValue({
+      data: {
+        source: {
+          key: "ig:DE-3r3_s",
+          platform: "instagram",
+          creator: "@agentbuilder",
+          url: "https://instagram.com/reel/DE-3r3_s",
+          stage: "analyzed",
+          caption: "caption",
+        },
+        cards: [],
+      },
+      response: new Response(null, { status: 200 }),
+    } as unknown as Awaited<ReturnType<typeof api.PATCH>>);
+
+    const postSpy = vi.spyOn(api, "POST").mockResolvedValue({
+      data: {
+        source: {
+          key: "ig:DE-3r3_s",
+          platform: "instagram",
+          creator: "@agentbuilder",
+          url: "https://instagram.com/reel/DE-3r3_s",
+          stage: "analyzed",
+          caption: "caption",
+        },
+        cards: [],
+      },
+      response: new Response(null, { status: 200 }),
+    } as unknown as Awaited<ReturnType<typeof api.POST>>);
+
+    vi.spyOn(api, "GET").mockResolvedValue({
+      data: {
+        source: {
+          key: "ig:DE-3r3_s",
+          platform: "instagram",
+          creator: "@agentbuilder",
+          url: "https://instagram.com/reel/DE-3r3_s",
+          stage: "triaged",
+          caption: "caption",
+        },
+        cards: [],
+      },
+      response: new Response(null, { status: 200 }),
+    } as unknown as Awaited<ReturnType<typeof api.GET>>);
+
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <SourceDetailPage />
+      </QueryClientProvider>
+    );
+
+    // Verify recheck button is rendered for triaged source
+    const recheckBtn = await screen.findByTestId("source-recheck-button");
+    expect(recheckBtn).toBeInTheDocument();
+    await user.click(recheckBtn);
+    expect(postSpy).toHaveBeenCalledWith("/api/sources/{id}/recheck", expect.anything());
+
+    // Verify stage selector chip clicks call PATCH stage
+    const stageSelector = screen.getByTestId("source-stage-selector");
+    expect(stageSelector).toBeInTheDocument();
+    const fetchedChip = screen.getByRole("button", { name: "New" });
+    await user.click(fetchedChip);
+    expect(patchSpy).toHaveBeenCalledWith("/api/sources/{id}/stage", expect.objectContaining({
+      body: { stage: "fetched" },
+    }));
+
+    // Verify share button and copy URL button are rendered
+    expect(screen.getByTestId("source-share-button")).toBeInTheDocument();
+    expect(screen.getByTestId("source-copy-url-button")).toBeInTheDocument();
   });
 });
+

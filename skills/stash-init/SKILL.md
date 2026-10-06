@@ -51,4 +51,5 @@ Step through one category at a time:
    - Prompt: "When video engines fail on a reel, stash falls back to a contact sheet. Want a local speech transcript added too? (installs faster-whisper ~150 MB + ~460 MB model)."
 
 ### 3. Verification & Summary
-Print a clean summary of entries recorded into `inventory/manual/*.md` and verified in SQLite.
+Print a clean summary of entries recorded into `inventory/manual/*.md` and verified in SQLite. Once seeded, agents will consult these items during development via `/stash-suggest` or `stash suggest "<task>"` before installing new packages or planning features.
+

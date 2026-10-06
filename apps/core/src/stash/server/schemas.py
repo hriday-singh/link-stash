@@ -68,6 +68,10 @@ class SourceDetail(BaseModel):
     cards: list[dict[str, str]] = Field(default_factory=lambda: cast(list[dict[str, str]], []))
 
 
+class SourceStagePatch(BaseModel):
+    stage: Literal["fetched", "analyzed", "triaged"]
+
+
 class CardLinks(BaseModel):
     backlinks: list[dict[str, str]] = Field(default_factory=lambda: cast(list[dict[str, str]], []))
     mentioned_by: list[dict[str, str]] = Field(

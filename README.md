@@ -100,6 +100,26 @@ pnpm dev:web
 pnpm build
 ```
 
+## Agent Skills & CLI Workflows
+
+Link Stash includes portable agent skills for Claude Code and Antigravity:
+
+| Command / Skill | Purpose |
+| --- | --- |
+| `stash suggest "<task>"` / `/stash-suggest` | Consult stash for relevant installed tools, saved library cards, or practices before installing new packages or planning features. |
+| `stash extract` / `/stash [links]` | Extract reels, repos, or docs, transcribe audio, OCR frames, and save structured cards. |
+| `stash have` / `/stash-have` | Quick-add installed tools, UI references, custom models, or practices to manual inventory. |
+| `stash pending` / `/stash-pending` | Track and resolve comment-for-link or DM-gated items with received links. |
+| `stash scan` / `/stash-scan` | Auto-scan host environment (Claude skills, Antigravity plugins, Ollama models, LM Studio, dev tools). |
+| `/stash-init` | Guided or bulk brain dump into manual inventory. |
+
+Install the skills into your agent environments:
+
+```bash
+uv run --directory apps/core stash install-skills --workspace
+```
+
+
 ## Running tests & quality checks
 
 ```bash

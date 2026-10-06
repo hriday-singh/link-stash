@@ -2,6 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { api, unwrap } from "@/api/client";
 import { queryKeys } from "@/api/keys";
 import type { components } from "@/api/schema";
+import { getCategoryToken } from "@/lib/categories";
 import type { TileData } from "@/components/Tile";
 import type { CardFilters } from "@/features/search/filters";
 
@@ -19,7 +20,7 @@ export function toTileItem(card: CardTileApi): CardTileItem {
     key: card.key,
     title: card.title,
     category: card.category,
-    categoryColor: `cat-${card.category}`,
+    categoryColor: getCategoryToken(card.category),
     kind: card.kind,
     // Source frames (reel covers) describe the post, not the card; feed tiles stay generated.
     thumbUrl: null,

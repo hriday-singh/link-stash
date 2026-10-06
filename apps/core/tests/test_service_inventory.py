@@ -115,13 +115,7 @@ def test_antigravity_plugin_skills_scan(tmp_path: Path) -> None:
 
     # Create mock Antigravity config plugin with skills
     plugin_skill_dir = (
-        user_home
-        / ".gemini"
-        / "config"
-        / "plugins"
-        / "superpowers"
-        / "skills"
-        / "brainstorming"
+        user_home / ".gemini" / "config" / "plugins" / "superpowers" / "skills" / "brainstorming"
     )
     plugin_skill_dir.mkdir(parents=True)
     content = "---\nname: brainstorming\n---\n# Brainstorming"
@@ -133,3 +127,15 @@ def test_antigravity_plugin_skills_scan(tmp_path: Path) -> None:
     assert "superpowers" in names  # plugin name
     assert "brainstorming" in names  # constituent skill name
 
+
+def test_parse_inventory_line_with_note() -> None:
+    from stash.store.lists import parse_inventory_line
+
+    line = "- [ui_ref] shadcn/ui — Modular reusable React component system (key: url:ui.shadcn.com)"
+    entry = parse_inventory_line(line, "manual/ui-ux.md")
+    assert entry is not None
+    assert entry.name == "shadcn/ui"
+    assert entry.kind == "ui_ref"
+    assert entry.key == "url:ui.shadcn.com"
+    assert entry.origin == "manual/ui-ux.md"
+    assert entry.note == "Modular reusable React component system"

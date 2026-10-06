@@ -8,9 +8,10 @@ from starlette.responses import FileResponse
 
 from stash.errors import NotFound
 from stash.server.routes.cards import get_db, get_home
-from stash.server.schemas import Page, SourceDetail, SourceRow
+from stash.server.schemas import Page, SourceDetail, SourceRow, SourceStagePatch
 from stash.services.library import get_source_detail, get_sources_page
 from stash.store.queries import get_source_row_by_id
+from stash.store.sources import read_source, write_source
 
 router = APIRouter(prefix="/api/sources", tags=["sources"])
 
@@ -101,3 +102,34 @@ def get_source(
 ) -> SourceDetail:
     """Retrieves full source metadata, parsed source.md, and linked cards."""
     return get_source_detail(home, conn, id)
+
+
+@router.patch("/{id:path}/stage", response_model=SourceDetail)
+def update_source_stage(
+    id: str,
+    body: SourceStagePatch,
+    home: Path = Depends(get_home),
+    conn: sqlite3.Connection = Depends(get_db),
+) -> SourceDetail:
+    """Updates the processing stage of a source (e.g. to request recheck or advance triage)."""
+    get_source_detail(home, conn, id)
+    doc = read_source(home, id)
+    updated = doc.model_copy(update={"stage": body.stage})
+    write_source(home, updated)
+    return get_source_detail(home, conn, id)
+
+
+@router.post("/{id:path}/recheck", response_model=SourceDetail)
+def recheck_source(
+    id: str,
+    home: Path = Depends(get_home),
+    conn: sqlite3.Connection = Depends(get_db),
+) -> SourceDetail:
+    """Sets a triaged source back to analyzed so it enters the triage queue for re-evaluation."""
+    get_source_detail(home, conn, id)
+    doc = read_source(home, id)
+    next_stage = "analyzed" if doc.stage == "triaged" else doc.stage
+    updated = doc.model_copy(update={"stage": next_stage})
+    write_source(home, updated)
+    return get_source_detail(home, conn, id)
+

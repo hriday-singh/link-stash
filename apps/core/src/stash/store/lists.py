@@ -36,11 +36,13 @@ def parse_inventory_line(line: str, origin: str) -> InventoryEntry | None:
     key = None
     if k := _KEY.search(rest):
         key, rest = k["key"], rest[: k.start()]
-    name = rest.split(SEP, 1)[0].strip()
+    parts = rest.split(SEP, 1)
+    name = parts[0].strip()
     if not name:
         return None
+    note = parts[1].strip() if len(parts) > 1 and parts[1].strip() else None
     # ponytail: untagged hand-written lines count as tools
-    return InventoryEntry(key=key, name=name, kind=m["kind"] or "tool", origin=origin)
+    return InventoryEntry(key=key, name=name, kind=m["kind"] or "tool", origin=origin, note=note)
 
 
 def inventory_line(kind: str, name: str, key: str | None, note: str | None = None) -> str:

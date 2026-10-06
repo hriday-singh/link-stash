@@ -208,4 +208,3 @@ def have_batch(home: Path, items: list[str]) -> list[InventoryEntry]:
             db.close()
 
     return entries
-

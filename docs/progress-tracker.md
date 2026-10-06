@@ -14,17 +14,19 @@ Link Stash is divided into two interdependent parts:
 
 | Area | Milestones Defined | Completed / Substantially Done | Planned / In Progress | Completion % |
 | --- | --- | --- | --- | --- |
-| **Core Pipeline (A1–A10)** | 10 | 9 complete/logic done (A1–A9) | 1 planned (A10) | **90%** |
+| **Core Pipeline (A1–A11)** | 11 | 10 complete/logic done (A1–A9, A11) | 1 planned (A10) | **91%** |
 | **Web Application (B0–B6)** | 7 | 7 complete (B0–B6) | 0 planned | **100%** |
-| **Combined System** | 17 | 16 complete/logic done | 1 planned (A10) | **94%** |
+| **Combined System** | 18 | 17 complete/logic done | 1 planned (A10) | **94%** |
+
 
 ### Automated Verification Scorecard
 
 | Component | Test Suite | Pass Count | Lint Status | Typecheck Status | Build Status |
 | --- | --- | --- | --- | --- | --- |
-| **`apps/core` (Python 3.14)** | Pytest 9.1.1 (34 modules) | **222 / 222 passing** (100%) | Ruff: 0 errors | Pyright (strict): 0 errors | N/A (Python package) |
-| **`apps/web` (React 19 / Vite)** | Vitest 5.0.3 (47 test files) | **220 / 220 passing** (100%) | ESLint: 0 errors | `tsc -b`: 0 errors | Vite build: **clean production build** |
-| **Total Automated Tests** | Pytest + Vitest | **442 tests passing** | Clean | Strict clean | Production build clean |
+| **`apps/core` (Python 3.14)** | Pytest 9.1.1 (35 modules) | **241 / 241 passing** (100%) | Ruff: 0 errors | Pyright (strict): 0 errors | N/A (Python package) |
+| **`apps/web` (React 19 / Vite)** | Vitest 5.0.3 (47 test files) | **225 / 225 passing** (100%) | ESLint: 0 errors | `tsc -b`: 0 errors | Vite build: **clean production build** |
+| **Total Automated Tests** | Pytest + Vitest | **466 tests passing** | Clean | Strict clean | Production build clean |
+
 
 ---
 
@@ -44,6 +46,8 @@ Link Stash is divided into two interdependent parts:
 | **A8 Agent Skills** | `A8` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L348-L408) | Planned | **Complete (100% logic)** | 2 tests (`test_service_skills.py`) | 5 portable `SKILL.md` files: `skills/stash/`, `skills/stash-init/`, `skills/stash-have/`, `skills/stash-pending/`, `skills/stash-scan/`; `install_skills` junction/symlink installer service. |
 | **A9 Fallbacks** | `A9` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L494) | Planned | **Complete (100% logic)** | 11 tests (`test_reel_frames.py`, `test_reel_whisper.py`, `test_reel_service.py`, `test_extract_service.py`) | Frames engine is now a handoff (not cached; `analyze` prints `needs_agent`, agent pipes to `ingest`). Contact sheet: opening frame + scene cuts + 5 s cadence, source-time labels. Optional faster-whisper transcript (`[whisper]` extra + `whisper = true`, offered in `/stash-init`). Blocked embed: manual mp4, else `blocked` pending item. No cookies, no export. `reel_engines` read from config. |
 | **A10 First Real Run** | `A10` | [link-stash-spec.md](file:///docs/link-stash-spec.md#L495) | Planned | **Planned (0%)** | 0 tests | Full end-to-end user test with backlog import and initial manual inventory seeding. Ready to run. |
+| **A11 Suggest Engine** | `A11` | [2026-10-06-stash-suggest-design.md](file:///docs/superpowers/specs/2026-10-06-stash-suggest-design.md) | [2026-10-06-stash-suggest.md](file:///docs/superpowers/plans/2026-10-06-stash-suggest.md) | **Complete (100%)** | 4 tests (`test_service_suggest.py`, `test_cli_suggest.py`, FTS index & lists) | `stash suggest` CLI (JSON + `--text`), FTS5 multi-indexing for inventory notes and card tags, partitioned suggest service (`installed`, `cards`, `practices`, `found: bool`), `skills/stash-suggest` agent skill installed across Claude Code, Antigravity, and workspace. |
+
 
 ---
 

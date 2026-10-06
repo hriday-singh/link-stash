@@ -1,4 +1,5 @@
 import { formatHex, parse } from "culori";
+import { getCategoryToken } from "@/lib/categories";
 
 /**
  * Resolves a CSS variable from document.documentElement to a #rrggbb hex string
@@ -41,16 +42,9 @@ export function resolveCategoryColor(categoryOrType: string): string {
     return resolveCssVarToHex("--muted-foreground", "#8c8c8c");
   }
 
-  // Strip cat- prefix if present to standardize
-  const catSlug = normalized.startsWith("cat-") ? normalized.slice(4) : normalized;
-
-  // Check known seed categories or fallback to cat-extra
-  const varName = `--cat-${catSlug}`;
-  const hex = resolveCssVarToHex(varName, "");
-  if (hex) return hex;
-
-  // Fallback to cat-extra-8 (muted neutral)
-  return resolveCssVarToHex("--cat-extra-8", "#888888");
+  // Resolve to defined CSS variable
+  const token = getCategoryToken(normalized);
+  return resolveCssVarToHex(`--${token}`, "#888888");
 }
 
 /**

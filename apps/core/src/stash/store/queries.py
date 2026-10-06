@@ -524,3 +524,76 @@ def get_graph_elements(
                     edges.append(ce)
 
     return list(nodes_map.values()), edges
+
+
+def get_card_row_by_key(conn: sqlite3.Connection, key: str) -> sqlite3.Row | None:
+    """Retrieves a single card row by key."""
+    sql = """
+    SELECT
+        c.key,
+        c.slug,
+        c.title,
+        c.category,
+        c.kind,
+        c.added,
+        c.url,
+        c.hash,
+        c.path,
+        c.frontmatter
+    FROM cards c
+    WHERE c.key = ?
+    """
+    return conn.execute(sql, (key,)).fetchone()
+
+
+def get_card_tags(conn: sqlite3.Connection, key: str) -> list[str]:
+    """Retrieves all tags for a given card key."""
+    sql = "SELECT tag FROM tags WHERE key = ? ORDER BY tag ASC"
+    rows = conn.execute(sql, (key,)).fetchall()
+    return [str(r["tag"]) for r in rows]
+
+
+def suggest_search_rows(
+    conn: sqlite3.Connection,
+    tokens: list[str],
+    limit: int = 40,
+) -> list[sqlite3.Row]:
+    """Queries FTS5 search table across cards and inventory using token prefix matching."""
+    if not tokens:
+        return []
+
+    fts_expr = " OR ".join(f'"{t}"*' for t in tokens)
+    sql = """
+    SELECT
+        s.key,
+        s.doc_type,
+        s.title,
+        s.body,
+        snippet(search, 3, '\x02', '\x03', '...', 20) as snippet,
+        bm25(search) as rank
+    FROM search s
+    WHERE search MATCH ?
+    ORDER BY rank ASC
+    LIMIT ?
+    """
+    try:
+        return conn.execute(sql, (fts_expr, limit)).fetchall()
+    except sqlite3.OperationalError:
+        return []
+
+
+def find_cards_by_tags(
+    conn: sqlite3.Connection, tags: list[str], limit: int = 10
+) -> list[sqlite3.Row]:
+    """Find cards that have any of the given tags."""
+    if not tags:
+        return []
+    placeholders = ",".join("?" for _ in tags)
+    sql = f"""
+    SELECT DISTINCT c.key, c.slug, c.title, c.category, c.kind, c.url, c.frontmatter
+    FROM tags t
+    JOIN cards c ON t.key = c.key
+    WHERE t.tag IN ({placeholders})
+    LIMIT ?
+    """
+    return conn.execute(sql, (*tags, limit)).fetchall()

@@ -43,8 +43,8 @@ export function AppShell({
         <div className="flex shrink-0 items-center gap-2">
           <Button
             variant="ghost"
-            size="icon-sm"
-            className="lg:hidden"
+            size="icon"
+            className="size-9 lg:hidden sm:size-7"
             onClick={() => setMobileOpen(true)}
             aria-label="Open navigation menu"
           >
@@ -84,10 +84,10 @@ export function AppShell({
         <div className="flex shrink-0 items-center">
           <Button
             variant="outline"
-            size="icon-sm"
+            size="icon"
             onClick={toggleTheme}
             aria-label={resolved === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-            className="rounded-lg"
+            className="size-9 sm:size-7 rounded-lg"
           >
             <MorphIcon
               icon={resolved === "dark" ? Moon02Icon : Sun01Icon}

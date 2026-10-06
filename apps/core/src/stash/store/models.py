@@ -115,3 +115,4 @@ class InventoryEntry(BaseModel):
     name: str
     kind: str
     origin: str
+    note: str | None = None

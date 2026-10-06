@@ -33,6 +33,7 @@ import {
 import {
   categoryColorVar,
   categoryNameError,
+  getCategoryToken,
   SEED_CATEGORIES,
 } from "@/lib/categories";
 import { useSidebar } from "@/state/sidebar";
@@ -97,7 +98,7 @@ export function SidebarNav({
       ...prev,
       {
         name: newCatName,
-        color: `cat-extra-${(prev.length % 9) + 1}`,
+        color: getCategoryToken(newCatName),
         count: 0,
       },
     ]);

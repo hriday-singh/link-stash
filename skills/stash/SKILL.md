@@ -59,9 +59,10 @@ echo '{"title": "Componentry", "url": "https://componentry.dev", "kind": "tool",
 For repos, the license is part of pricing: flag `AGPL`, non-commercial, or source-available (`BSL`, `SSPL`, `Elastic`) licenses, and `no_license` means all rights reserved.
 
 **c. Job-to-be-done comparison.** Before proposing a save, answer "what do they already have that does this job?":
-- Grep `inventory/manual/*.md` and `inventory/auto/*.md` under STASH_HOME (default `~/stash`) for the job, not the name (e.g. `tailwind`, `component`, `download`, `scraper`), and look at the `stash check` candidates.
+- Run `stash suggest "<job keywords>"` to instantly check existing tools, cards, and practices. You can also inspect `stash check` candidates.
 - Decide one relation: `gap` (nothing does this), `alternative` (same job, different tradeoff: lighter, self-hosted, no deps, different aesthetic), `upgrade` (clearly better than something they use), `complement` (works alongside), `redundant` (same job, no advantage).
 - Name the concrete difference in a few words ("zero-JS pure Tailwind vs Radix-based shadcn", "GUI companion to gallery-dl").
+
 
 ### 6. Review Table
 One numbered table, plain text badges only (no emoji anywhere). Link names with reference-style links underneath.

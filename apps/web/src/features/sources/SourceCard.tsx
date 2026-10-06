@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Video01Icon } from "@hugeicons/core-free-icons";
+import { Video01Icon, Copy01Icon } from "@hugeicons/core-free-icons";
+import { toast } from "sonner";
 import { BrandLogo } from "@/components/BrandLogo";
 import type { SourceRow } from "@/api/client";
 import { stageLabel } from "./filters";
@@ -74,7 +75,26 @@ export function SourceCard({ source }: { source: SourceRow }) {
         </div>
 
         <div className="flex items-center justify-between text-2xs text-muted-foreground pt-1 border-t border-border/40">
-          <span className="min-w-0 truncate font-mono text-2xs">{source.id}</span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="min-w-0 truncate font-mono text-2xs">{source.id}</span>
+            <button
+              type="button"
+              data-testid="source-card-copy-button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const cmd = source.stage === "triaged" ? `/stash recheck ${source.id}` : `/stash triage ${source.id}`;
+                if (navigator.clipboard?.writeText) {
+                  void navigator.clipboard.writeText(cmd);
+                  toast.success(`Copied agent command: ${cmd}`);
+                }
+              }}
+              title="Copy agent command"
+              className="rounded p-0.5 text-muted-foreground/70 hover:bg-muted hover:text-foreground transition-colors"
+            >
+              <HugeiconsIcon icon={Copy01Icon} className="size-3" strokeWidth={1.5} />
+            </button>
+          </div>
           {source.fetched_at && (
             <time dateTime={source.fetched_at} className="shrink-0">
               {new Date(source.fetched_at).toLocaleDateString()}

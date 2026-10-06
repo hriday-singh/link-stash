@@ -360,9 +360,11 @@ Five skills drive the `stash` CLI. Each skill is a portable `SKILL.md` that work
 | `/stash-have <thing>` | Add one installed thing to the inventory | `have` |
 | `/stash-pending` | List pendings; paste a DM'd link to resolve one | `pending list`, `pending resolve` |
 | `/stash-scan` | Force an inventory rescan | `scan` |
+| `/stash-suggest <task>` | Consult stash for relevant tools, saved library cards, or practices before installing new packages or planning features | `suggest` |
 
 **CLI subcommands** (all print JSON with `--json`; exit 0 ok, 1 error, 2 usage)
 
+- `stash suggest <query> [--category <cat>] [--kind <kind>] [--limit <n>] [--text]`
 - `stash extract <url...> [--retry-failed]`
 - `stash analyze <id> [--engine agy|gemini_api|frames]`
 - `stash ingest <id> -` (reads engine JSON from stdin; used when agy reads the video in-session)
@@ -375,6 +377,7 @@ Five skills drive the `stash` CLI. Each skill is a portable `SKILL.md` that work
 - `stash reindex`
 - `stash serve [--port] [--dev]` (`--dev`: API only, for the Vite dev server)
 - `stash install-skills`
+
 
 **`/stash` flow**
 
