@@ -6,12 +6,15 @@ import {
   Comment01Icon,
   CheckmarkCircle02Icon,
   Alert02Icon,
+  Delete02Icon,
+  RefreshIcon,
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 import { LazyMotion, domAnimation, AnimatePresence, m, useReducedMotion } from "motion/react";
 import { api, unwrap, type PendingItem } from "@/api/client";
 import { queryKeys } from "@/api/keys";
 import { PageHeader } from "@/components/PageHeader";
+import { Button } from "@/components/ui/button";
 import { ResolveForm } from "./ResolveForm";
 
 export function PendingPage() {
@@ -43,6 +46,41 @@ export function PendingPage() {
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to resolve item";
       toast.error(message);
+    } finally {
+      setResolvingId(null);
+    }
+  };
+
+  const refresh = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.pending() }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.meta() }),
+    ]);
+
+  const handleRecheck = async (id: string) => {
+    setResolvingId(id);
+    try {
+      const res = await unwrap(
+        api.POST("/api/pending/{id}/recheck", { params: { path: { id } } }),
+      );
+      if (res.status === "failed") toast.error("Still blocked. Save the reel manually.");
+      else toast.success("Fetched. Will be triaged on next /stash run.");
+      await refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Recheck failed");
+    } finally {
+      setResolvingId(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setResolvingId(id);
+    try {
+      await unwrap(api.DELETE("/api/pending/{id}", { params: { path: { id } } }));
+      toast.success("Removed from pending.");
+      await refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Delete failed");
     } finally {
       setResolvingId(null);
     }
@@ -125,7 +163,34 @@ export function PendingPage() {
                     )}
                   </div>
 
-                  <span className="font-mono text-2xs text-muted-foreground">{item.added}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="mr-1 font-mono text-2xs text-muted-foreground">
+                      {item.added}
+                    </span>
+                    {item.kind === "blocked" && isOpen && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={resolvingId === item.id}
+                        onClick={() => handleRecheck(item.id)}
+                        className="gap-1 text-xs"
+                      >
+                        <HugeiconsIcon icon={RefreshIcon} strokeWidth={1.5} />
+                        Recheck
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={resolvingId === item.id}
+                      onClick={() => handleDelete(item.id)}
+                      className="gap-1 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      aria-label={`Delete ${item.id}`}
+                    >
+                      <HugeiconsIcon icon={Delete02Icon} strokeWidth={1.5} />
+                      Delete
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Instruction */}

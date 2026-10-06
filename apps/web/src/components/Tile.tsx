@@ -24,7 +24,7 @@ export function Tile({ data, badge }: { data: TileData; badge?: ReactNode }) {
     <article className="group flex h-full flex-col overflow-hidden rounded-lg border bg-card shadow-sm transition-[translate,box-shadow] duration-(--duration-base) ease-out hover:-translate-y-0.5 hover:shadow-md">
       <div
         style={{ viewTransitionName: transitionName } as React.CSSProperties}
-        className="relative aspect-[4/3] shrink-0 bg-muted"
+        className="relative aspect-[4/3] shrink-0 overflow-hidden bg-muted"
       >
         {data.thumbUrl ? (
           <img
@@ -32,7 +32,7 @@ export function Tile({ data, badge }: { data: TileData; badge?: ReactNode }) {
             alt=""
             loading="lazy"
             decoding="async"
-            className="size-full object-cover"
+            className="absolute inset-0 size-full object-cover"
           />
         ) : (
           <GeneratedTile data={data} />

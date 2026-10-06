@@ -21,7 +21,8 @@ export function toTileItem(card: CardTileApi): CardTileItem {
     category: card.category,
     categoryColor: `cat-${card.category}`,
     kind: card.kind,
-    thumbUrl: card.thumb_url ?? null,
+    // Source frames (reel covers) describe the post, not the card; feed tiles stay generated.
+    thumbUrl: null,
     platform: card.platform ?? null,
     bucket: card.bucket ?? null,
     added: card.added,

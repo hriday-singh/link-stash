@@ -2,14 +2,16 @@
 
 import sqlite3
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, Depends
 
-from stash.errors import Invalid
+from stash.errors import Invalid, NotFound
 from stash.server.routes.cards import get_db, get_home
 from stash.server.schemas import InventoryAddRequest, PendingResolveRequest
+from stash.services.extract import extract
 from stash.services.inventory import have
-from stash.services.pending import list_pending, resolve_pending
+from stash.services.pending import drop_pending, list_pending, resolve_pending
 from stash.services.rejects import remove_reject
 from stash.store.models import InventoryEntry, PendingItem, RejectEntry
 
@@ -33,6 +35,24 @@ def resolve_pending_item(
     if not (clean_url.startswith("http://") or clean_url.startswith("https://")):
         raise Invalid("URL must start with http:// or https://", {"url": clean_url})
     return resolve_pending(home, id, clean_url)
+
+
+@router.delete("/pending/{id}")
+def delete_pending_item(id: str, home: Path = Depends(get_home)) -> dict[str, str]:
+    """Drops a pending item (no-op if already gone)."""
+    drop_pending(home, id)
+    return {"status": "removed", "id": id}
+
+
+@router.post("/pending/{id}/recheck")
+def recheck_pending_item(id: str, home: Path = Depends(get_home)) -> dict[str, Any]:
+    """Re-runs the Instagram fetch for a blocked item; success drops it from pending."""
+    item = next((p for p in list_pending(home) if p.id == id), None)
+    if item is None or not item.source_key or not item.source_key.startswith("ig:"):
+        raise NotFound(f"no recheckable pending item {id}", {"id": id})
+    code = item.source_key.removeprefix("ig:")
+    result = extract(home, [f"https://www.instagram.com/reel/{code}/"])[0]
+    return {"id": id, "status": str(result.get("status", "failed")), "key": item.source_key}
 
 
 @router.get("/rejects", response_model=list[RejectEntry])

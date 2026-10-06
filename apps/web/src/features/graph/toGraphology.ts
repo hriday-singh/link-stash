@@ -58,8 +58,9 @@ export function toGraphology(
       return;
     }
 
+    // Sigma reads `type` as its render program name; keep ours under `edgeType`.
     graph.addEdge(edge.source, edge.target, {
-      type: edge.type,
+      edgeType: edge.type,
       size: 1,
       color: getEdgeColor(edge.type),
     });

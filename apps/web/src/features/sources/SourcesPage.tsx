@@ -7,19 +7,22 @@ import { queryKeys } from "@/api/keys";
 import { PageHeader } from "@/components/PageHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { SourceCard } from "./SourceCard";
 import { STAGES, STAGE_LABELS, type SourceFilters } from "./filters";
 
+// "other" = any platform not listed here; the API maps it to NOT IN.
 const PLATFORMS = [
-  { id: "", label: "All Platforms" },
-  { id: "instagram", label: "Instagram" },
-  { id: "github", label: "GitHub" },
-  { id: "huggingface", label: "Hugging Face" },
+  { value: "", label: "All" },
+  { value: "instagram", label: "Instagram" },
+  { value: "github", label: "GitHub" },
+  { value: "huggingface", label: "Hugging Face" },
+  { value: "other", label: "Other" },
 ];
 
 const STAGE_OPTIONS = [
-  { id: "", label: "All Stages" },
-  ...STAGES.map((id) => ({ id, label: STAGE_LABELS[id] })),
+  { value: "", label: "Any stage" },
+  ...STAGES.map((value) => ({ value, label: STAGE_LABELS[value] })),
 ];
 
 interface SourcesPageProps {
@@ -90,80 +93,49 @@ export function SourcesPage({ filters }: SourcesPageProps) {
       <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 shadow-xs">
         {/* One wrapping row: `contents` lets the pill groups wrap alongside the creator input. */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="contents">
-            {/* Platform pills */}
-            <div className="flex flex-wrap items-center rounded-lg border border-border/60 bg-surface-sunken p-0.5 text-xs">
-              {PLATFORMS.map((p) => {
-                const active = (filters.platform || "") === p.id;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => updateFilters({ platform: p.id || undefined })}
-                    className={`rounded-md px-2.5 py-1 text-2xs font-medium transition-colors ${
-                      active
-                        ? "bg-background text-foreground shadow-xs font-semibold"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                );
-              })}
-            </div>
+          <SegmentedControl
+            value={filters.platform ?? ""}
+            onChange={(v) => updateFilters({ platform: v || undefined })}
+            options={PLATFORMS}
+            aria-label="Platform filter"
+            className="flex-wrap"
+          />
+          <SegmentedControl
+            value={filters.stage ?? ""}
+            onChange={(v) => updateFilters({ stage: v || undefined })}
+            options={STAGE_OPTIONS}
+            aria-label="Stage filter"
+            className="flex-wrap"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            aria-pressed={Boolean(filters.has_video)}
+            onClick={() => updateFilters({ has_video: !filters.has_video })}
+            className={`h-8 gap-1.5 text-xs ${
+              filters.has_video ? "border-primary/50 bg-primary/10 text-primary" : "text-muted-foreground"
+            }`}
+          >
+            <HugeiconsIcon icon={Video01Icon} strokeWidth={1.5} />
+            Has video
+          </Button>
 
-            {/* Stage pills */}
-            <div className="flex flex-wrap items-center rounded-lg border border-border/60 bg-surface-sunken p-0.5 text-xs">
-              {STAGE_OPTIONS.map((s) => {
-                const active = (filters.stage || "") === s.id;
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => updateFilters({ stage: s.id || undefined })}
-                    className={`rounded-md px-2.5 py-1 text-2xs font-medium transition-colors ${
-                      active
-                        ? "bg-background text-foreground shadow-xs font-semibold"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {s.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Has Video toggle */}
-            <button
-              type="button"
-              onClick={() => updateFilters({ has_video: !filters.has_video })}
-              className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-2xs font-medium transition-colors ${
-                filters.has_video
-                  ? "border-primary/50 bg-primary/10 text-primary font-semibold"
-                  : "border-border/60 bg-surface-sunken text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <HugeiconsIcon icon={Video01Icon} className="size-3" strokeWidth={1.5} />
-              <span>Has Video</span>
-            </button>
-          </div>
-
-          <div className="ml-auto flex items-center gap-2">
+          <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
             <Input
               placeholder="Filter creator (@name)..."
               value={filters.creator ?? ""}
               onChange={(e) => updateFilters({ creator: e.target.value.trim() || undefined })}
-              className="h-8 w-44 text-xs bg-surface-sunken/60"
+              className="h-8 w-full text-xs bg-surface-sunken/60 sm:w-44"
             />
             {hasActiveFilters && (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={clearFilters}
-                className="h-8 gap-1 px-2 text-2xs text-muted-foreground hover:text-foreground"
+                className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
               >
-                <HugeiconsIcon icon={Cancel01Icon} className="size-3" strokeWidth={1.5} />
-                <span>Reset</span>
+                <HugeiconsIcon icon={Cancel01Icon} strokeWidth={1.5} />
+                Clear
               </Button>
             )}
           </div>

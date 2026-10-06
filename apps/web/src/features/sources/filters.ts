@@ -5,7 +5,7 @@ export type Stage = (typeof STAGES)[number];
 
 // Backend stage ids are pipeline jargon; show what they mean to the user.
 export const STAGE_LABELS: Record<Stage, string> = {
-  fetched: "Awaiting triage",
+  fetched: "New",
   analyzed: "Analyzed",
   triaged: "Triaged",
 };

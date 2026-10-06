@@ -730,6 +730,98 @@
         }
       }
     },
+    "/api/pending/{id}": {
+      "delete": {
+        "tags": [
+          "state"
+        ],
+        "summary": "Delete Pending Item",
+        "description": "Drops a pending item (no-op if already gone).",
+        "operationId": "delete_pending_item_api_pending__id__delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Delete Pending Item Api Pending  Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pending/{id}/recheck": {
+      "post": {
+        "tags": [
+          "state"
+        ],
+        "summary": "Recheck Pending Item",
+        "description": "Re-runs the Instagram fetch for a blocked item; success drops it from pending.",
+        "operationId": "recheck_pending_item_api_pending__id__recheck_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Recheck Pending Item Api Pending  Id  Recheck Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/rejects": {
       "get": {
         "tags": [

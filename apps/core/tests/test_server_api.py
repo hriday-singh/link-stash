@@ -226,6 +226,7 @@ def test_sources_and_media_range(test_env: tuple[Config, TestClient]) -> None:
     sources = resp.json()["items"]
     assert len(sources) >= 1
     assert sources[0]["id"] == "ig:test1"
+    assert client.get("/api/sources?platform=other").json()["items"] == []
 
     # Get source detail
     resp_detail = client.get("/api/sources/ig:test1")
@@ -286,6 +287,28 @@ def test_pending_lifecycle(test_env: tuple[Config, TestClient]) -> None:
     assert resp_res.status_code == 200
     assert resp_res.json()["status"] == "ready"
     assert resp_res.json()["url"] == "https://github.com/org/repo"
+
+
+def test_pending_delete_and_recheck(
+    test_env: tuple[Config, TestClient], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _, client = test_env
+    calls: list[list[str]] = []
+
+    def fake_extract(home: object, urls: list[str]) -> list[dict[str, str]]:
+        calls.append(urls)
+        return [{"key": "ig:test1", "status": "fetched"}]
+
+    monkeypatch.setattr("stash.server.routes.state.extract", fake_extract)
+    resp = client.post("/api/pending/p1/recheck")
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "fetched"
+    assert calls == [["https://www.instagram.com/reel/test1/"]]
+
+    assert client.post("/api/pending/nope/recheck").status_code == 404
+
+    assert client.delete("/api/pending/p1").status_code == 200
+    assert client.get("/api/pending").json() == []
 
 
 def test_inventory_add_and_list(test_env: tuple[Config, TestClient]) -> None:

@@ -9,20 +9,14 @@ const {
   mockReset,
   mockRefresh,
   mockOn,
-  mockStartSupervisor,
-  mockStopSupervisor,
-  mockKillSupervisor,
-  mockIsRunning,
+  mockAssign,
 } = vi.hoisted(() => ({
   mockKillSigma: vi.fn(),
   mockZoom: vi.fn(),
   mockReset: vi.fn(),
   mockRefresh: vi.fn(),
   mockOn: vi.fn(),
-  mockStartSupervisor: vi.fn(),
-  mockStopSupervisor: vi.fn(),
-  mockKillSupervisor: vi.fn(),
-  mockIsRunning: vi.fn(() => true),
+  mockAssign: vi.fn(),
 }));
 
 vi.mock("sigma", () => {
@@ -30,6 +24,7 @@ vi.mock("sigma", () => {
     default: class MockSigma {
       kill = mockKillSigma;
       refresh = mockRefresh;
+      setSetting = vi.fn();
       on = mockOn;
       getCamera() {
         return {
@@ -41,6 +36,7 @@ vi.mock("sigma", () => {
     Sigma: class MockSigma {
       kill = mockKillSigma;
       refresh = mockRefresh;
+      setSetting = vi.fn();
       on = mockOn;
       getCamera() {
         return {
@@ -52,16 +48,9 @@ vi.mock("sigma", () => {
   };
 });
 
-vi.mock("graphology-layout-forceatlas2/worker", () => {
-  return {
-    default: class MockFA2 {
-      start = mockStartSupervisor;
-      stop = mockStopSupervisor;
-      kill = mockKillSupervisor;
-      isRunning = mockIsRunning;
-    },
-  };
-});
+vi.mock("graphology-layout-forceatlas2", () => ({
+  default: { assign: mockAssign, inferSettings: () => ({}) },
+}));
 
 describe("GraphView", () => {
   beforeEach(() => {
@@ -102,7 +91,7 @@ describe("GraphView", () => {
     expect(screen.getByText("No connections yet")).toBeInTheDocument();
   });
 
-  it("starts FA2 supervisor worker on mount", () => {
+  it("runs FA2 layout once on mount", () => {
     render(
       <GraphView
         graphData={{
@@ -115,10 +104,10 @@ describe("GraphView", () => {
       />
     );
 
-    expect(mockStartSupervisor).toHaveBeenCalled();
+    expect(mockAssign).toHaveBeenCalledTimes(1);
   });
 
-  it("kills supervisor worker and sigma on unmount (Review Focus #5)", () => {
+  it("kills sigma on unmount (Review Focus #5)", () => {
     const { unmount } = render(
       <GraphView
         graphData={{
@@ -133,8 +122,6 @@ describe("GraphView", () => {
 
     unmount();
 
-    expect(mockStopSupervisor).toHaveBeenCalled();
-    expect(mockKillSupervisor).toHaveBeenCalled();
     expect(mockKillSigma).toHaveBeenCalled();
   });
 

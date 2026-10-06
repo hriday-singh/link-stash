@@ -1,7 +1,7 @@
 import * as React from "react";
 import Sigma from "sigma";
 import Graph from "graphology";
-import FA2LayoutSupervisor from "graphology-layout-forceatlas2/worker";
+import forceAtlas2 from "graphology-layout-forceatlas2";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ZoomInAreaIcon,
@@ -14,7 +14,7 @@ import {
 import type { GraphData } from "@/api/client";
 import { useTheme } from "@/state/theme";
 import { toGraphology } from "./toGraphology";
-import { resolveCategoryColor, resolveEdgeColor } from "./colorResolver";
+import { resolveCategoryColor, resolveCssVarToHex, resolveEdgeColor } from "./colorResolver";
 import { Button } from "@/components/ui/button";
 
 export interface HoveredNodeInfo {
@@ -46,7 +46,6 @@ export function GraphView({
 }: GraphViewProps) {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const rendererRef = React.useRef<Sigma | null>(null);
-  const supervisorRef = React.useRef<FA2LayoutSupervisor | null>(null);
   const graphRef = React.useRef<Graph | null>(null);
 
   const [hoveredNode, setHoveredNode] = React.useState<HoveredNodeInfo | null>(null);
@@ -65,19 +64,31 @@ export function GraphView({
   const edges = graphData.edges ?? [];
   const isIsolatedCard = nodes.length === 1 && edges.length === 0;
 
-  // 1. Initialize Sigma and FA2 Web Worker supervisor
+  // 1. Lay out once, then hand the settled graph to Sigma (no animated swirl)
   React.useEffect(() => {
     if (!containerRef.current || nodes.length === 0) return;
 
     try {
       const graph = toGraphology(graphData);
       graphRef.current = graph;
+      // ponytail: synchronous layout, fine to ~2k nodes; move back to the FA2 worker past that.
+      forceAtlas2.assign(graph, {
+        iterations: 300,
+        settings: {
+          ...forceAtlas2.inferSettings(graph),
+          adjustSizes: true,
+          barnesHutOptimize: nodes.length > 50,
+          gravity: 1,
+          scalingRatio: 12,
+        },
+      });
 
       // Sigma WebGL instance
       const renderer = new Sigma(graph, containerRef.current, {
         labelFont: "Geist Variable, sans-serif",
         labelSize: 11,
         labelWeight: "500",
+        labelColor: { color: resolveCssVarToHex("--foreground", "#111111") },
         renderEdgeLabels: false,
         enableEdgeEvents: false,
         allowInvalidContainer: true,
@@ -95,26 +106,6 @@ export function GraphView({
         },
       });
       rendererRef.current = renderer;
-
-      // ForceAtlas2 Web Worker supervisor
-      const supervisor = new FA2LayoutSupervisor(graph, {
-        settings: {
-          barnesHutOptimize: nodes.length > 50,
-          strongGravityMode: false,
-          gravity: 1.2,
-          scalingRatio: 10,
-          slowDown: 1.5,
-        },
-      });
-      supervisorRef.current = supervisor;
-      supervisor.start();
-
-      // Time budget: stop worker after 2.0s to free background CPU
-      const budgetTimer = setTimeout(() => {
-        if (supervisor.isRunning()) {
-          supervisor.stop();
-        }
-      }, 2000);
 
       // Event listeners
       renderer.on("enterNode", ({ node }) => {
@@ -141,12 +132,6 @@ export function GraphView({
 
       // Cleanup on unmount or re-render
       return () => {
-        clearTimeout(budgetTimer);
-        if (supervisor) {
-          if (supervisor.isRunning()) supervisor.stop();
-          supervisor.kill();
-        }
-        supervisorRef.current = null;
         if (renderer) {
           renderer.kill();
         }
@@ -169,7 +154,10 @@ export function GraphView({
       graph.setNodeAttribute(node, "color", resolveCategoryColor(String(attrs.category || "")));
     });
     graph.forEachEdge((edge, attrs) => {
-      graph.setEdgeAttribute(edge, "color", resolveEdgeColor(String(attrs.type || "")));
+      graph.setEdgeAttribute(edge, "color", resolveEdgeColor(String(attrs.edgeType || "")));
+    });
+    rendererRef.current.setSetting("labelColor", {
+      color: resolveCssVarToHex("--foreground", "#111111"),
     });
     rendererRef.current.refresh();
   }, [resolvedTheme]);

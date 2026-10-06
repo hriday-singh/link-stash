@@ -182,7 +182,9 @@ def list_sources_rows(
         conditions.append("s.id < :cursor_id")
         params["cursor_id"] = cursor_id
 
-    if platform:
+    if platform == "other":
+        conditions.append("s.platform NOT IN ('instagram', 'github', 'huggingface')")
+    elif platform:
         conditions.append("s.platform = :platform")
         params["platform"] = platform
 
