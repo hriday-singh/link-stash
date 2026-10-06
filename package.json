@@ -20,6 +20,7 @@
     "lint": "uv run --no-sync --directory apps/core ruff check && pnpm --filter web lint",
     "typecheck": "uv run --no-sync --directory apps/core pyright && pnpm --filter web typecheck",
     "format": "uv run --no-sync --directory apps/core ruff format && pnpm --filter web format",
+    "stats": "node scripts/generate-repo-stats.mjs",
     "check:bundle": "node scripts/check-bundle.mjs",
     "gen:api": "uv run --directory apps/core stash openapi > apps/web/openapi.json && pnpm --filter web gen:api"
   },
