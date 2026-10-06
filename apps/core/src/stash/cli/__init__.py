@@ -10,6 +10,7 @@ import typer
 from stash.cli.reel import register_reel_commands
 from stash.cli.serve import register_serve_commands
 from stash.cli.store import register_store_commands
+from stash.cli.triage import register_triage_commands
 from stash.config import load_config
 from stash.errors import StashError
 
@@ -17,6 +18,7 @@ app = typer.Typer(help="Link Stash: extract, triage and store saved links.", no_
 register_reel_commands(app)
 register_serve_commands(app)
 register_store_commands(app)
+register_triage_commands(app)
 
 REQUIRED_TOOLS = ("ffmpeg", "agy", "gh")
 
