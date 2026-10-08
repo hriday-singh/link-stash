@@ -179,3 +179,24 @@ def test_pending_add_with_flags_and_alias(home: Path) -> None:
     ])  # fmt: skip
     assert item["kind"] == "cta"
     assert item["source_key"] == "ig:abc"
+
+
+def test_check_batch_array(home: Path) -> None:
+    _ok(["reject", "github:acme/bad", "--reason", "dead"])
+    rows = _ok(
+        ["check", "-"],
+        input=json.dumps([{"key": "github:acme/bad"}, {"name": "Brand New Thing"}]),
+    )
+    assert [r["status"] for r in rows] == ["previously_rejected", "new"]
+
+
+def test_save_batch_array_reports_bad_rows(home: Path) -> None:
+    cards = [
+        {"url": "https://github.com/acme/one", "title": "One", "category": "repos-tools"},
+        {"title": "no key or url"},
+    ]
+    result = runner.invoke(app, ["save", "-", "--bucket", "later"], input=json.dumps(cards))
+    assert result.exit_code == 2
+    rows = json.loads(result.stdout)
+    assert rows[0]["status"] == "saved"
+    assert rows[1]["error"]["code"] == "invalid"

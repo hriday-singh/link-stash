@@ -39,6 +39,12 @@ def test_cli_ingest_help():
     assert "Ingest raw structured reel JSON" in result.stdout
 
 
+def test_cli_ingest_template_is_a_valid_record():
+    result = runner.invoke(app, ["ingest", "--template"])
+    assert result.exit_code == 0
+    ReelRecord.model_validate(json.loads(result.stdout))
+
+
 def test_cli_analyze_success():
     with patch("stash.cli.reel.analyze_reel", return_value=make_dummy_record()) as mock_analyze:
         result = runner.invoke(app, ["analyze", "src123"])

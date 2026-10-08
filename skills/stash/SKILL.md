@@ -26,9 +26,13 @@ stash scan --if-stale
 ```bash
 stash extract <url1> <url2> ...
 ```
-For Instagram reels, run `stash analyze <id>` (or `stash ingest <id> -` when analyzing in-session) to get mentions, takeaways, CTA keywords and summary.
+Before extracting, note any `img_index=N` in the pasted Instagram links: the user bookmarked slide N of a carousel (see step 4).
 
-If `stash analyze` returns `engine: "frames"` with a `needs_agent` block, every video engine failed. Open the `contact` image, read the caption in `source.md` and any `transcript`, fill the reel schema yourself, and pipe the JSON to `stash ingest <id> -`.
+For Instagram reels, run `stash analyze <id>` to get mentions, takeaways, CTA keywords and summary. `<id>` may be the key (`ig:ABC`), the folder name (`ig-ABC`) or the bare shortcode.
+
+If `stash analyze` returns `engine: "frames"` with a `needs_agent` block, every video engine failed. Open the `contact` image, read the caption in `source.md` and any `transcript`, and go straight to step 4. `stash ingest <id> -` is optional (it only records `raw.json` for the web app); `needs_agent.template` and `stash ingest --template` show the shape.
+
+Vision beats transcription for names: speech-to-text mangles handles and domains ("good night triple zero" for `goodnight000`, "new form" for `neuform.ai`). Read repo names, URLs and star counts from the contact sheet, carousel slides and screenshots; use the transcript only for context.
 
 If `stash extract` reports `blocked`, a `blocked` pending item exists asking for the mp4. Tell the user where to save it; rerunning `stash extract` picks it up.
 
@@ -40,6 +44,8 @@ A reel or carousel is usually a wrapper around several tools. The post itself is
 - Shortener (`bit.ly`, `t.co`) or link-in-bio hub (`linktr.ee`, `beacons.ai`): follow it to the real tool links. Never save the hub or the shortener.
 - Listicle or SEO article: extract the concrete tools it names. The article is not a card.
 - Huge `awesome-*` list: one candidate for the list itself (bucket `later` or `inspiration`), do not unpack it.
+- Bookmarked slide (`img_index=N` in the pasted link): before checking anything, ask once: "You linked slide N (<thing>). Just that, or all <count> items in the carousel?" Default to the bookmarked slide only if the user does not answer.
+- Beginner educational listicle ("7 repos to learn DevOps", Docker 101, roadmap.sh, interview prep lists): skip by default. Name the skipped items in one line under the table so the user can pull any back. Keep deep architecture guides and production references. Surface beginner material only if the user asks for it.
 - Comment-for-link, DM keyword, "link in bio" with no usable link, or "part 2 tomorrow": create a pending item (step 7) instead of guessing.
 
 ### 5. Probe, Check, Compare
@@ -54,6 +60,10 @@ echo '{"title": "Componentry", "url": "https://componentry.dev", "kind": "tool",
 - `health.status`: `live`, `dead` (404/410, DNS failure, parked domain), `blocked` (403/429/bot wall: unknown, NOT dead), `error`.
 - `health.flags`: `archived`, `stale` (no push for a year), `no_license`, `renamed` (use `health.canonical_key`), `redirected_domain`, `shortener`, `link_hub`, `parked_domain`.
 - `blocked`: fetch the page with Scrapling (`stealthy_fetch`) before judging it.
+- Several candidates: send them as one JSON array. The output is an array in the same order; a bad row comes back as `{"error": ...}` without stopping the rest.
+  ```bash
+  echo '[{"title": "Widget", "url": "https://github.com/acme/widget", "kind": "repo"}, {"title": "Componentry", "url": "https://componentry.dev", "kind": "tool"}]' | stash check --live -
+  ```
 
 **b. Pricing** (judged by you, not the CLI). Open the landing page, and the `/pricing` page when one exists. Badges:
 `free` (open source or no paid tier) / `freemium` (useful free tier) / `paid` / `trial` (time-limited) / `waitlist` / `card-required` (free tier needs a card) / `open-core` (self-host free, cloud paid) / `byo-key` (needs a paid third-party API key) / `vendor` (a shop or supplier) / `unknown`.
@@ -66,7 +76,9 @@ For repos, the license is part of pricing: flag `AGPL`, non-commercial, or sourc
 
 
 ### 6. Review Table
-One numbered table, plain text badges only (no emoji anywhere). Link names with reference-style links underneath.
+One table per source post, headed with the post (creator, what it is, and the bookmarked slide if any), numbered continuously across posts so one-line answers still work. Plain text badges only (no emoji anywhere). Link names with reference-style links underneath.
+
+**Post 1: @creator reel "5 UI tools" (bookmarked slide 3: Componentry)**
 
 | # | Thing | Health | Pricing | Compares with | Adds | Bucket | Proposed |
 |---|---|---|---|---|---|---|---|
@@ -77,6 +89,8 @@ One numbered table, plain text badges only (no emoji anywhere). Link names with 
 | 5 | [ekzhang/openjev][5] | dead (404) | unknown | - | - | - | reject |
 | 6 | Cobalt | live | free (self-host) | gallery-dl | web UI vs CLI | alternative? | ask |
 | 7 | reel "5 AI Agents" | gated | - | - | - | - | pending (comment AGENT) |
+
+Skipped (beginner listicle): Docker 101, roadmap.sh. Say a name to pull it back.
 
 Buckets (stored on the card, filterable in the web app):
 - `try-now`: improves the daily stack today (CLI, MCP server, free UI kit for an active project).
@@ -91,6 +105,10 @@ Below the table, ask only about `ask` rows. The user can answer in one line ("sa
   ```bash
   stash save --url https://componentry.dev --title Componentry --category ui-ux --kind tool \
     --tag tailwind-components --bucket try-now --source ig:C12345 --body "<card markdown>"
+  ```
+  Several cards: pipe a JSON array (card fields plus `body`; `key` is derived from `url` when missing). Flags apply to every card, so shared values like `--source` go once:
+  ```bash
+  echo '[{"url": "https://componentry.dev", "title": "Componentry", "category": "ui-ux", "kind": "tool", "tags": ["tailwind-components"], "bucket": "try-now", "body": "..."}]' | stash save --source ig:C12345 -
   ```
   Saving a key that already exists merges the new source into the existing card (second reel about the same tool), so propose `merge`, not a new card.
 - Reject: `stash reject <key> --reason "<reason>"`

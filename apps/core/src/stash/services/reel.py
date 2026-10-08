@@ -10,16 +10,17 @@ from stash.reel.frames import generate_contact_sheet
 from stash.reel.gemini_api import run_gemini_api
 from stash.reel.models import ReelRecord
 from stash.reel.whisper import transcribe
+from stash.store.keys import source_dir as source_dir_for_key
 
 DEFAULT_ENGINES: list[str] = ["agy", "gemini_api", "frames"]
 
 
 def resolve_source_dir(home: Path, source_id: str) -> Path:
-    """Finds the source directory under home/library/sources/."""
-    candidates = [
-        home / "library" / "sources" / source_id,
-        home / "library" / "sources" / f"ig-{source_id}",
-    ]
+    """Finds the source directory under home/library/sources/.
+
+    Accepts the key (`ig:ABC`), the directory name (`ig-ABC`) or a bare shortcode (`ABC`).
+    """
+    candidates = [source_dir_for_key(home, source_id), source_dir_for_key(home, f"ig:{source_id}")]
     for c in candidates:
         if c.is_dir():
             return c

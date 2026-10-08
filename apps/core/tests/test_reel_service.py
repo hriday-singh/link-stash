@@ -7,7 +7,7 @@ import pytest
 from stash.errors import NotFound, StashError
 from stash.reel.agy import ReelEngineError
 from stash.reel.models import ReelRecord
-from stash.services.reel import analyze_reel, ingest_reel
+from stash.services.reel import analyze_reel, ingest_reel, resolve_source_dir
 
 
 def make_dummy_record(summary: str = "Test", engine: str = "agy-headless") -> ReelRecord:
@@ -27,6 +27,13 @@ def test_missing_source_dir(tmp_path: Path):
     with pytest.raises(NotFound) as exc_info:
         analyze_reel(tmp_path, "missing_source")
     assert "Source directory not found" in str(exc_info.value)
+
+
+@pytest.mark.parametrize("given", ["ig:ABC", "ig-ABC", "ABC"])
+def test_resolve_source_dir_accepts_key_dir_or_shortcode(tmp_path: Path, given: str):
+    d = tmp_path / "library" / "sources" / "ig-ABC"
+    d.mkdir(parents=True)
+    assert resolve_source_dir(tmp_path, given) == d
 
 
 def test_missing_video_file(tmp_path: Path):

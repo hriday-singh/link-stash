@@ -2,9 +2,10 @@
 
 import json
 import sys
+from collections.abc import Callable
 from datetime import date
 from pathlib import Path
-from typing import Annotated, Any, NoReturn
+from typing import Annotated, Any, NoReturn, cast
 
 import typer
 from pydantic import ValidationError
@@ -33,16 +34,42 @@ def _fail(err: StashError) -> NoReturn:
     raise typer.Exit(2)
 
 
-def _read_json(path: str) -> dict[str, Any]:
-    """Read a JSON object from a file path, or stdin when path is `-`."""
+def _load(path: str) -> object:
     try:
         text = sys.stdin.read() if path == "-" else Path(path).read_text("utf-8")
-        data = json.loads(text)
+        return json.loads(text)
     except (OSError, json.JSONDecodeError) as e:
         raise Invalid(f"cannot read JSON from {path}: {e}") from e
+
+
+def _objects(data: object) -> list[dict[str, Any]] | None:
+    """`data` as a list of JSON objects, or None when it is not an array of objects."""
+    if isinstance(data, list) and all(isinstance(d, dict) for d in data):  # type: ignore[reportUnknownVariableType]
+        return cast(list[dict[str, Any]], data)
+    return None
+
+
+def _read_json(path: str) -> dict[str, Any]:
+    """Read a JSON object from a file path, or stdin when path is `-`."""
+    data = _load(path)
     if not isinstance(data, dict):
         raise Invalid(f"expected a JSON object in {path}")
-    return data  # type: ignore[reportUnknownVariableType]
+    return cast(dict[str, Any], data)
+
+
+def _batch(items: list[dict[str, Any]], one: Callable[[dict[str, Any]], Any]) -> None:
+    """Run `one` per item; failures become `{"error": ...}` rows. Exit 2 if any row failed."""
+    out: list[Any] = []
+    for data in items:
+        try:
+            out.append(one(data))
+        except ValidationError as e:
+            out.append(_invalid(e).to_dict())
+        except StashError as e:
+            out.append(e.to_dict())
+    _print(out)
+    if any(isinstance(r, dict) and "error" in r for r in out):
+        raise typer.Exit(2)
 
 
 def _invalid(e: ValidationError) -> Invalid:
@@ -119,17 +146,28 @@ def register_triage_commands(app: typer.Typer) -> None:
             typer.Option("--live", help="Also probe the URL: dead, archived, stale, redirected."),
         ] = False,
     ) -> None:
-        """Check a candidate against library, inventory and rejects."""
+        """Check a candidate (or, via `-`, a JSON array of candidates) against library,
+        inventory and rejects."""
         try:
             home = load_config().home
             if record == "-":
                 raw = sys.stdin.read().strip()
                 try:
                     data = json.loads(raw)
+                    if (rows := _objects(data)) is not None:
+                        _batch(
+                            rows,
+                            lambda d: check_item(
+                                home, CheckInput.model_validate(d), live=live
+                            ).model_dump(mode="json"),
+                        )
+                        return
                     if isinstance(data, dict):
                         item = CheckInput.model_validate(data)
                     else:
-                        raise Invalid(f"expected a JSON object, got {type(data).__name__}")
+                        raise Invalid(
+                            f"expected a JSON object or array of objects, got {type(data).__name__}"
+                        )
                 except json.JSONDecodeError:
                     if raw.startswith(("http://", "https://")):
                         item = CheckInput(url=raw)
@@ -167,25 +205,38 @@ def register_triage_commands(app: typer.Typer) -> None:
         ] = None,
         body: Annotated[str | None, typer.Option("--body", help="Card markdown body.")] = None,
     ) -> None:
-        """Save a card into library/ and index it. Flags override fields from the JSON."""
-        try:
-            data = _read_json(card_file) if card_file else {}
-            if url and not key and "key" not in data:
+        """Save a card (or a JSON array of cards) into library/ and index it.
+
+        Flags override fields from the JSON; with an array they apply to every card.
+        """
+        flags = {
+            "url": url, "key": key, "title": title, "category": category, "kind": kind,
+            "tags": tags, "bucket": bucket, "sources": source, "body": body,
+        }  # fmt: skip
+        set_flags = {k: v for k, v in flags.items() if v is not None}
+
+        def one(data: dict[str, Any]) -> Any:
+            data = {**data, **set_flags}
+            if data.get("url") and "key" not in data:
                 from stash.services.inventory import key_for_url
 
-                key, derived_kind, _ = key_for_url(url)
+                data["key"], derived_kind, _ = key_for_url(str(data["url"]))
                 data.setdefault("kind", derived_kind)
-            flags = {
-                "url": url, "key": key, "title": title, "category": category, "kind": kind,
-                "tags": tags, "bucket": bucket, "sources": source, "body": body,
-            }  # fmt: skip
-            data.update({k: v for k, v in flags.items() if v is not None})
             body_text = str(data.pop("body", ""))
             slug = data.pop("slug", None)
             data.setdefault("added", date.today().isoformat())
             card = Card.model_validate(data)
             result = save(load_config().home, card, body_text, slug=str(slug) if slug else None)
-            _print(result.model_dump(mode="json"))
+            return result.model_dump(mode="json")
+
+        try:
+            data: object = _load(card_file) if card_file else {}
+            if (rows := _objects(data)) is not None:
+                _batch(rows, one)
+            elif isinstance(data, dict):
+                _print(one(cast(dict[str, Any], data)))
+            else:
+                raise Invalid(f"expected a JSON object or array of objects in {card_file}")
         except ValidationError as e:
             _fail(_invalid(e))
         except StashError as e:

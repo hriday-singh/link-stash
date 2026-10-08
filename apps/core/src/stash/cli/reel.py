@@ -11,6 +11,20 @@ from stash.config import load_config
 from stash.errors import StashError
 from stash.services.reel import analyze_reel, ingest_reel, resolve_source_dir
 
+# Minimal valid ReelRecord for `stash ingest`; full schema in stash/reel/schemas/reel.json.
+INGEST_TEMPLATE: dict[str, object] = {
+    "summary": "One line on what the post shows.",
+    "on_screen_text": [],
+    "mentions": [
+        {"kind": "repo", "name": "owner/repo", "url": "https://github.com/owner/repo",
+         "url_source": "on_screen", "evidence": "on_screen"},
+    ],
+    "takeaways": [],
+    "cta": {"type": "none"},
+    "engine": "agy-host",
+    "confidence": "medium",
+}  # fmt: skip
+
 
 def _print(data: object) -> None:
     typer.echo(json.dumps(data, indent=2, default=str))
@@ -48,7 +62,8 @@ def register_reel_commands(app: typer.Typer) -> None:
                 out["needs_agent"] = {
                     "contact": str(sdir / "contact.jpg"),
                     "caption": str(sdir / "source.md"),
-                    "next": f"stash ingest {source_id} -",
+                    "next": f"stash ingest {source_id} -  (optional; check/save do not need it)",
+                    "template": INGEST_TEMPLATE,
                 }
             _print(out)
         except StashError as e:
@@ -56,10 +71,18 @@ def register_reel_commands(app: typer.Typer) -> None:
 
     @app.command("ingest")
     def ingest(
-        source_id: str = typer.Argument(..., help="Source ID to ingest into"),
-        file: str = typer.Argument(..., help="Path to JSON file, or '-' to read from stdin"),
+        source_id: str = typer.Argument("", help="Source ID to ingest into"),
+        file: str = typer.Argument("-", help="Path to JSON file, or '-' to read from stdin"),
+        template: bool = typer.Option(
+            False, "--template", help="Print a minimal valid JSON to fill in, then exit."
+        ),
     ) -> None:
         """Ingest raw structured reel JSON into sources/<id>/raw.json (from file or stdin)."""
+        if template:
+            _print(INGEST_TEMPLATE)
+            return
+        if not source_id:
+            _fail(StashError("invalid", "source_id is required unless --template is given"))
         try:
             cfg = load_config()
             raw_json = sys.stdin.read() if file == "-" else Path(file).read_text(encoding="utf-8")

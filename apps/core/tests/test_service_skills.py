@@ -128,4 +128,3 @@ def test_repo_skills_have_valid_frontmatter() -> None:
         assert data.get("name") == name, f"Mismatch name in {skill_file}"
         desc = data.get("description")
         assert isinstance(desc, str) and desc.strip(), f"Missing description in {skill_file}"
-
