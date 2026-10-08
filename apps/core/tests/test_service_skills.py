@@ -1,12 +1,15 @@
 """Unit tests for install_skills service."""
 
 from pathlib import Path
+from typing import cast
 
 import pytest
+import yaml
 
 from stash.errors import Invalid
 from stash.services.skills import (
     SKILL_NAMES,
+    find_project_root,
     get_default_targets,
     install_skills,
     is_junction_or_symlink,
@@ -108,3 +111,21 @@ def test_remove_target_handles_missing_and_existing(tmp_path: Path) -> None:
     (real_dir / "file.txt").write_text("content", encoding="utf-8")
     remove_target(real_dir)
     assert not real_dir.exists()
+
+
+def test_repo_skills_have_valid_frontmatter() -> None:
+    root = find_project_root()
+    skills_dir = root / "skills"
+    assert skills_dir.is_dir()
+    for name in SKILL_NAMES:
+        skill_file = skills_dir / name / "SKILL.md"
+        assert skill_file.is_file(), f"Missing SKILL.md for {name}"
+        parts = skill_file.read_text(encoding="utf-8").split("---")
+        assert len(parts) >= 3, f"Missing YAML frontmatter in {skill_file}"
+        raw_data: object = yaml.safe_load(parts[1])
+        assert isinstance(raw_data, dict), f"Frontmatter is not a dict in {skill_file}"
+        data = cast(dict[str, object], raw_data)
+        assert data.get("name") == name, f"Mismatch name in {skill_file}"
+        desc = data.get("description")
+        assert isinstance(desc, str) and desc.strip(), f"Missing description in {skill_file}"
+

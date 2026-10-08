@@ -1,6 +1,7 @@
 ---
 name: stash
-description: Full triage workflow: extract, unroll mentioned tools, probe health, compare against what the user already has, show review table, and save cards to Link Stash library.
+description: >-
+  Full triage workflow: extract, unroll mentioned tools, probe health, compare against what the user already has, show review table, and save cards to Link Stash library.
 ---
 
 # `/stash` - Triage Workflow
