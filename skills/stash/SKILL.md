@@ -26,7 +26,9 @@ stash scan --if-stale
 ```bash
 stash extract <url1> <url2> ...
 ```
-Before extracting, note any `img_index=N` in the pasted Instagram links: the user bookmarked slide N of a carousel (see step 4).
+Pass every pasted link in one call, then run steps 4 and 5 for all of them in one sweep. Do not stop to ask between posts; collect every question for the review table.
+
+Note any `img_index=N` in the pasted Instagram links: the user bookmarked slide N of a carousel (see step 4).
 
 For Instagram reels, run `stash analyze <id>` to get mentions, takeaways, CTA keywords and summary. `<id>` may be the key (`ig:ABC`), the folder name (`ig-ABC`) or the bare shortcode.
 
@@ -44,9 +46,11 @@ A reel or carousel is usually a wrapper around several tools. The post itself is
 - Shortener (`bit.ly`, `t.co`) or link-in-bio hub (`linktr.ee`, `beacons.ai`): follow it to the real tool links. Never save the hub or the shortener.
 - Listicle or SEO article: extract the concrete tools it names. The article is not a card.
 - Huge `awesome-*` list: one candidate for the list itself (bucket `later` or `inspiration`), do not unpack it.
-- Bookmarked slide (`img_index=N` in the pasted link): before checking anything, ask once: "You linked slide N (<thing>). Just that, or all <count> items in the carousel?" Default to the bookmarked slide only if the user does not answer.
+- Bookmarked slide (`img_index=N` in the pasted link): look at slide N after extracting, never before.
+  - Cover, intro, outro or CTA slide ("Comment X for the links"): unroll every tool slide, no question.
+  - Slide N is one tool among several distinct tools: unroll all, mark row N as bookmarked in the table, and ask in the review step: "You linked slide N (<thing>). Just that, or all <count>?"
 - Beginner educational listicle ("7 repos to learn DevOps", Docker 101, roadmap.sh, interview prep lists): skip by default. Name the skipped items in one line under the table so the user can pull any back. Keep deep architecture guides and production references. Surface beginner material only if the user asks for it.
-- Comment-for-link, DM keyword, "link in bio" with no usable link, or "part 2 tomorrow": create a pending item (step 7) instead of guessing.
+- Comment-for-link, DM keyword, "link in bio" with no usable link, or "part 2 tomorrow": create a pending item (step 7) instead of guessing. If the slides, caption or frames already name the tools or domains, the CTA is resolved: find the official links and skip the pending item.
 
 ### 5. Probe, Check, Compare
 For every candidate:
@@ -71,6 +75,7 @@ For repos, the license is part of pricing: flag `AGPL`, non-commercial, or sourc
 
 **c. Job-to-be-done comparison.** Before proposing a save, answer "what do they already have that does this job?":
 - Run `stash suggest "<job keywords>"` to instantly check existing tools, cards, and practices. You can also inspect `stash check` candidates.
+- To look up a thing by name or URL (is it already saved?), use `stash check <name-or-url>`, not `suggest`: it returns the matching card key with a name score.
 - Decide one relation: `gap` (nothing does this), `alternative` (same job, different tradeoff: lighter, self-hosted, no deps, different aesthetic), `upgrade` (clearly better than something they use), `complement` (works alongside), `redundant` (same job, no advantage).
 - Name the concrete difference in a few words ("zero-JS pure Tailwind vs Radix-based shadcn", "GUI companion to gallery-dl").
 
@@ -98,7 +103,12 @@ Buckets (stored on the card, filterable in the web app):
 - `upgrade`: replaces something already in inventory with a clearly better version. Name what it replaces.
 - `inspiration`: reference only (design galleries, paid kits with great patterns, architecture write-ups). Paid or closed things that are still worth seeing go here, never `try-now`.
 
-Below the table, ask only about `ask` rows. The user can answer in one line ("save try-now and later, reject paywalls, 6 -> later").
+Keep the review fast:
+- `Adds` is the punchline in a few words; `Compares with` names what they already have.
+- Restrictive licenses (AGPL, FSL, BSL, SSPL, non-commercial, no license) and paywalls go in `Pricing` so they are visible before anything lands in work code.
+- Clear rows (live, permissive license or free, `gap`/`complement`/`upgrade`, no CTA) are `save`. Rows needing judgment (paid, restrictive license, `alternative`/`redundant`, bookmarked slide, unclear name) are `ask`.
+
+Below the table, one line: "Saving N clear rows. Decide: #4, #6." Ask only about `ask` rows. The user can answer in one line ("go", "save try-now and later, reject paywalls, 6 -> later"). When the host has a multiple-choice question tool, offer the `ask` rows as options there instead of free text. Never save before the user answers.
 
 ### 7. Apply Verdicts
 - Save (flags; no temp JSON needed). Use the canonical key/URL (after redirects and renames), strip tracking and referral params, and add 1-3 job tags reused from similar cards:
@@ -109,6 +119,10 @@ Below the table, ask only about `ask` rows. The user can answer in one line ("sa
   Several cards: pipe a JSON array (card fields plus `body`; `key` is derived from `url` when missing). Flags apply to every card, so shared values like `--source` go once:
   ```bash
   echo '[{"url": "https://componentry.dev", "title": "Componentry", "category": "ui-ux", "kind": "tool", "tags": ["tailwind-components"], "bucket": "try-now", "body": "..."}]' | stash save --source ig:C12345 -
+  ```
+  Cards from different posts in one save: put `sources` on each card and leave out `--source`. A file works the same as stdin (`stash save triage.json`):
+  ```bash
+  echo '[{"url": "https://componentry.dev", "title": "Componentry", "category": "ui-ux", "sources": ["ig:C12345"], "body": "..."}, {"url": "https://github.com/acme/widget", "title": "Widget", "category": "repos-tools", "sources": ["github:acme/widget"], "body": "..."}]' | stash save -
   ```
   Saving a key that already exists merges the new source into the existing card (second reel about the same tool), so propose `merge`, not a new card.
 - Reject: `stash reject <key> --reason "<reason>"`

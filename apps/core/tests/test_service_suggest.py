@@ -71,3 +71,38 @@ def test_suggest_returns_partitioned_results_and_skip_flag(tmp_path: Path) -> No
     assert len(res_cat.cards) == 0
     res_cat_ok = suggest_items(home, "components", category="ui-ux")
     assert len(res_cat_ok.cards) > 0
+
+
+def test_suggest_finds_card_sharing_key_with_its_source(tmp_path: Path) -> None:
+    # A saved GitHub repo has a source and a card under the same key; indexing the source
+    # after the card must not drop the card from search.
+    from datetime import datetime
+
+    from stash.store.models import SourceDoc
+    from stash.store.sources import write_source
+
+    key = "github:backnotprop/pstack"
+    card = Card(
+        schema=1,
+        key=key,
+        title="pstack",
+        category="skills-plugins",
+        kind="tool",
+        added=date(2026, 10, 9),
+        url="https://github.com/backnotprop/pstack",
+    )
+    save_card(tmp_path, card, "Verification-first agent skills")
+    write_source(
+        tmp_path,
+        SourceDoc(
+            key=key,
+            platform="github",
+            stage="fetched",
+            url="https://github.com/backnotprop/pstack",
+            fetched_at=datetime(2026, 10, 9),
+            summary="Skills for rigorous AI-assisted engineering",
+        ),
+    )
+
+    res = suggest_items(tmp_path, "pstack")
+    assert any(c.title == "pstack" for c in res.cards)

@@ -262,7 +262,7 @@ def _index_card(home: Path, path: Path, posix_path: str, db: sqlite3.Connection)
         )
 
     # Search FTS5
-    db.execute("DELETE FROM search WHERE key = ?", (card.key,))
+    db.execute("DELETE FROM search WHERE key = ? AND doc_type = 'card'", (card.key,))
     extra_text = " ".join([*card.tags, *card.features])
     search_body = f"{body}\n{extra_text}".strip() if extra_text else body
     db.execute(
@@ -317,7 +317,7 @@ def _index_source(home: Path, path: Path, db: sqlite3.Connection) -> None:
         (key, platform, creator, url, stage, video, thumb, engine, fetched_at, cta_json),
     )
 
-    db.execute("DELETE FROM search WHERE key = ?", (key,))
+    db.execute("DELETE FROM search WHERE key = ? AND doc_type = 'source'", (key,))
     db.execute(
         """
         INSERT INTO search (key, doc_type, title, body, transcript, caption)
@@ -392,7 +392,7 @@ def remove_path(home: Path, path: Path, con: sqlite3.Connection | None = None) -
             db.execute("DELETE FROM cards WHERE key = ?", (card_key,))
             db.execute("DELETE FROM tags WHERE key = ?", (card_key,))
             db.execute("DELETE FROM links WHERE from_key = ?", (card_key,))
-            db.execute("DELETE FROM search WHERE key = ?", (card_key,))
+            db.execute("DELETE FROM search WHERE key = ? AND doc_type = 'card'", (card_key,))
             db.commit()
             return
 
@@ -417,7 +417,7 @@ def remove_path(home: Path, path: Path, con: sqlite3.Connection | None = None) -
         if len(rel_parts) >= 3 and rel_parts[0] == "library" and rel_parts[1] == "sources":
             source_id = rel_parts[2].replace("-", ":", 1)
             db.execute("DELETE FROM sources WHERE id = ?", (source_id,))
-            db.execute("DELETE FROM search WHERE key = ?", (source_id,))
+            db.execute("DELETE FROM search WHERE key = ? AND doc_type = 'source'", (source_id,))
             db.commit()
 
 
