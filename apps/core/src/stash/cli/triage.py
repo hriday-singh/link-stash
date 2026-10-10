@@ -16,7 +16,6 @@ from stash.services.cards import save
 from stash.services.check import CheckInput, check_item
 from stash.services.decisions import (
     Decision,
-    Proposed,
     check_proposed,
     log_decision,
     prefs_summary,
@@ -27,6 +26,7 @@ from stash.services.pending import add_pending, list_pending, new_id, resolve_pe
 from stash.services.rejects import add_reject
 from stash.services.skills import install_skills
 from stash.store.models import Card, PendingItem
+from stash.store.sources import mark_triaged
 
 # apps/core/src/stash/cli/triage.py -> repo root
 DEFAULT_SKILLS_DIR = Path(__file__).resolve().parents[5] / "skills"
@@ -278,8 +278,14 @@ def register_triage_commands(app: typer.Typer) -> None:
 
     @app.command()
     def reject(
-        key: Annotated[str, typer.Argument(help="Canonical key, e.g. github:owner/repo.")],
-        reason: Annotated[str, typer.Option("--reason", help="Why it was rejected.")],
+        key: Annotated[
+            str,
+            typer.Argument(
+                help="Canonical key (e.g. github:owner/repo), or a JSON file / `-` holding "
+                "an array of {key, reason, proposed, category, tags, sources}."
+            ),
+        ],
+        reason: Annotated[str | None, typer.Option("--reason", help="Why it was rejected.")] = None,
         proposed: Annotated[
             str | None,
             typer.Option("--proposed", help="What triage proposed: save, reject or ask. Logs it."),
@@ -290,21 +296,52 @@ def register_triage_commands(app: typer.Typer) -> None:
         tags: Annotated[
             list[str] | None, typer.Option("--tag", help="Tag, for the decision log. Repeatable.")
         ] = None,
+        source: Annotated[
+            list[str] | None,
+            typer.Option("--source", help="Source key; moves it to stage triaged. Repeatable."),
+        ] = None,
     ) -> None:
-        """Record a rejection in library/rejected.md (and, with `proposed`, in decisions.jsonl)."""
-        try:
-            check_proposed(proposed, None)
+        """Record a rejection (or a JSON array of them) in library/rejected.md.
+
+        Flags override fields from the JSON; with an array they apply to every row.
+        With `proposed`, the decision is appended to library/decisions.jsonl.
+        """
+        flags = {
+            "reason": reason, "proposed": proposed, "category": category, "tags": tags,
+            "sources": source,
+        }  # fmt: skip
+        set_flags = {k: v for k, v in flags.items() if v is not None}
+
+        def one(data: dict[str, Any]) -> Any:
+            data = {**data, **set_flags}
+            if not data.get("key") or not data.get("reason"):
+                raise Invalid("each reject needs a key and a reason", {"row": data})
+            check_proposed(data.get("proposed"), None)
             home = load_config().home
-            entry = add_reject(home, key, reason)
-            if proposed:
+            entry = add_reject(home, str(data["key"]), str(data["reason"]))
+            mark_triaged(home, list(data.get("sources") or []))
+            if data.get("proposed"):
                 log_decision(
                     home,
-                    Decision(
-                        date=entry.date, key=key, final="reject", proposed=cast(Proposed, proposed),
-                        category=category, tags=tags or [], reason=entry.reason,
+                    Decision.model_validate(
+                        {**data, "date": entry.date, "final": "reject", "reason": entry.reason}
                     ),
-                )  # fmt: skip
-            _print(entry.model_dump(mode="json"))
+                )
+            return entry.model_dump(mode="json")
+
+        try:
+            if key == "-" or Path(key).is_file():
+                data = _load(key)
+                if (rows := _objects(data)) is not None:
+                    _batch(rows, one)
+                elif isinstance(data, dict):
+                    _print(one(cast(dict[str, Any], data)))
+                else:
+                    raise Invalid(f"expected a JSON object or array of objects in {key}")
+            else:
+                _print(one({"key": key}))
+        except ValidationError as e:
+            _fail(_invalid(e))
         except StashError as e:
             _fail(e)
 

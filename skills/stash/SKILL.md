@@ -22,7 +22,7 @@ Goal: be a sommelier, not a bouncer. Keep niche, experimental and region-specifi
 stash scan --if-stale
 stash prefs
 ```
-`stash prefs` returns the user's learned rules (`rules`, the text of `preferences.md` at `rules_path`), recent overrides with reasons, per-category save/reject counts and `liked_tags`. Keep them in mind for step 5d.
+`stash prefs` returns the user's learned rules (`rules`, the text of `preferences.md` at `rules_path`), recent overrides with reasons, per-category save/reject counts and `liked_tags`. Keep them in mind for step 5d. This is the only preference surface: there is no `stash config`; edit rules in the file at `rules_path`.
 
 When `rules` is null and no seed has happened yet, seed once: run `stash prefs --seed`, read the `library` block (card counts by category and bucket, top tags, reject reasons), and write 5-15 starter rules to `rules_path` in the format of step 8, each ending in `, seeded`. Only write patterns the data clearly shows (several rejects with the same reason, a category that is mostly one bucket). Tell the user in one line and continue.
 
@@ -36,9 +36,11 @@ Note any `img_index=N` in the pasted Instagram links: the user bookmarked slide 
 
 For Instagram reels, run `stash analyze <id>` to get mentions, takeaways, CTA keywords and summary. `<id>` may be the key (`ig:ABC`), the folder name (`ig-ABC`) or the bare shortcode.
 
-If `stash analyze` returns `engine: "frames"` with a `needs_agent` block, every video engine failed. Open the `contact` image, read the caption in `source.md` and any `transcript`, and go straight to step 4. `stash ingest <id> -` is optional (it only records `raw.json` for the web app); `needs_agent.template` and `stash ingest --template` show the shape.
+If `stash analyze` returns `engine: "frames"` with a `needs_agent` block, every video engine failed; `summary` names why per engine and whether a transcript exists (`whisper off` is the default, not an error). Open the `contact` image, read the caption in `source.md` and any `transcript`, and go straight to step 4. `stash ingest <id> -` is optional (it only records `raw.json` for the web app); `needs_agent.template` and `stash ingest --template` show the shape.
 
 Vision beats transcription for names: speech-to-text mangles handles and domains ("good night triple zero" for `goodnight000`, "new form" for `neuform.ai`). Read repo names, URLs and star counts from the contact sheet, carousel slides and screenshots; use the transcript only for context.
+
+Carousels have no extracted slide text (no OCR by design; `on_screen_text: []` and `summary: null` are normal). Open the slide images in the source folder and read them; start with the bookmarked slide and the cover, then the tool slides.
 
 If `stash extract` reports `blocked`, a `blocked` pending item exists asking for the mp4. Tell the user where to save it; rerunning `stash extract` picks it up.
 
@@ -75,7 +77,7 @@ echo '{"title": "Componentry", "url": "https://componentry.dev", "kind": "tool",
 
 **b. Pricing** (judged by you, not the CLI). Open the landing page, and the `/pricing` page when one exists. Badges:
 `free` (open source or no paid tier) / `freemium` (useful free tier) / `paid` / `trial` (time-limited) / `waitlist` / `card-required` (free tier needs a card) / `open-core` (self-host free, cloud paid) / `byo-key` (needs a paid third-party API key) / `vendor` (a shop or supplier) / `unknown`.
-For repos, the license is part of pricing: flag `AGPL`, non-commercial, or source-available (`BSL`, `SSPL`, `Elastic`) licenses, and `no_license` means all rights reserved.
+For repos, the license is part of pricing: flag `AGPL`, non-commercial, or source-available (`BSL`, `SSPL`, `Elastic`) licenses. `no_license` is often a detection miss (license in a subfolder, README, or nonstandard file), so list it as a plain `no license found` note in `Pricing` and keep going; never let it block or change a proposal on its own.
 
 **c. Job-to-be-done comparison.** Before proposing a save, answer "what do they already have that does this job?":
 - Run `stash suggest "<job keywords>"` to instantly check existing tools, cards, and practices. You can also inspect `stash check` candidates.
@@ -115,12 +117,12 @@ Buckets (stored on the card, filterable in the web app):
 
 Keep the review fast:
 - `Adds` is the punchline in a few words; `Compares with` names what they already have.
-- Restrictive licenses (AGPL, FSL, BSL, SSPL, non-commercial, no license) and paywalls go in `Pricing` so they are visible before anything lands in work code.
-- Clear rows (live, permissive license or free, `gap`/`complement`/`upgrade`, no CTA) are `save`. Rows needing judgment (paid, restrictive license, `alternative`/`redundant`, bookmarked slide, unclear name) are `ask`.
+- Restrictive licenses (AGPL, FSL, BSL, SSPL, non-commercial) and paywalls go in `Pricing` so they are visible before anything lands in work code. A missing license is listed there too (`no license found`), as a static note only.
+- Clear rows (live, permissive license or free, `gap`/`complement`/`upgrade`, no CTA) are `save`. Rows needing judgment (paid, restrictive license (not a missing one), `alternative`/`redundant`, bookmarked slide, unclear name) are `ask`.
 - A proposal decided by a rule (step 5d) names it: `reject (pattern: paid UI kits 9/10)`, where 9/10 is held out of held + broken.
 - Remember each row's proposal and bucket as shown; step 7 logs them.
 
-Below the table, one line: "Saving N clear rows. Decide: #4, #6." Ask only about `ask` rows. The user can answer in one line ("go", "save try-now and later, reject paywalls, 6 -> later"). When the host has a multiple-choice question tool, offer the `ask` rows as options there instead of free text. Never save before the user answers.
+Below the table, one line: "Saving N clear rows. Decide: #4, #6." Ask only about `ask` rows. The user can answer in one line ("go", "save try-now and later, reject paywalls, 6 -> later"). Write the full tables in your reply text first; the user must see them before any decision prompt. Only after the tables are printed, and only when the host has a multiple-choice question tool, offer the `ask` rows as options there (each option names its row number and thing). The tool never replaces the tables. Never save before the user answers.
 
 ### 7. Apply Verdicts
 - Save (flags; no temp JSON needed). Use the canonical key/URL (after redirects and renames), strip tracking and referral params, and add 1-3 job tags reused from similar cards:
@@ -137,7 +139,10 @@ Below the table, one line: "Saving N clear rows. Decide: #4, #6." Ask only about
   echo '[{"url": "https://componentry.dev", "title": "Componentry", "category": "ui-ux", "sources": ["ig:C12345"], "body": "..."}, {"url": "https://github.com/acme/widget", "title": "Widget", "category": "repos-tools", "sources": ["github:acme/widget"], "body": "..."}]' | stash save -
   ```
   Saving a key that already exists merges the new source into the existing card (second reel about the same tool), so propose `merge`, not a new card.
-- Reject: `stash reject <key> --reason "<reason>" --proposed <save|reject|ask> --category <category> --tag <tag>`
+- Reject: `stash reject <key> --reason "<reason>" --proposed <save|reject|ask> --category <category> --tag <tag> --source <source_key>`. `--source` moves the post to stage `triaged`, same as save, so a post whose candidates were all rejected does not stay `fetched`. Several rejects: pipe a JSON array (flags apply to every row):
+  ```bash
+  echo '[{"key": "github:acme/old", "reason": "abandoned", "proposed": "reject", "category": "repos-tools"}, {"key": "web:paidkit.io", "reason": "paid UI kit", "proposed": "ask", "tags": ["ui-kit"]}]' | stash reject --source ig:C12345 -
+  ```
 - Log every save and reject made from the review table: pass `--proposed` (what the table proposed: `save`, `reject` or `ask`) and, for saves, `--proposed-bucket`. In a JSON array, put `proposed`, `proposed_bucket` and `reason` on each card instead. When the user flipped a row ("6 -> later", "reject paywalls"), add `reason` with their reason in a few words, inferred from the reply; do not ask for one. Leave `--proposed` out for saves the user requested directly outside a table.
   ```bash
   echo '[{"url": "https://componentry.dev", "title": "Componentry", "category": "ui-ux", "bucket": "try-now", "proposed": "save", "proposed_bucket": "try-now", "body": "..."}, {"url": "https://cobalt.tools", "title": "Cobalt", "category": "repos-tools", "bucket": "later", "proposed": "ask", "reason": "keep as GUI fallback", "body": "..."}]' | stash save --source ig:C12345 -
@@ -188,7 +193,8 @@ Keep, but flag clearly:
 - `stale`: same judgment as archived.
 - `redirected_domain`: acquired, rebranded or hijacked. Confirm the final page is still the same product.
 - `renamed`: save under `health.canonical_key`, and check again with the new name.
-- `no_license` or restrictive license: fine for `inspiration`, flag it for anything used in work code.
+- Restrictive license: fine for `inspiration`, flag it for anything used in work code.
+- `no_license`: list it, do not ask about it. A row that is otherwise `save` stays `save`.
 - Fork or mirror: prefer the upstream unless the fork is the maintained one.
 - Very new repo with a star spike and no releases: say "early", do not auto-reject.
 - Placeholder repo or waitlist-only product ("coming soon", README only): `later` at most, usually skip.

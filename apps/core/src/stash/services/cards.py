@@ -5,12 +5,11 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from stash.errors import NotFound
 from stash.store.cards import parse_card, render_card, save_card, write_atomic
 from stash.store.index import connect, reindex_path
 from stash.store.lock import write_lock
 from stash.store.models import Card
-from stash.store.sources import read_source, write_source
+from stash.store.sources import mark_triaged
 
 
 class SaveResult(BaseModel):
@@ -51,13 +50,7 @@ def save(home: Path, card: Card, body: str, slug: str | None = None) -> SaveResu
         else:
             path = save_card(home, card, body, slug)
             status = "saved"
-        for key in card.sources:
-            try:
-                doc = read_source(home, key)
-            except NotFound:
-                continue
-            if doc.stage != "triaged":
-                write_source(home, doc.model_copy(update={"stage": "triaged"}))
+        mark_triaged(home, card.sources)
     return SaveResult(
         status=status, key=card.key, slug=path.stem, path=path.relative_to(home).as_posix()
     )

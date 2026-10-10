@@ -95,6 +95,17 @@ def write_source(home: Path, doc: SourceDoc) -> Path:
         return source_file
 
 
+def mark_triaged(home: Path, keys: list[str]) -> None:
+    """Move each existing source to stage `triaged` (a save or reject decided on it)."""
+    for key in keys:
+        try:
+            doc = read_source(home, key)
+        except NotFound:
+            continue
+        if doc.stage != "triaged":
+            write_source(home, doc.model_copy(update={"stage": "triaged"}))
+
+
 def append_failed(home: Path, entry: dict[str, Any]) -> None:
     """Append a failure entry to logs/failed.jsonl."""
     home = Path(home)

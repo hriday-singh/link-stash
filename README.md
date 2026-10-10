@@ -175,7 +175,7 @@ You can invoke the CLI using `pnpm stash <command>`, `./stash <command>` (bash),
 | `stash check` | Deduplicate and score candidate cards against library and inventory. | `pnpm stash check candidate.json` |
 | `stash save` | Atomically save and index one card or a JSON array. `--proposed` logs the triage decision. | `pnpm stash save card.json --category repos-tools --proposed save` |
 | `stash pending` | List, add, or resolve comment-for-link and DM-gated items. | `pnpm stash pending list` |
-| `stash reject` | Discard a candidate and log it in `rejected.md`. `--proposed` logs the triage decision. | `pnpm stash reject github:acme/kit --reason "paid only" --proposed save` |
+| `stash reject` | Discard a candidate (or a JSON array via `-`) and log it in `rejected.md`. `--proposed` logs the triage decision; `--source` marks the post triaged. | `pnpm stash reject github:acme/kit --reason "paid only" --proposed save` |
 | `stash prefs` | Summarize the decision log and return your preference rules (`--seed` adds a library summary). | `pnpm stash prefs` |
 | `stash reindex` | Rebuild SQLite index from markdown cards and inventory. | `pnpm stash reindex` |
 | `stash serve` | Run the library server (serves API and built static frontend). | `pnpm stash serve --port 8765` |

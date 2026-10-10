@@ -158,9 +158,15 @@ def analyze_reel(
                 # carries the speech" needs the on-screen text, which only the agent sees.
                 cache = source_dir / "transcript.json"
                 heard = transcribe(video_path, cache) if whisper else None
+                why = [f"{e['engine']}: {str(e['error'])[:160]}" for e in errors]
+                if not heard:
+                    why.append(
+                        "no transcript: "
+                        + ("silent or faster-whisper missing" if whisper else "whisper off")
+                    )
                 record = ReelRecord(
-                    summary="Frames fallback: read contact.jpg with the caption, fill the schema, "
-                    f"pipe it to `stash ingest {source_id} -`.",
+                    summary=f"Frames fallback ({'; '.join(why)}). Read contact.jpg with the "
+                    f"caption, fill the schema, pipe it to `stash ingest {source_id} -`.",
                     transcript=heard[0] if heard else None,
                     spoken_language=heard[1] if heard else None,
                     transcript_source="audio" if heard else "none",

@@ -159,6 +159,7 @@ def test_frames_handoff_is_not_cached(tmp_path: Path):
     with agy, gem, sheet, patch("stash.services.reel.transcribe") as tr:
         record = analyze_reel(tmp_path, "ig-F1")
         assert record.engine == "frames" and "stash ingest ig-F1 -" in record.summary
+        assert "agy: agy down" in record.summary and "whisper off" in record.summary
         tr.assert_not_called()  # whisper off by default
     assert not (sdir / "raw.json").exists()
     assert "stage: fetched" in (sdir / "source.md").read_text(encoding="utf-8")

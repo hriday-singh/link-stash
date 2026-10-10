@@ -2,6 +2,7 @@
 
 import json
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
 from unittest.mock import patch
@@ -11,6 +12,8 @@ from typer.testing import CliRunner
 
 from stash.cli import app
 from stash.config import Config
+from stash.store.models import SourceDoc
+from stash.store.sources import read_source, write_source
 
 runner = CliRunner()
 
@@ -67,6 +70,30 @@ def test_reject_then_check_reports_rejection(home: Path) -> None:
     assert rej["reason"] == "abandoned"
     checked = _ok(["check", "-"], input=json.dumps({"key": "github:acme/old"}))
     assert checked["status"] == "previously_rejected"
+
+
+def test_reject_batch_marks_source_triaged(home: Path) -> None:
+    write_source(
+        home,
+        SourceDoc(
+            key="ig:C1", platform="instagram", url="https://www.instagram.com/p/C1/",
+            stage="fetched", fetched_at=datetime.now(UTC),
+        ),
+    )  # fmt: skip
+    rows = [
+        {"key": "github:acme/old", "reason": "abandoned"},
+        {"key": "web:paidkit.io", "reason": "paid", "proposed": "ask", "tags": ["ui-kit"]},
+    ]
+    out = _ok(["reject", "--source", "ig:C1", "-"], input=json.dumps(rows))
+    assert [r["key"] for r in out] == ["github:acme/old", "web:paidkit.io"]
+    assert read_source(home, "ig:C1").stage == "triaged"
+    logged = (home / "library" / "decisions.jsonl").read_text("utf-8").splitlines()
+    assert len(logged) == 1 and json.loads(logged[0])["sources"] == ["ig:C1"]
+
+
+def test_reject_needs_reason(home: Path) -> None:
+    err = _err(["reject", "github:acme/old"])
+    assert err["error"]["code"] == "invalid"
 
 
 def test_pending_add_list_resolve(home: Path) -> None:

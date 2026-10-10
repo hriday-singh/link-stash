@@ -11,6 +11,11 @@ and versions follow `MAJOR.MINOR.PATCH.BUILD` (PEP 440). `pnpm setup` prints eve
 - `/stash-feedback` skill: run after `/stash` in the same session; the agent reviews its own run (friction, confusing skill lines, human-in-the-loop waits, proposed skill/CLI changes), saves it to `<stash home>/feedback/` and prints it for copy-paste. Delete a file once addressed.
 - Preference learning: `stash save` / `stash reject` take `--proposed` (and `--proposed-bucket`, `--reason`; per-card fields in batch JSON) and log proposed vs final to `library/decisions.jsonl`. `stash prefs` summarizes the log (overrides, per-category counts, liked tags) and returns `library/preferences.md`; `--seed` adds a library summary for the first rules. `/stash` applies the rules to proposals (tagged `pattern:` in the review table) and updates them after runs with overrides.
 - `stash suggest` nudges `try-now`/`upgrade` cards and cards with liked tags up by at most two places; cards now include `bucket`.
+- `stash reject` takes `--source` (moves the post to stage `triaged`, like save) and a JSON array via `-` or a file for batch rejects.
+
+### Changed
+- `stash analyze` frames fallback summary names why each engine failed and whether a transcript exists (`whisper off` by default).
+- `/stash` skill: review tables are printed before any multiple-choice prompt; carousel slides are read from images (no OCR); no `stash config`, rules live at `rules_path`.
 
 ## [1.0.0.11] - 2026-10-10
 
