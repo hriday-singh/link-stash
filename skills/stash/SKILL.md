@@ -17,10 +17,14 @@ Goal: be a sommelier, not a bouncer. Keep niche, experimental and region-specifi
 ### 1. Check Open Pendings
 `stash pending list`. List open items in one line each so the user knows which DM links are still awaited.
 
-### 2. Ensure Inventory Freshness
+### 2. Ensure Inventory Freshness, Load Preferences
 ```bash
 stash scan --if-stale
+stash prefs
 ```
+`stash prefs` returns the user's learned rules (`rules`, the text of `preferences.md` at `rules_path`), recent overrides with reasons, per-category save/reject counts and `liked_tags`. Keep them in mind for step 5d.
+
+When `rules` is null and no seed has happened yet, seed once: run `stash prefs --seed`, read the `library` block (card counts by category and bucket, top tags, reject reasons), and write 5-15 starter rules to `rules_path` in the format of step 8, each ending in `, seeded`. Only write patterns the data clearly shows (several rejects with the same reason, a category that is mostly one bucket). Tell the user in one line and continue.
 
 ### 3. Extract Sources
 ```bash
@@ -79,6 +83,12 @@ For repos, the license is part of pricing: flag `AGPL`, non-commercial, or sourc
 - Decide one relation: `gap` (nothing does this), `alternative` (same job, different tradeoff: lighter, self-hosted, no deps, different aesthetic), `upgrade` (clearly better than something they use), `complement` (works alongside), `redundant` (same job, no advantage).
 - Name the concrete difference in a few words ("zero-JS pure Tailwind vs Radix-based shadcn", "GUI companion to gallery-dl").
 
+**d. Patterns.** Match each candidate against the rules from step 2:
+- A rule that clearly fits may turn an `ask` row into `save` or `reject`, set the bucket, or turn a `save` row into `ask` (the user tends to reject this kind of thing).
+- A rule never moves a row into the skipped line and never hides it. Every pattern-driven decision stays visible in the table so the user can override it.
+- Hard checks still win: dead, unsafe and duplicate rows follow Edge Cases whatever a rule says.
+- A rule with more broken than held, or one that only loosely fits, is a hint at most: leave the row `ask`.
+
 
 ### 6. Review Table
 One table per source post, headed with the post (creator, what it is, and the bookmarked slide if any), numbered continuously across posts so one-line answers still work. Plain text badges only (no emoji anywhere). Link names with reference-style links underneath.
@@ -90,7 +100,7 @@ One table per source post, headed with the post (creator, what it is, and the bo
 | 1 | [Componentry][1] | live | free (MIT) | shadcn/ui, Kokonut UI | zero-dep pure Tailwind, no Radix | try-now | save |
 | 2 | [Robu.in][2] | blocked (bot wall, page ok) | vendor | - (gap) | Indian electronics supplier | later | save |
 | 3 | [Details.so][3] | live | freemium | Refero Design | micro-interaction catalog | inspiration | save |
-| 4 | [UI Arc][4] | live | paid ($49, no free tier) | Tailark Blocks | nothing free | - | reject |
+| 4 | [UI Arc][4] | live | paid ($49, no free tier) | Tailark Blocks | nothing free | - | reject (pattern: paid UI kits 9/10) |
 | 5 | [ekzhang/openjev][5] | dead (404) | unknown | - | - | - | reject |
 | 6 | Cobalt | live | free (self-host) | gallery-dl | web UI vs CLI | alternative? | ask |
 | 7 | reel "5 AI Agents" | gated | - | - | - | - | pending (comment AGENT) |
@@ -107,6 +117,8 @@ Keep the review fast:
 - `Adds` is the punchline in a few words; `Compares with` names what they already have.
 - Restrictive licenses (AGPL, FSL, BSL, SSPL, non-commercial, no license) and paywalls go in `Pricing` so they are visible before anything lands in work code.
 - Clear rows (live, permissive license or free, `gap`/`complement`/`upgrade`, no CTA) are `save`. Rows needing judgment (paid, restrictive license, `alternative`/`redundant`, bookmarked slide, unclear name) are `ask`.
+- A proposal decided by a rule (step 5d) names it: `reject (pattern: paid UI kits 9/10)`, where 9/10 is held out of held + broken.
+- Remember each row's proposal and bucket as shown; step 7 logs them.
 
 Below the table, one line: "Saving N clear rows. Decide: #4, #6." Ask only about `ask` rows. The user can answer in one line ("go", "save try-now and later, reject paywalls, 6 -> later"). When the host has a multiple-choice question tool, offer the `ask` rows as options there instead of free text. Never save before the user answers.
 
@@ -125,13 +137,37 @@ Below the table, one line: "Saving N clear rows. Decide: #4, #6." Ask only about
   echo '[{"url": "https://componentry.dev", "title": "Componentry", "category": "ui-ux", "sources": ["ig:C12345"], "body": "..."}, {"url": "https://github.com/acme/widget", "title": "Widget", "category": "repos-tools", "sources": ["github:acme/widget"], "body": "..."}]' | stash save -
   ```
   Saving a key that already exists merges the new source into the existing card (second reel about the same tool), so propose `merge`, not a new card.
-- Reject: `stash reject <key> --reason "<reason>"`
+- Reject: `stash reject <key> --reason "<reason>" --proposed <save|reject|ask> --category <category> --tag <tag>`
+- Log every save and reject made from the review table: pass `--proposed` (what the table proposed: `save`, `reject` or `ask`) and, for saves, `--proposed-bucket`. In a JSON array, put `proposed`, `proposed_bucket` and `reason` on each card instead. When the user flipped a row ("6 -> later", "reject paywalls"), add `reason` with their reason in a few words, inferred from the reply; do not ask for one. Leave `--proposed` out for saves the user requested directly outside a table.
+  ```bash
+  echo '[{"url": "https://componentry.dev", "title": "Componentry", "category": "ui-ux", "bucket": "try-now", "proposed": "save", "proposed_bucket": "try-now", "body": "..."}, {"url": "https://cobalt.tools", "title": "Cobalt", "category": "repos-tools", "bucket": "later", "proposed": "ask", "reason": "keep as GUI fallback", "body": "..."}]' | stash save --source ig:C12345 -
+  ```
 - Pending (`--kind cta` is the default and covers comment-for-link and DM keywords; `blocked` is for unfetchable media):
   ```bash
   stash pending add --source ig:C12345 --instruction "Comment AGENT on the reel, paste the DM link here"
   ```
 
 Print one summary line: saved, merged, rejected, pending.
+
+### 8. Learn
+Skip this step when the user accepted every proposal as shown and no rule was contradicted. Otherwise update the file at `rules_path`, using what was flipped and why:
+- New pattern in a flip (or the same reason on 2+ rows): add a rule.
+- A rule applied and the user agreed: `held` +1, update `last`.
+- A rule applied and the user overrode it: `broken` +1, update `last`. If the reason shows the rule is too broad, edit it narrower instead.
+- Drop an unpinned rule once `broken` >= 3 and `broken` > `held`. Never drop or edit a `[pin]` rule's action.
+- Keep it under about 25 rules: merge near-duplicates rather than adding.
+
+One line per rule; the user may edit the file, so keep their edits:
+```
+# Preferences
+- [reject] Paid UI kits with no free tier. held 9, broken 1, last 2026-10-09
+- [bucket:inspiration] Design galleries, even free ones. held 4, broken 0, last 2026-10-08
+- [pin] [save] Windows-native MCP servers. held 2, broken 0, last 2026-10-01
+- [ask] macOS-only CLIs. held 1, broken 0, last 2026-10-10, seeded
+```
+Actions: `[save]`, `[reject]`, `[ask]`, `[bucket:<try-now|later|upgrade|inspiration>]`. A rule describes a kind of thing (pricing, license, platform, category, job), never a single key; one-off decisions are already in the log.
+
+Report one line: "Learned: +1 rule, 2 reinforced, 1 weakened."
 
 ## Categories
 Use the seed categories (`models`, `skills-plugins`, `mcp-servers`, `repos-tools`, `ui-ux`, `practices`) when they fit. When a thing clearly belongs to a domain with none (hardware, electronics, 3d, audio...), propose a new kebab-case category in the table instead of forcing a bad fit, and create it only after the user agrees. New categories get a color automatically (`cat-extra-1..8`); to pin one, add it under `[category_colors]` in `config.toml`.

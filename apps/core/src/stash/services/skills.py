@@ -10,7 +10,15 @@ from typing import Literal
 
 from stash.errors import Invalid
 
-SKILL_NAMES = ("stash", "stash-init", "stash-have", "stash-pending", "stash-scan", "stash-suggest")
+SKILL_NAMES = (
+    "stash",
+    "stash-init",
+    "stash-have",
+    "stash-pending",
+    "stash-scan",
+    "stash-suggest",
+    "stash-feedback",
+)
 
 
 SkillInstallMode = Literal["copy", "symlink"]

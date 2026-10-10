@@ -1,10 +1,12 @@
 """Suggestion service: match installed tools, saved library cards, and practices."""
 
+import json
 import re
 from pathlib import Path
 
 from pydantic import BaseModel, Field
 
+from stash.services.decisions import liked_tags, read_decisions
 from stash.store.index import connect
 from stash.store.queries import (
     find_cards_by_tags,
@@ -49,6 +51,8 @@ STOP_WORDS = {
     "with",
 }
 
+BOOST_BUCKETS = ("try-now", "upgrade")
+
 
 def _parse_inv_search_body(body: str) -> tuple[str, str | None, str]:
     """Extract (kind, note, origin) from inventory search body."""
@@ -87,6 +91,7 @@ class CardSuggestion(BaseModel):
     tags: list[str] = Field(default_factory=list)
     url: str | None = None
     snippet: str | None = None
+    bucket: str | None = None
 
 
 class PracticeSuggestion(BaseModel):
@@ -120,6 +125,24 @@ def _clean_snippet(snip: str | None) -> str | None:
     if not snip:
         return None
     return snip.replace("\x02", "").replace("\x03", "").strip()
+
+
+def _bucket(frontmatter: str | None) -> str | None:
+    bucket = json.loads(frontmatter or "{}").get("bucket")
+    return str(bucket) if bucket else None
+
+
+def boost_cards(cards: list[CardSuggestion], liked: set[str]) -> list[CardSuggestion]:
+    """Nudge cards up by at most two places: actionable bucket, then a liked tag.
+
+    Relevance order stays primary; this only breaks near-ties toward the user's taste.
+    """
+
+    def score(pair: tuple[int, CardSuggestion]) -> int:
+        i, c = pair
+        return i - (c.bucket in BOOST_BUCKETS) - bool(liked & set(c.tags))
+
+    return [c for _, c in sorted(enumerate(cards), key=score)]
 
 
 def suggest_items(
@@ -225,6 +248,7 @@ def suggest_items(
                                 tags=c_tags,
                                 url=c_url,
                                 snippet=snip,
+                                bucket=_bucket(card_row["frontmatter"]),
                             )
                         )
 
@@ -266,11 +290,12 @@ def suggest_items(
                             tags=c_tags,
                             url=c_url,
                             snippet=None,
+                            bucket=_bucket(cr["frontmatter"]),
                         )
                     )
 
         inst_res = installed[:limit]
-        cards_res = cards[:limit]
+        cards_res = boost_cards(cards, set(liked_tags(read_decisions(home))))[:limit]
         prac_res = practices[:limit]
         found = bool(inst_res or cards_res or prac_res)
 

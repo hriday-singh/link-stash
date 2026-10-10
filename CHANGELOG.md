@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions follow `MAJOR.MINOR.PATCH.BUILD` (PEP 440). `pnpm setup` prints every entry added since your last setup.
 
+## [Unreleased]
+
+### Added
+- `/stash-feedback` skill: run after `/stash` in the same session; the agent reviews its own run (friction, confusing skill lines, human-in-the-loop waits, proposed skill/CLI changes), saves it to `<stash home>/feedback/` and prints it for copy-paste. Delete a file once addressed.
+- Preference learning: `stash save` / `stash reject` take `--proposed` (and `--proposed-bucket`, `--reason`; per-card fields in batch JSON) and log proposed vs final to `library/decisions.jsonl`. `stash prefs` summarizes the log (overrides, per-category counts, liked tags) and returns `library/preferences.md`; `--seed` adds a library summary for the first rules. `/stash` applies the rules to proposals (tagged `pattern:` in the review table) and updates them after runs with overrides.
+- `stash suggest` nudges `try-now`/`upgrade` cards and cards with liked tags up by at most two places; cards now include `bucket`.
+
 ## [1.0.0.11] - 2026-10-10
 
 ### Added

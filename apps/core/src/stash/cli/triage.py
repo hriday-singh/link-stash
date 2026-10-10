@@ -14,6 +14,13 @@ from stash.config import load_config
 from stash.errors import Invalid, StashError
 from stash.services.cards import save
 from stash.services.check import CheckInput, check_item
+from stash.services.decisions import (
+    Decision,
+    Proposed,
+    check_proposed,
+    log_decision,
+    prefs_summary,
+)
 from stash.services.extract import extract_urls, failed_urls
 from stash.services.inventory import have, have_batch, scan_inventory
 from stash.services.pending import add_pending, list_pending, new_id, resolve_pending
@@ -23,6 +30,9 @@ from stash.store.models import Card, PendingItem
 
 # apps/core/src/stash/cli/triage.py -> repo root
 DEFAULT_SKILLS_DIR = Path(__file__).resolve().parents[5] / "skills"
+
+# Per-card decision fields in `stash save` input; logged, never stored on the card.
+PROPOSAL_FIELDS = ("proposed", "proposed_bucket", "reason")
 
 
 def _print(data: object) -> None:
@@ -204,14 +214,26 @@ def register_triage_commands(app: typer.Typer) -> None:
             list[str] | None, typer.Option("--source", help="Source key. Repeatable.")
         ] = None,
         body: Annotated[str | None, typer.Option("--body", help="Card markdown body.")] = None,
+        proposed: Annotated[
+            str | None,
+            typer.Option("--proposed", help="What triage proposed: save, reject or ask. Logs it."),
+        ] = None,
+        proposed_bucket: Annotated[
+            str | None, typer.Option("--proposed-bucket", help="Bucket triage proposed.")
+        ] = None,
+        reason: Annotated[
+            str | None, typer.Option("--reason", help="Why the user decided (when flipped).")
+        ] = None,
     ) -> None:
         """Save a card (or a JSON array of cards) into library/ and index it.
 
         Flags override fields from the JSON; with an array they apply to every card.
+        With `proposed`, the decision is appended to library/decisions.jsonl.
         """
         flags = {
             "url": url, "key": key, "title": title, "category": category, "kind": kind,
             "tags": tags, "bucket": bucket, "sources": source, "body": body,
+            "proposed": proposed, "proposed_bucket": proposed_bucket, "reason": reason,
         }  # fmt: skip
         set_flags = {k: v for k, v in flags.items() if v is not None}
 
@@ -224,9 +246,21 @@ def register_triage_commands(app: typer.Typer) -> None:
                 data.setdefault("kind", derived_kind)
             body_text = str(data.pop("body", ""))
             slug = data.pop("slug", None)
+            prop, prop_bucket, why = (data.pop(k, None) for k in PROPOSAL_FIELDS)
+            check_proposed(prop, prop_bucket)
             data.setdefault("added", date.today().isoformat())
             card = Card.model_validate(data)
-            result = save(load_config().home, card, body_text, slug=str(slug) if slug else None)
+            home = load_config().home
+            result = save(home, card, body_text, slug=str(slug) if slug else None)
+            if prop:
+                log_decision(
+                    home,
+                    Decision(
+                        date=date.today(), key=card.key, final="save", proposed=prop,
+                        bucket=card.bucket, proposed_bucket=prop_bucket, category=card.category,
+                        tags=card.tags, sources=card.sources, reason=why,
+                    ),
+                )  # fmt: skip
             return result.model_dump(mode="json")
 
         try:
@@ -246,10 +280,43 @@ def register_triage_commands(app: typer.Typer) -> None:
     def reject(
         key: Annotated[str, typer.Argument(help="Canonical key, e.g. github:owner/repo.")],
         reason: Annotated[str, typer.Option("--reason", help="Why it was rejected.")],
+        proposed: Annotated[
+            str | None,
+            typer.Option("--proposed", help="What triage proposed: save, reject or ask. Logs it."),
+        ] = None,
+        category: Annotated[
+            str | None, typer.Option("--category", help="Category, for the decision log.")
+        ] = None,
+        tags: Annotated[
+            list[str] | None, typer.Option("--tag", help="Tag, for the decision log. Repeatable.")
+        ] = None,
     ) -> None:
-        """Record a rejection in library/rejected.md."""
+        """Record a rejection in library/rejected.md (and, with `proposed`, in decisions.jsonl)."""
         try:
-            _print(add_reject(load_config().home, key, reason).model_dump(mode="json"))
+            check_proposed(proposed, None)
+            home = load_config().home
+            entry = add_reject(home, key, reason)
+            if proposed:
+                log_decision(
+                    home,
+                    Decision(
+                        date=entry.date, key=key, final="reject", proposed=cast(Proposed, proposed),
+                        category=category, tags=tags or [], reason=entry.reason,
+                    ),
+                )  # fmt: skip
+            _print(entry.model_dump(mode="json"))
+        except StashError as e:
+            _fail(e)
+
+    @app.command()
+    def prefs(
+        seed: Annotated[
+            bool, typer.Option("--seed", help="Add a library summary for the first rule seed.")
+        ] = False,
+    ) -> None:
+        """Summarize library/decisions.jsonl: overrides, per-category counts, liked tags."""
+        try:
+            _print(prefs_summary(load_config().home, seed=seed))
         except StashError as e:
             _fail(e)
 
