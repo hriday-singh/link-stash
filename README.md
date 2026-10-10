@@ -27,6 +27,7 @@ When you save links from Instagram reels, Twitter posts, or developer threads, t
 4. **Saves human-readable markdown cards** with strict YAML frontmatter to your local filesystem (`~/stash/library/`).
 5. **Maintains a disposable SQLite FTS5 search index** for lightning-fast full-text search, bidirectional wikilinks (`[[slug]]`), and interactive WebGL graph visualization.
 6. **Integrates with AI coding agents** (Claude Code, Antigravity) through portable skills that suggest relevant tools and practices before you write code or install packages.
+7. **Learns your taste** from triage: every proposal you accept or flip is logged, and distilled into an editable rules file that shapes future proposals (see [Preference Learning](#preference-learning)).
 
 ---
 
@@ -85,7 +86,10 @@ All your data lives on disk in plain, readable files:
 │   ├── items/          # Categorized markdown cards (models, tools, ui-ux, etc.)
 │   ├── sources/        # Saved reel videos, audio transcripts, thumbnails, raw JSON
 │   ├── pending.md      # Items waiting on DM links or manual URLs
-│   └── rejected.md     # Discarded suggestions log
+│   ├── rejected.md     # Discarded suggestions log
+│   ├── decisions.jsonl # Triage log: what was proposed vs what you decided
+│   └── preferences.md  # Learned preference rules (editable)
+├── feedback/           # /stash-feedback run reports
 └── .index/stash.db     # Disposable SQLite index (WAL mode + FTS5 full-text search)
 ```
 
@@ -117,9 +121,18 @@ Run the doctor command to check required tools on your PATH:
 
 ```bash
 pnpm stash doctor
+stash -v          # installed version (also shown by doctor)
 ```
 
 *(You can also run `./stash doctor` on Linux/macOS or `.\stash.ps1 doctor` on Windows).*
+
+### Updating
+
+```bash
+git pull && pnpm setup
+```
+
+`pnpm setup` refreshes dependencies, the global `stash` command and the agent skills, then prints every [changelog](CHANGELOG.md) entry added since your last setup (tracked in `.stash-version`). Code changes alone need nothing: the global command is an editable install.
 
 ### 3. Start Development Servers
 
@@ -151,17 +164,19 @@ You can invoke the CLI using `pnpm stash <command>`, `./stash <command>` (bash),
 
 | Command | Purpose | Example |
 | --- | --- | --- |
-| `stash doctor` | Check environment, paths, and tools on PATH. | `pnpm stash doctor` |
-| `stash suggest` | Query installed tools, saved library cards, and practices for a task. | `pnpm stash suggest "how to build a web scraper" --text` |
+| `stash doctor` | Check environment, paths, tools on PATH, and installed version. | `pnpm stash doctor` |
+| `stash --version` | Print the installed version (`-v`). | `stash -v` |
+| `stash suggest` | Query installed tools, saved library cards, and practices for a task. Try-now/upgrade cards and tags you keep get a small boost. | `pnpm stash suggest "how to build a web scraper" --text` |
 | `stash extract` | Extract links into local source records. | `pnpm stash extract https://instagram.com/reel/...` |
 | `stash analyze` | Analyze a downloaded reel video using AI vision/audio engines. | `pnpm stash analyze ig:XYZ123` |
 | `stash ingest` | Ingest structured reel JSON into sources from a file or stdin. | `pnpm stash ingest ig:XYZ123 analysis.json` |
 | `stash scan` | Rescan local environment (Ollama, LM Studio, agent skills, tools). | `pnpm stash scan` |
 | `stash have` | Register installed tools, UI references, or practices into inventory. | `pnpm stash have "Docker" --kind tool --origin manual` |
 | `stash check` | Deduplicate and score candidate cards against library and inventory. | `pnpm stash check candidate.json` |
-| `stash save` | Atomically save and index a structured markdown card. | `pnpm stash save card.json --category repos-tools` |
+| `stash save` | Atomically save and index one card or a JSON array. `--proposed` logs the triage decision. | `pnpm stash save card.json --category repos-tools --proposed save` |
 | `stash pending` | List, add, or resolve comment-for-link and DM-gated items. | `pnpm stash pending list` |
-| `stash reject` | Discard a candidate and log it in `rejected.md`. | `pnpm stash reject candidate.json` |
+| `stash reject` | Discard a candidate and log it in `rejected.md`. `--proposed` logs the triage decision. | `pnpm stash reject github:acme/kit --reason "paid only" --proposed save` |
+| `stash prefs` | Summarize the decision log and return your preference rules (`--seed` adds a library summary). | `pnpm stash prefs` |
 | `stash reindex` | Rebuild SQLite index from markdown cards and inventory. | `pnpm stash reindex` |
 | `stash serve` | Run the library server (serves API and built static frontend). | `pnpm stash serve --port 8765` |
 | `stash openapi` | Export OpenAPI JSON schema for TypeScript client generation. | `pnpm stash openapi > apps/web/openapi.json` |
@@ -176,7 +191,8 @@ Link Stash includes portable agent skills compatible with **Claude Code** and **
 | Slash Command | Agent Behavior |
 | --- | --- |
 | `/stash-suggest <task>` | Consults your stash for installed tools, saved library cards, and team practices before starting a new feature or installing packages. |
-| `/stash [links]` | Extracts reels, repos, or documentation, runs OCR and audio transcription, checks local inventory, and generates structured cards. |
+| `/stash [links]` | Extracts reels, repos, or documentation, runs OCR and audio transcription, checks local inventory, applies your learned preferences, and generates structured cards. |
+| `/stash-feedback` | Run right after `/stash` in the same session: the agent reviews its own run (friction, confusing steps, waits on you), saves the report to `<stash home>/feedback/`, and prints it. |
 | `/stash-init` | Guided or bulk onboarding questionnaire to populate your personal inventory with existing tools, frameworks, and coding practices. |
 | `/stash-have <name>` | Quickly adds a tool, custom model, or UI reference into your manual inventory without leaving the chat. |
 | `/stash-pending` | Views and resolves pending items awaiting links from creator DMs or comments. |
@@ -186,6 +202,16 @@ Install skills to your agent environments at any time:
 ```bash
 pnpm skills:install
 ```
+
+### Preference Learning
+
+`/stash` learns what you keep and what you turn down, without any model training:
+
+1. **Log.** Every save or reject from the review table records what was proposed and what you decided in `library/decisions.jsonl`.
+2. **Distill.** After a run where you flipped a proposal, the agent updates `library/preferences.md`: one rule per line with held/broken counts, e.g. `- [reject] Paid UI kits with no free tier. held 9, broken 1, last 2026-10-09`. Rules broken more often than held are dropped; mark one `[pin]` to keep it. On first run, starter rules are seeded from your existing library and `rejected.md`.
+3. **Apply.** Rules only shift proposals (an `ask` row becomes `save` or `reject`, or the reverse), shown as `reject (pattern: paid UI kits 9/10)`. Nothing is hidden or saved without your approval.
+
+`preferences.md` is plain markdown: edit or delete rules freely. `stash prefs` shows the current rules and log summary.
 
 ---
 
