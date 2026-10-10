@@ -166,7 +166,7 @@ Every link goes through `stash extract <url>`, which returns one JSON record per
 - The embed page blocks right-click saving; download the `<video src>` URL directly (httpx).
 - `thumb.jpg` comes from the embed page's poster image, else the first ffmpeg frame.
 
-**Follow-through (one level).** Every record lists the links and names it mentions. GitHub and HF links are extracted immediately. A bare name such as "a repo called X" is resolved with GitHub search and marked low confidence, which triggers the "unclear" question.
+**Follow-through (one level).** Every record lists the links and names it mentions. GitHub and HF links mentioned by an Instagram post are extracted immediately; mentions inside a directly pasted repo or page are listed but not extracted. A bare name such as "a repo called X" is resolved with GitHub search and marked low confidence, which triggers the "unclear" question.
 
 **Comment-for-link detection.** A caption or transcript matching *comment / type / drop / reply + a quoted or ALL-CAPS word* sets `cta.keyword`. That is a hint, not a route: most CTA posts (7 of 12 in the Oct 6 test) also name the repos or tools in the caption, video, on-screen text or carousel slides. Commenting is the last resort. The item goes to the pending queue ("Comment `<KEYWORD>` on <reel>") only when `cta.keyword` is set **and** analysis finds no concrete mention (no URL, no resolvable name).
 

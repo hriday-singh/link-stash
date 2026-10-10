@@ -1,4 +1,4 @@
-"""Unit tests for unified extractor dispatch and 1-level follow-through."""
+"""Unit tests for unified extractor dispatch; direct repo links are not followed."""
 
 from pathlib import Path
 from typing import Any
@@ -65,7 +65,6 @@ def test_extract_urls_multi_source(tmp_path: Path, monkeypatch: pytest.MonkeyPat
 
     docs = extract_urls(home, ["https://github.com/org/repo"], follow_depth=1)
 
-    assert len(docs) == 2
-    keys = {d.key for d in docs}
-    assert "github:org/repo" in keys
-    assert "hf:model:org/model" in keys
+    # Direct repo links keep their mentions but do not pull them in as sources.
+    assert [d.key for d in docs] == ["github:org/repo"]
+    assert docs[0].mentions

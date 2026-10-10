@@ -12,7 +12,7 @@ from pydantic import ValidationError
 
 from stash.config import load_config
 from stash.errors import Invalid, StashError
-from stash.services.cards import save
+from stash.services.cards import existing_card, save
 from stash.services.check import CheckInput, check_item
 from stash.services.decisions import (
     Decision,
@@ -244,13 +244,16 @@ def register_triage_commands(app: typer.Typer) -> None:
 
                 data["key"], derived_kind, _ = key_for_url(str(data["url"]))
                 data.setdefault("kind", derived_kind)
+            home = load_config().home
+            # Merge into an existing card: its fields fill whatever the call left out.
+            if data.get("key") and (old := existing_card(home, str(data["key"]))):
+                data = {**old.model_dump(), **data}
             body_text = str(data.pop("body", ""))
             slug = data.pop("slug", None)
             prop, prop_bucket, why = (data.pop(k, None) for k in PROPOSAL_FIELDS)
             check_proposed(prop, prop_bucket)
             data.setdefault("added", date.today().isoformat())
             card = Card.model_validate(data)
-            home = load_config().home
             result = save(home, card, body_text, slug=str(slug) if slug else None)
             if prop:
                 log_decision(

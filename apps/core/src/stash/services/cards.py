@@ -23,18 +23,27 @@ def _union(a: list[str], b: list[str]) -> list[str]:
     return list(dict.fromkeys([*a, *b]))
 
 
+def _path_for_key(home: Path, key: str) -> Path | None:
+    db = connect(home)
+    try:
+        row = db.execute("SELECT path FROM cards WHERE key = ?", (key,)).fetchone()
+    finally:
+        db.close()
+    return home / row["path"] if row else None
+
+
+def existing_card(home: Path, key: str) -> Card | None:
+    """The library card holding `key`, so a merge call can skip re-sending its fields."""
+    path = _path_for_key(home, key)
+    return parse_card(path.read_text(encoding="utf-8"))[0] if path else None
+
+
 def save(home: Path, card: Card, body: str, slug: str | None = None) -> SaveResult:
     """Key already in the library: only `sources` and `overlaps` grow and a missing `bucket`
     is filled; title, body and notes stay as they are. Otherwise a new card with a
     library-unique slug. Each source the card cites moves to stage `triaged`."""
     with write_lock(home):
-        db = connect(home)
-        try:
-            row = db.execute("SELECT path FROM cards WHERE key = ?", (card.key,)).fetchone()
-        finally:
-            db.close()
-        if row:
-            path = home / row["path"]
+        if path := _path_for_key(home, card.key):
             old, old_body = parse_card(path.read_text(encoding="utf-8"))
             merged = old.model_copy(
                 update={

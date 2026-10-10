@@ -199,6 +199,19 @@ def test_save_with_flags_and_bucket(home: Path) -> None:
     assert err["error"]["code"] == "invalid"
 
 
+def test_save_key_only_merges_into_existing_card(home: Path) -> None:
+    first = _ok(["save", "--url", "https://github.com/acme/widget", "--title", "Widget",
+                 "--category", "repos-tools", "--source", "ig:one"])  # fmt: skip
+    merged = _ok(["save", "--key", "github:acme/widget", "--source", "ig:two"])
+    assert merged["status"] == "merged"
+    assert merged["path"] == first["path"]
+    text = (home / first["path"]).read_text("utf-8")
+    assert "ig:one" in text and "ig:two" in text
+    assert "title: Widget" in text
+    err = _err(["save", "--key", "github:acme/missing", "--source", "ig:three"])
+    assert err["error"]["code"] == "invalid"
+
+
 def test_pending_add_with_flags_and_alias(home: Path) -> None:
     item = _ok([
         "pending", "add", "--kind", "comment_for_link", "--source", "ig:abc",

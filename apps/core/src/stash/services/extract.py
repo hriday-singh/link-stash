@@ -282,7 +282,9 @@ def extract_urls(
     """Unified multi-source extractor with 1-level follow-through.
 
     Dispatches to Instagram, GitHub, Hugging Face, Notion, PDF, or generic web.
-    If follow_depth > 0, automatically extracts mentioned GitHub/HF child links.
+    If follow_depth > 0, also extracts links mentioned by Instagram posts. Links pasted
+    directly (GitHub, HF...) keep their README mentions in `mentions` but are not followed:
+    a README links dozens of repos the user never asked about.
     """
     from stash.extract.github import extract_github
     from stash.extract.hf import extract_hf
@@ -334,10 +336,6 @@ def extract_urls(
                     if sdoc.key not in seen_keys:
                         seen_keys.add(sdoc.key)
                         docs.append(sdoc)
-                        if follow_depth > 0:
-                            for m in sdoc.mentions:
-                                if m.url:
-                                    child_urls.append(m.url)
                     continue
                 except Exception:
                     pass
@@ -353,10 +351,6 @@ def extract_urls(
                     if sdoc.key not in seen_keys:
                         seen_keys.add(sdoc.key)
                         docs.append(sdoc)
-                        if follow_depth > 0:
-                            for m in sdoc.mentions:
-                                if m.url:
-                                    child_urls.append(m.url)
                     continue
                 except Exception:
                     pass

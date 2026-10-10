@@ -46,6 +46,7 @@ If `stash extract` reports `blocked`, a `blocked` pending item exists asking for
 
 ### 4. Unroll Into Candidates
 A reel or carousel is usually a wrapper around several tools. The post itself is never the candidate; the things it names are.
+A link pasted directly (GitHub, Hugging Face, web page) is itself the one candidate; its README `mentions` are context for the card, not extra candidates.
 - One candidate per mention (repo, model, tool, skill, plugin, mcp, link) and one per actionable practice.
 - Mention without a URL: find the official URL (Scrapling or web search). Ambiguous names (Cursor, Bolt, Warp, Zed...) need the URL that matches the context; ask if still unclear.
 - Names from transcripts or frames can be misspelled by speech-to-text; confirm the spelling against the real project.
@@ -138,7 +139,7 @@ Below the table, one line: "Saving N clear rows. Decide: #4, #6." Ask only about
   ```bash
   echo '[{"url": "https://componentry.dev", "title": "Componentry", "category": "ui-ux", "sources": ["ig:C12345"], "body": "..."}, {"url": "https://github.com/acme/widget", "title": "Widget", "category": "repos-tools", "sources": ["github:acme/widget"], "body": "..."}]' | stash save -
   ```
-  Saving a key that already exists merges the new source into the existing card (second reel about the same tool), so propose `merge`, not a new card.
+  Saving a key that already exists merges the new source into the existing card (second reel about the same tool), so propose `merge`, not a new card. The merge call needs only the key and source (`stash save --key <key> --source <source>`); title, category and kind come from the existing card.
 - Reject: `stash reject <key> --reason "<reason>" --proposed <save|reject|ask> --category <category> --tag <tag> --source <source_key>`. `--source` moves the post to stage `triaged`, same as save, so a post whose candidates were all rejected does not stay `fetched`. Several rejects: pipe a JSON array (flags apply to every row):
   ```bash
   echo '[{"key": "github:acme/old", "reason": "abandoned", "proposed": "reject", "category": "repos-tools"}, {"key": "web:paidkit.io", "reason": "paid UI kit", "proposed": "ask", "tags": ["ui-kit"]}]' | stash reject --source ig:C12345 -
