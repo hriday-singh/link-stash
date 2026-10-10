@@ -44,7 +44,7 @@ Clone the repository and run the setup script:
 git clone https://github.com/your-username/stash.git
 cd stash
 
-# One-step setup: installs Node packages, Python venv, and links agent skills
+# One-step setup: installs Node packages, Python venv, global `stash` command, links agent skills
 pnpm setup
 ```
 

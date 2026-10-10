@@ -7,6 +7,7 @@ from typing import NoReturn
 
 import typer
 
+from stash import __version__
 from stash.cli.reel import register_reel_commands
 from stash.cli.serve import register_serve_commands
 from stash.cli.store import register_store_commands
@@ -35,8 +36,18 @@ def _fail(err: StashError) -> NoReturn:
     raise typer.Exit(2)
 
 
+def _version(value: bool) -> None:
+    if value:
+        typer.echo(f"stash {__version__}")
+        raise typer.Exit()
+
+
 @app.callback()
-def main() -> None:
+def main(
+    version: bool = typer.Option(
+        False, "--version", "-v", callback=_version, is_eager=True, help="Show version and exit."
+    ),
+) -> None:
     """Link Stash core CLI."""
 
 
@@ -50,6 +61,7 @@ def doctor() -> None:
     tools = {name: shutil.which(name) for name in REQUIRED_TOOLS}
     _print(
         {
+            "version": __version__,
             "home": str(config.home),
             "home_exists": config.home.is_dir(),
             "python": sys.version.split()[0],

@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from stash import __version__
 from stash.cli import app
 
 runner = CliRunner()
@@ -27,6 +28,13 @@ def test_help() -> None:
     result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
     assert "doctor" in result.output
+
+
+@pytest.mark.parametrize("flag", ["--version", "-v"])
+def test_version(flag: str) -> None:
+    result = runner.invoke(app, [flag])
+    assert result.exit_code == 0
+    assert result.output.strip() == f"stash {__version__}"
 
 
 def test_doctor_all_tools_present(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:

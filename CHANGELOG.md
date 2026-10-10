@@ -9,6 +9,8 @@ and versions follow `MAJOR.MINOR.PATCH.BUILD` (PEP 440). `pnpm setup` prints eve
 
 ### Added
 - `pnpm setup` now prints changelog entries since the last setup and records the version in `.stash-version`.
+- `stash --version` / `stash -v` prints the installed version; `stash doctor` includes it.
+- `pnpm setup` installs/refreshes the global `stash` command (`uv tool install --force --editable apps/core`); run it alone with `pnpm tool:install`.
 - `stash check` and `stash save` accept multiple items in one call (batch triage).
 - `stash ingest --template` prints the ingest JSON schema.
 - Repository statistics page (`pnpm stats`) with charts and KPIs.

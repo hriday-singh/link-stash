@@ -107,7 +107,7 @@ Clone the repository and install all dependencies:
 git clone https://github.com/your-username/stash.git
 cd stash
 
-# Installs Node dependencies, Python virtualenv, and links agent skills
+# Installs Node deps, Python virtualenv, global `stash` command (uv tool), links agent skills, prints changelog
 pnpm setup
 ```
 
@@ -147,7 +147,7 @@ The app is now accessible directly at [http://127.0.0.1:8765](http://127.0.0.1:8
 
 ## CLI Command Reference
 
-You can invoke the CLI using `pnpm stash <command>`, `./stash <command>` (bash), `.\stash.ps1 <command>` (PowerShell), or install it globally via `uv tool install --editable apps/core`.
+You can invoke the CLI using `pnpm stash <command>`, `./stash <command>` (bash), `.\stash.ps1 <command>` (PowerShell), or the global `stash` command (installed by `pnpm setup`; refresh alone with `pnpm tool:install`).
 
 | Command | Purpose | Example |
 | --- | --- | --- |
