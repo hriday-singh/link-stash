@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 from starlette.testclient import TestClient
 
+from stash import __version__
 from stash.config import Config
 from stash.server.app import create_app
 from stash.services.pending import add_pending
@@ -342,7 +343,7 @@ def test_metadata_and_colors(test_env: tuple[Config, TestClient]) -> None:
     assert resp.status_code == 200
     meta = resp.json()
     assert meta["counts"]["cards"] >= 2
-    assert meta["version"] == "0.1.0"
+    assert meta["version"] == __version__
     categories = {c["name"]: c["color"] for c in meta["categories"]}
     assert categories["models"] == "cat-models"
     assert categories["repos-tools"] == "cat-repos-tools"

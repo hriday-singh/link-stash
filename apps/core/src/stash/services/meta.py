@@ -5,6 +5,7 @@ from pathlib import Path
 
 import tomlkit
 
+from stash import __version__
 from stash.config import Config
 from stash.server.schemas import CategoryMeta, MetaCounts, MetaResponse, TagMeta
 from stash.store.index import connect
@@ -95,7 +96,7 @@ def get_meta(home: Path, config: Config) -> MetaResponse:
             categories=categories,
             tags=tags,
             counts=MetaCounts(**counts_dict),
-            version="0.1.0",
+            version=__version__,
         )
     finally:
         conn.close()

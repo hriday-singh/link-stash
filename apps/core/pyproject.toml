@@ -1,6 +1,6 @@
 [project]
 name = "stash"
-version = "0.1.0"
+version = "1.0.0.11"
 description = "Link Stash core: extract, triage and store saved links"
 authors = [
     { name = "Hriday Singh", email = "hridaysingh2207@gmail.com" }

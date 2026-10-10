@@ -3,7 +3,23 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and versions follow `MAJOR.MINOR.PATCH.BUILD` (PEP 440). `pnpm setup` prints every entry added since your last setup.
+
+## [1.0.0.11] - 2026-10-10
+
+### Added
+- `pnpm setup` now prints changelog entries since the last setup and records the version in `.stash-version`.
+- `stash check` and `stash save` accept multiple items in one call (batch triage).
+- `stash ingest --template` prints the ingest JSON schema.
+- Repository statistics page (`pnpm stats`) with charts and KPIs.
+
+### Changed
+- Version is read from `apps/core/pyproject.toml` everywhere (API `/api/meta`, OpenAPI spec).
+- Stash skill: batch extraction without mid-stream pauses, smarter carousel/CTA handling, denser review table.
+
+### Fixed
+- Card search rows no longer deleted when a source shares the same key (`stash suggest` now finds them).
+- Windows `ig:ID` style keys normalized to valid source directories.
 
 ## [0.1.0] - 2026-10-07
 

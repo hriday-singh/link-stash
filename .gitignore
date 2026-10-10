@@ -110,3 +110,6 @@ Desktop.ini
 
 # Local agent workspace skills
 .agents/
+
+# --- Last version seen by pnpm setup (scripts/changelog.mjs) ---
+.stash-version

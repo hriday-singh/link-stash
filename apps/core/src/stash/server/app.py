@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
 
+from stash import __version__
 from stash.config import Config
 from stash.errors import Conflict, Invalid, LockTimeout, NotFound, StashError
 from stash.server.events import EventHub, run_watcher_loop
@@ -89,7 +90,7 @@ def create_app(config: Config, dev: bool = False) -> FastAPI:
 
     app = FastAPI(
         title="Link Stash Library API",
-        version="0.1.0",
+        version=__version__,
         lifespan=lifespan,
     )
     app.state.config = config
