@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SourcesPage } from "./SourcesPage";
 import { api } from "@/api/client";
@@ -90,6 +91,14 @@ describe("SourcesPage", () => {
     // Label shows on both the stage filter pill and the card badge.
     expect(screen.getAllByText("Analyzed")).toHaveLength(2);
     expect(screen.getByText("Video")).toBeInTheDocument();
+
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    await user.click(screen.getByRole("button", { name: "Copy /stash (2)" }));
+    expect(writeText).toHaveBeenCalledWith(
+      "/stash https://instagram.com/reel/DE-3r3_s https://github.com/owner/repo",
+    );
   });
 
   it("renders empty state when no sources are returned", async () => {

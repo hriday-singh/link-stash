@@ -4,7 +4,7 @@
   "description": "Monorepo root for Link Stash",
   "scripts": {
     "stash": "uv run --directory apps/core stash",
-    "setup": "pnpm install && uv sync --directory apps/core && pnpm tool:install && uv run --directory apps/core stash install-skills --workspace && node scripts/changelog.mjs",
+    "setup": "pnpm install && pnpm build && uv sync --directory apps/core && pnpm tool:install && uv run --directory apps/core stash install-skills --workspace && node scripts/changelog.mjs",
     "doctor": "uv run --directory apps/core stash doctor",
     "scan": "uv run --directory apps/core stash scan",
     "serve": "uv run --directory apps/core stash serve",

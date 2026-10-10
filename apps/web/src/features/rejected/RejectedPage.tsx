@@ -7,6 +7,7 @@ import { LazyMotion, domAnimation, AnimatePresence, m, useReducedMotion } from "
 import { api, ApiError, unwrap, type RejectEntry } from "@/api/client";
 import { queryKeys } from "@/api/keys";
 import { PageHeader } from "@/components/PageHeader";
+import { keyToUrl } from "@/lib/keyUrl";
 import { Button } from "@/components/ui/button";
 
 export function RejectedPage() {
@@ -33,7 +34,21 @@ export function RejectedPage() {
           params: { path: { key } },
         }),
       );
-      toast.success("Removed from rejected log. Item can be suggested again.");
+      const url = keyToUrl(key);
+      const command = url ? `/stash ${url}` : null;
+      toast.success("Removed from rejected log. Re-run it to save the card again.", {
+        description: command ?? undefined,
+        action: command
+          ? {
+              label: "Copy",
+              onClick: () => {
+                navigator.clipboard.writeText(command).catch(() => {
+                  toast.error("Could not copy. Select the command and copy it by hand.");
+                });
+              },
+            }
+          : undefined,
+      });
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
         // Spec & review focus: 404 handled as a quiet refresh (CLI or another session already removed it).
@@ -58,7 +73,7 @@ export function RejectedPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title={`Rejected log (${rejectList.length})`}
-        description="Rejected links and cards are skipped during triage and never suggested again."
+        description="Rejected links are skipped during triage. Rejecting a card deletes it. Un-reject removes the entry and gives you a /stash command to save it again."
       />
 
       {isLoading ? (

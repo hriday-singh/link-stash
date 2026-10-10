@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RejectedPage } from "./RejectedPage";
+import { keyToUrl } from "@/lib/keyUrl";
 import { api } from "@/api/client";
 
 vi.mock("sonner", () => ({
@@ -12,6 +13,20 @@ vi.mock("sonner", () => ({
     error: vi.fn(),
   },
 }));
+
+describe("keyToUrl", () => {
+  it("maps each key shape back to a link", () => {
+    expect(keyToUrl("github:a/b")).toBe("https://github.com/a/b");
+    expect(keyToUrl("hf:model:org/m")).toBe("https://huggingface.co/org/m");
+    expect(keyToUrl("hf:dataset:org/d")).toBe("https://huggingface.co/datasets/org/d");
+    expect(keyToUrl("hf:space:org/s")).toBe("https://huggingface.co/spaces/org/s");
+    expect(keyToUrl("ig:ABC123")).toBe("https://www.instagram.com/p/ABC123/");
+    expect(keyToUrl("url:example.com/x")).toBe("https://example.com/x");
+    expect(keyToUrl("url:https://example.com/x")).toBe("https://example.com/x");
+    expect(keyToUrl("weird")).toBeNull();
+    expect(keyToUrl("hf:other:org/x")).toBeNull();
+  });
+});
 
 describe("RejectedPage", () => {
   let queryClient: QueryClient;
@@ -98,7 +113,10 @@ describe("RejectedPage", () => {
       params: { path: { key: "github:langchain-ai/legacy-wrapper" } },
     });
     expect(toast.success).toHaveBeenCalledWith(
-      "Removed from rejected log. Item can be suggested again.",
+      "Removed from rejected log. Re-run it to save the card again.",
+      expect.objectContaining({
+        description: "/stash https://github.com/langchain-ai/legacy-wrapper",
+      }),
     );
     expect(toast.error).not.toHaveBeenCalled();
   });

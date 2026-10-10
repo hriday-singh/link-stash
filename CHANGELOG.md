@@ -16,6 +16,10 @@ and versions follow `MAJOR.MINOR.PATCH.BUILD` (PEP 440). `pnpm setup` prints eve
 ### Changed
 - `stash analyze` frames fallback summary names why each engine failed and whether a transcript exists (`whisper off` by default).
 - `/stash` skill: review tables are printed before any multiple-choice prompt; carousel slides are read from images (no OCR); no `stash config`, rules live at `rules_path`.
+- `/stash` skill: a missing license (`no_license`) is listed in `Pricing` as `no license found` and no longer turns a row into `ask`; detection misses too often to block on.
+- `pnpm setup` now runs `pnpm build`, so `stash serve` picks up web UI changes.
+- Sources page: `Copy /stash (N)` button copies one `/stash <links>` command for every source the current filters show (e.g. stage New), to send them all through triage.
+- Rejected page: un-reject toasts a copyable `/stash <link>` command to save the card again (rejecting deletes the card, so un-reject alone does not restore it).
 
 ## [1.0.0.11] - 2026-10-10
 

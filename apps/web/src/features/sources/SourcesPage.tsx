@@ -1,7 +1,8 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Video01Icon, FilterIcon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import { Video01Icon, FilterIcon, Cancel01Icon, Copy01Icon } from "@hugeicons/core-free-icons";
+import { toast } from "sonner";
 import { api, unwrap, type PageSourceRow } from "@/api/client";
 import { queryKeys } from "@/api/keys";
 import { PageHeader } from "@/components/PageHeader";
@@ -78,6 +79,15 @@ export function SourcesPage({ filters }: SourcesPageProps) {
     });
   };
 
+  // One /stash command for every source on screen, so a filtered set (e.g. New) can be re-run.
+  const copyStashCommand = () => {
+    const command = `/stash ${sources.map((src) => src.url).join(" ")}`;
+    navigator.clipboard.writeText(command).then(
+      () => toast.success(`Copied /stash command for ${sources.length} sources`),
+      () => toast.error("Could not copy the command"),
+    );
+  };
+
   const clearFilters = () => {
     navigate({ search: {} });
   };
@@ -121,6 +131,17 @@ export function SourcesPage({ filters }: SourcesPageProps) {
             <HugeiconsIcon icon={Video01Icon} strokeWidth={1.5} />
             Has video
           </Button>
+          {sources.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyStashCommand}
+              className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <HugeiconsIcon icon={Copy01Icon} strokeWidth={1.5} />
+              Copy /stash ({sources.length})
+            </Button>
+          )}
 
           <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
             <Input
